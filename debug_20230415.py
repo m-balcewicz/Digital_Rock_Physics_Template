@@ -3,14 +3,22 @@ from scipy import ndimage
 from import_data import import_raw
 from fractions_data import get_fractions
 from tqdm import tqdm
+from subvolume_data import create_subvolume
+
 
 footprint_6=np.ones((3, 3, 1))
 footprint_18=np.ones((3, 3, 2))
 footprint_26=np.ones((3, 3, 3))
-
-dir_path_1_12_800cube = './data/Sandstone_1_12_800cube_segmented.raw'
+path = '/Users/martin/MYDATA/SCIENCE_WORLD/STUDIES/2022_Pang/Python/data'
+dir_path_1_12_800cube = f'{path}/segmented/Sandstone_1_12_800cube_segmented.raw'
 data_1_12_800cube = import_raw(dir_path_1_12_800cube, 800)
 fractions = get_fractions(data_1_12_800cube)
+save_subvolume_directory = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/SCIENCE_WORLD/STUDIES/2022_Pang'
+subvolume_1_12_100cube = create_subvolume(data=data_1_12_800cube, set_subvolume=100, name='subvolume_1_12_100cube')
+
+'''
+# Create a subvolume for faster calculations
+create_subvolume(data=data_1_12_800cube, set_subvolume=100, name='data_1_12_100cube')
 
 # Create a copy of the input array and set all values to 0
 data_porosity = np.zeros_like(data_1_12_800cube)
@@ -44,3 +52,4 @@ for i in tqdm(range(1, num_features + 1)):
 # set the values of connected_voxels to 1 for all voxels in adjacent_voxels
 connected_voxels = np.zeros_like(data_porosity)
 connected_voxels[adjacent_voxels != 0] = 1
+'''

@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 from export_data import export_raw
 
-def create_subvolume(data, set_subvolume, name):
+def create_subvolume(data, set_subvolume, name, directory=None):
     x, y, z = data.shape
 
     # calculate center of sample
@@ -33,11 +33,17 @@ def create_subvolume(data, set_subvolume, name):
     varname = str(t)
     varname = str(name + '_' + str(set_subvolume)+'cube')
 
-    # create the subvolume directory if it does not already exist
-    if not os.path.exists('subvolume'):
-        os.mkdir('subvolume')
+    if directory is not None:
+        path_temp =  os.path.join(directory, 'subvolume')
+        if not os.path.exists(path_temp):
+            os.mkdir(path_temp)
+        export_raw(data_subvolume, path=path_temp, varname=varname)
 
-    # Save new data_subvolume as a 'uint8' raw file
-    export_raw(data_subvolume, path='subvolume', varname=varname)
+    else:
+        # create the subvolume directory if it does not already exist
+        if not os.path.exists('subvolume'):
+            os.mkdir('subvolume')
+            # Save new data_subvolume as a 'uint8' raw file
+            export_raw(data_subvolume, path='subvolume', varname=varname)
 
     return data_subvolume

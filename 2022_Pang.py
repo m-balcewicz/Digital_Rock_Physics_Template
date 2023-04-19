@@ -19,33 +19,36 @@ subvolume_size = 400
 
 make_subvolume = 0 # can be 0 or 1
 make_figures = 1 # can be 0 or 1
-save_figures = 0  # can be 0 or 1
+save_figures = 1  # can be 0 or 1
 
-import_raw_files_800 = 0 # can be 0 or 1
+import_raw_files_800 = 1 # can be 0 or 1
 import_segmented_files_800 = 1 # can be 0 or 1
 calculate_fractions_800 = 1 # can be 0 or 1
 
+import_raw_files_400 = 1 # can be 0 or 1
 import_segmented_files_400 = 1 # can be 0 or 1
 
+path = '/Users/martin/MYDATA/SCIENCE_WORLD/STUDIES/2022_Pang/Python/data'
+
 if import_raw_files_800 == 1:
-    dir_path_1_12_800cube_raw = './data/Sandstone_1_12_800cube_raw.raw'
-    dir_path_1_23_800cube_raw = './data/Sandstone_1_23_800cube_raw.raw'
-    dir_path_1_29_800cube_raw = './data/Sandstone_1_29_800cube_raw.raw'
-    dir_path_2_7_800cube_raw = './data/Sandstone_2_7_800cube_raw.raw'
+    dir_path_1_12_800cube_raw = f'{path}/raw/Sandstone_1_12_800cube_raw.raw'
+    dir_path_1_23_800cube_raw = f'{path}/raw/Sandstone_1_23_800cube_raw.raw'
+    dir_path_1_29_800cube_raw = f'{path}/raw/Sandstone_1_29_800cube_raw.raw'
+    dir_path_2_7_800cube_raw = f'{path}/raw/Sandstone_2_7_800cube_raw.raw'
 
     data_1_12_800cube_raw = import_raw(dir_path_1_12_800cube_raw, raw_size)
     data_1_23_800cube_raw = import_raw(dir_path_1_23_800cube_raw, raw_size)
     data_1_29_800cube_raw = import_raw(dir_path_1_29_800cube_raw, raw_size)
     data_2_7_800cube_raw = import_raw(dir_path_2_7_800cube_raw, raw_size)
-    print('segmented data is imported')
+    print('raw data 800cube is imported')
 else:
     print('No raw files imported')
 
 if import_segmented_files_800 == 1:
-    dir_path_1_12_800cube = './data/Sandstone_1_12_800cube_segmented.raw'
-    dir_path_1_23_800cube = './data/Sandstone_1_23_800cube_segmented.raw'
-    dir_path_1_29_800cube = './data/Sandstone_1_29_800cube_segmented.raw'
-    dir_path_2_7_800cube = './data/Sandstone_2_7_800cube_segmented.raw'
+    dir_path_1_12_800cube = f'{path}/segmented/Sandstone_1_12_800cube_segmented.raw'
+    dir_path_1_23_800cube = f'{path}/segmented/Sandstone_1_23_800cube_segmented.raw'
+    dir_path_1_29_800cube = f'{path}/segmented/Sandstone_1_29_800cube_segmented.raw'
+    dir_path_2_7_800cube = f'{path}/segmented/Sandstone_2_7_800cube_segmented.raw'
 
     data_1_12_800cube = import_raw(dir_path_1_12_800cube, raw_size)
     data_1_23_800cube = import_raw(dir_path_1_23_800cube, raw_size)
@@ -86,14 +89,28 @@ if make_subvolume == 1:
     data_2_7_400cube = create_subvolume(data_2_7_800cube, set_subvolume=subvolume_size, name='Sandstone_2_7')
 
 else:
-    print('No figures are saved today.')
-    
+    print('No created today.')
+
+
+if import_raw_files_400 == 1:
+    dir_path_1_12_400cube_raw = f'{path}/subvolume/Sandstone_1_12_raw_400cube.raw'
+    dir_path_1_23_400cube_raw = f'{path}/subvolume/Sandstone_1_23_raw_400cube.raw'
+    dir_path_1_29_400cube_raw = f'{path}/subvolume/Sandstone_1_29_raw_400cube.raw'
+    dir_path_2_7_400cube_raw = f'{path}/subvolume/Sandstone_2_7_raw_400cube.raw'
+
+    data_1_12_400cube_raw = import_raw(dir_path_1_12_400cube_raw, subvolume_size)
+    data_1_23_400cube_raw = import_raw(dir_path_1_23_400cube_raw, subvolume_size)
+    data_1_29_400cube_raw = import_raw(dir_path_1_29_400cube_raw, subvolume_size)
+    data_2_7_400cube_raw = import_raw(dir_path_2_7_400cube_raw, subvolume_size)
+    print('raw data 400cube is imported')
+else:
+    print('No raw files imported')
 
 if import_segmented_files_400 == 1:
-    dir_path_1_12_400cube = './subvolume/Sandstone_1_12_400cube.raw'
-    dir_path_1_23_400cube = './subvolume/Sandstone_1_23_400cube.raw'
-    dir_path_1_29_400cube = './subvolume/Sandstone_1_29_400cube.raw'
-    dir_path_2_7_400cube = './subvolume/Sandstone_2_7_400cube.raw'
+    dir_path_1_12_400cube = f'{path}/subvolume/Sandstone_1_12_400cube.raw'
+    dir_path_1_23_400cube = f'{path}/subvolume/Sandstone_1_23_400cube.raw'
+    dir_path_1_29_400cube = f'{path}/subvolume/Sandstone_1_29_400cube.raw'
+    dir_path_2_7_400cube = f'{path}/subvolume/Sandstone_2_7_400cube.raw'
 
     data_1_12_400cube = import_raw(dir_path_1_12_400cube, subvolume_size)
     data_1_23_400cube = import_raw(dir_path_1_23_400cube, subvolume_size)
@@ -128,27 +145,27 @@ if make_figures == 1:
     if not os.path.exists('figures'):
         os.makedirs('figures')
 
-    if import_segmented_files_800 == 1:
+    if import_raw_files_800 == 1 and import_segmented_files_800 == 1:
         fig_1_12_800cube = visualize_plane(data_1_12_800cube, type=2, slice=subvolume_size, plane='xy',
                                            subvolume=subvolume_size, labels=labels)
         fig_1_12_800cube.show()
-        
+
         fig_1_23_800cube = visualize_plane(data_1_23_800cube, type=2, slice=subvolume_size, plane='xy',
                                            subvolume=subvolume_size, labels=labels)
         fig_1_23_800cube.show()
-        
+
         fig_1_29_800cube = visualize_plane(data_1_29_800cube, type=2, slice=subvolume_size, plane='xy',
                                            subvolume=subvolume_size, labels=labels)
         fig_1_29_800cube.show()
-        
-        fig_2_7_800cube = visualize_plane(data_2_7_800cube, type=2, slice=subvolume_size, plane='xy', subvolume=subvolume_size,
+
+        fig_2_7_800cube = visualize_plane(data_2_7_800cube, type=2, slice=subvolume_size, plane='xy',
+                                          subvolume=subvolume_size,
                                           labels=labels)
         fig_2_7_800cube.show()
-        
+
         fig_1_29_400cube = visualize_plane(data_1_29_400cube, type=2, slice=200, plane='xy', labels=labels)
         fig_1_29_400cube.show()
-    
-    elif import_raw_files_800 == 1:
+
         fig_1_12_800cube_raw = visualize_plane(data_1_12_800cube_raw, type=1, slice=subvolume_size, plane='xy',
                                                subvolume=subvolume_size)
         fig_1_12_800cube_raw.show()
@@ -168,6 +185,27 @@ if make_figures == 1:
 
         fig_1_29_400cube_raw = visualize_plane(data_1_29_400cube_raw, type=1, slice=200, plane='xy', labels=labels)
         fig_1_29_400cube_raw.show()
+
+    elif import_segmented_files_800 == 1:
+            fig_1_12_800cube = visualize_plane(data_1_12_800cube, type=2, slice=subvolume_size, plane='xy',
+                                               subvolume=subvolume_size, labels=labels)
+            fig_1_12_800cube.show()
+
+            fig_1_23_800cube = visualize_plane(data_1_23_800cube, type=2, slice=subvolume_size, plane='xy',
+                                               subvolume=subvolume_size, labels=labels)
+            fig_1_23_800cube.show()
+
+            fig_1_29_800cube = visualize_plane(data_1_29_800cube, type=2, slice=subvolume_size, plane='xy',
+                                               subvolume=subvolume_size, labels=labels)
+            fig_1_29_800cube.show()
+
+            fig_2_7_800cube = visualize_plane(data_2_7_800cube, type=2, slice=subvolume_size, plane='xy',
+                                              subvolume=subvolume_size,
+                                              labels=labels)
+            fig_2_7_800cube.show()
+
+            fig_1_29_400cube = visualize_plane(data_1_29_400cube, type=2, slice=200, plane='xy', labels=labels)
+            fig_1_29_400cube.show()
         
 
 if save_figures == 1:
