@@ -14,9 +14,7 @@ import time
 from control_data import check_binary
 import struct
 import os
-from alive_progress import alive_bar
 # import re
-from tqdm import tqdm
 
 '''
 This script will import an range of data sets, e.g. tiff sequences or 3D-raw files. If tiff sequences are selected than 
