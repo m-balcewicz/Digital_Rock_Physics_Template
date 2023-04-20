@@ -6,8 +6,9 @@ import openpnm as op
 
 data_100cube = import_raw('./subvolume/Sandstone_1_29_100cube.raw', dimension=100)
 
-fig_data_1_12_800cube = visualize_plane(data_100cube, type=2, slice=50)
-fig_data_1_12_800cube.show()
+fig_data_1_12_100cube = visualize_plane(data_100cube, type=2, slice=50)
+fig_data_1_12_100cube.show()
+fig_data_1_12_100cube.savefig('/data/GZB/mbalcewicz/SCIENCE_WORLD/STUDIES/2023_PYTHON_POROSITY/figure-1.png', format='png')
 
 fractions = get_fractions(data_100cube)
 print(fractions)
@@ -36,7 +37,7 @@ print("{} particles have been identified".format(labelled.max()))
 plt.figure()
 plt.title("Labelled volume")
 plt.imshow(labelled[midSlice], cmap=spam.label.randomCmap)
-plt.savefig('spam-figure-2.png', format='png')
+plt.savefig('/data/GZB/mbalcewicz/SCIENCE_WORLD/STUDIES/2023_PYTHON_POROSITY/spam-figure-2.png', format='png')
 
 
 """
