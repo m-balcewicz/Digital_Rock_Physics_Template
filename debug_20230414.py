@@ -6,8 +6,9 @@ from subvolume_data import create_subvolume
 from fractions_data import get_fractions
 import numpy as np
 
-dir_path_1_12_800cube = 'Q:\SCIENCE_WORLD\STUDIES\2023_PYTHON_POROSITY'
-data_1_12_800cube = import_raw(dir_path_1_12_800cube, 800)
+dir_path_1_12_800cube = '/Volumes/mbalcewicz/SCIENCE_WORLD/STUDIES/2023_PYTHON_POROSITY/'
+data_800cube = import_raw(f'{dir_path_1_12_800cube}Sandstone_1_29_800cube_segmented.raw', dimension=800)
+# data_800cube = import_raw(f'{dir_path_1_12_800cube}Sandstone_1_29_800cube_segmented.raw', 800)
 
 labels = [(0, 'Pore'),
  (1, 'Quartz'),
@@ -16,10 +17,10 @@ labels = [(0, 'Pore'),
  (4, 'Dolomite'),
  (5, 'Clay')]
 
-fig_data_1_12_800cube = visualize_plane(data_1_12_800cube, type=2, slice=200, plane='xy', labels=labels, subvolume=400)
+fig_data_1_12_800cube = visualize_plane(data_800cube, type=2, slice=200, plane='xy', labels=labels, subvolume=400)
 fig_data_1_12_800cube.show()
 
-fractions, header = get_fractions(data_1_12_800cube)
+fractions = get_fractions(data_800cube)
 """
 # Save the data as a text file
 np.savetxt("data.txt", data, header=header, fmt=fmt, delimiter="|")

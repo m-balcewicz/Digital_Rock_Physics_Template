@@ -14,7 +14,9 @@ import time
 from control_data import check_binary
 import struct
 import os
-import re
+from alive_progress import alive_bar
+# import re
+from tqdm import tqdm
 
 '''
 This script will import an range of data sets, e.g. tiff sequences or 3D-raw files. If tiff sequences are selected than 
@@ -82,28 +84,38 @@ def import_tiff(path, type):
 
 
 def import_raw(path, dimension=None):
-        start = time.time()
+    print('+-------------------------------------------------------------------------------------------------+')
+    print('+-------------------------------------------------------------------------------------------------+')
+    print('+--- Welcome to the importer of high-resolution X-ray Computed Tomography                      ---+')
+    print('+--- developed 04/2023 by Martin Balcewicz (mail: martin.balcewicz@rockphysics.org)            ---+')
+    print('+-------------------------------------------------------------------------------------------------+')
+    print('+-------------------------------------------------------------------------------------------------+')
+    print(' ')
 
-        # Define the shape of the data
-        if dimension is not None:
-            x_size = dimension
-            y_size = dimension
-            z_size = dimension
+    # Define the shape of the data
+    if dimension is not None:
+        x_size = dimension
+        y_size = dimension
+        z_size = dimension
+    else:
+        raise ValueError("No dimension was set!")
 
-        # Read the data from the file
-        with open(path, 'rb') as f:
-            data = np.fromfile(f, dtype=np.uint8)
 
-        # Reshape the data to the original shape
-        data = data.reshape((x_size, y_size, z_size))
+    # # Read the data from the file
+    # with open(path, 'rb') as f:
+    #     data = np.fromfile(tqdm(f, desc="Importing data"), dtype=np.uint8)
 
-        # Check wrong label numbering
-        data = check_binary(data)
+    # Read the data from the file with alive_progress bar
+    with open(path, 'rb') as f:
+        data = np.fromfile(f, dtype=np.uint8)
 
-        end = time.time()
-        print(f'import takes {end - start} seconds')
+    # Reshape the data to the original shape
+    data = data.reshape((x_size, y_size, z_size))
 
-        return data
+    # Check wrong label numbering
+    data = check_binary(data)
+
+    return data
 
 
 def import_heidi(path, z, x, y, d):
