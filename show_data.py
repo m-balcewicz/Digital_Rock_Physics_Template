@@ -22,7 +22,7 @@ def main():
     print(' ')
 
 
-def visualize_plane(data, type, slice, plane, subvolume=None, labels=None, title=None):
+def visualize_plane(data, type, slice=None, plane='xy', subvolume=None, labels=None, title=None):
     cmap_set = 'ocean'
 
     dimensions = data.shape
@@ -40,6 +40,14 @@ def visualize_plane(data, type, slice, plane, subvolume=None, labels=None, title
         F1 = 'NaN'
 
     F1 = plt.figure()
+
+    if slice is not None:
+        slice = slice
+
+    else:
+        slice = int(dimensions[0] / 2)
+
+
     if plane == 'yz':
         plt.pcolormesh(data[slice, :, :], cmap=cmap_set)
     elif plane == 'xz':

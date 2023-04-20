@@ -18,13 +18,13 @@ subvolume_1_12_100cube = create_subvolume(data=data_1_12_800cube, set_subvolume=
 
 '''
 # Create a subvolume for faster calculations
-create_subvolume(data=data_800cube, set_subvolume=100, name='data_1_12_100cube')
+create_subvolume(data=data_100cube, set_subvolume=100, name='data_1_12_100cube')
 
 # Create a copy of the input array and set all values to 0
-data_porosity = np.zeros_like(data_800cube)
+data_porosity = np.zeros_like(data_100cube)
 
 # find all voxels with entry = 0
-data_porosity[data_800cube == 0] = 1
+data_porosity[data_100cube == 0] = 1
 
 # label connected regions of non-zero values
 labeled_array, num_features = ndimage.label(data_porosity)
@@ -38,7 +38,7 @@ def adjacent_filter(x, labeled_array):
     # dilate the label mask to get the adjacent voxels
     adjacent_mask = ndimage.binary_dilation(label_mask) & (labeled_array != 0)
     # get the values of the adjacent voxels
-    adjacent_values = data_800cube[adjacent_mask]
+    adjacent_values = data_100cube[adjacent_mask]
     # return the values of the adjacent voxels as a tuple
     return tuple(adjacent_values)
 
