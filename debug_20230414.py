@@ -6,7 +6,7 @@ from subvolume_data import create_subvolume
 from fractions_data import get_fractions
 import numpy as np
 
-dir_path_1_12_800cube = './data/Sandstone_1_12_800cube_segmented.raw'
+dir_path_1_12_800cube = 'Q:\SCIENCE_WORLD\STUDIES\2023_PYTHON_POROSITY'
 data_1_12_800cube = import_raw(dir_path_1_12_800cube, 800)
 
 labels = [(0, 'Pore'),
