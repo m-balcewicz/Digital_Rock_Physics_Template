@@ -5,7 +5,7 @@ import openpnm as op
 import imageio
 import time
 import multiprocessing
-from logging  import new_log_entry
+from WriteLog  import new_log_entry
 
 new_log_entry(f'DRP_snow: started')
 filename_output = 'Output'
