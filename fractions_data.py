@@ -44,7 +44,7 @@ def get_fractions(data):
     # Format the columns
     df["Phase"] = df["Phase"].apply(lambda x: f"{x:.0f}")
     df["Count"] = df["Count"].apply(lambda x: f"{x:.0f}")
-    df["Fraction"] = df["Fraction"].apply(lambda x: f"{x:.2f}")
+    df["Fraction"] = df["Fraction"].apply(lambda x: f"{x:.4f}")
 
     # Add the footer row to the table
     footer = [np.size(unique_values), np.sum(value_counts), np.sum(percentages)]

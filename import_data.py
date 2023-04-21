@@ -10,11 +10,11 @@
 # ------------------------------------------------------------------------------------------------- #
 import numpy as np
 from skimage import io
-import time
 from control_data import check_binary
 import struct
 import os
-# import re
+
+
 
 '''
 This script will import an range of data sets, e.g. tiff sequences or 3D-raw files. If tiff sequences are selected than 
@@ -32,7 +32,17 @@ def main():
     print(' ')
 
 
-def import_tiff(path, type):
+def import_3d_tiff(path):
+    # Load the 3D TIFF file
+    data = io.imread(path)
+    # The data is order in data(z, x, y). Therefore, a transpose is needed:
+    data = np.transpose(data, axes=(1, 2, 0))
+    # Finally, flip the data in the y-axis:
+    data = np.flip(data, axis=0)
+
+    return data
+
+def import_2d_tiff(path, type):
     if type == 1:
         file_Listing = io.imread_collection(f'{path}/*.tif*')
         first_image = file_Listing[0]
@@ -56,17 +66,6 @@ def import_tiff(path, type):
         binaries = np.unique(data)
         print('## segmented CT image is loaded')
 
-        # # CHECK WRONG LABEL NUMBERING
-        # if 0 in binaries:
-        #     data_recovery = data
-        #     for m in range(len(binaries)):
-        #         # SEARCH FOR CURRENT BINARY AND CHANGE TO ABSTRACT (OLD_BINARY + 100)
-        #         data[data == binaries[m]] = 100 + m
-        #     for m in range(len(binaries)):
-        #         data[data == (100 + m)] = m
-        # else:
-        #     print('## nice data')
-
         # Check wrong label numbering
         data = check_binary(data)
 
@@ -75,10 +74,11 @@ def import_tiff(path, type):
         binaries = 'NaN'
         return
 
-    # # IMPORTANT: due to reading automations of arrays the final array's
-    # # columns must be flipped to fit the original data set!
-    # data = np.flip(data, axis=1)
-    return data, rows, cols, pages, binaries
+    # Flip the y-axis of the array
+    data = np.flip(data, axis=0)
+
+
+    return data
 
 
 def import_raw(path, dimension=None):
@@ -98,18 +98,15 @@ def import_raw(path, dimension=None):
     else:
         raise ValueError("No dimension was set!")
 
-
-    # # Read the data from the file
-    # with open(path, 'rb') as f:
-    #     data = np.fromfile(tqdm(f, desc="Importing data"), dtype=np.uint8)
-
-    # Read the data from the file with alive_progress bar
+    # Read the data from the file
     with open(path, 'rb') as f:
         data = np.fromfile(f, dtype=np.uint8)
-
     # Reshape the data to the original shape
-    data = data.reshape((x_size, y_size, z_size))
-
+    data = data.reshape((z_size, x_size, y_size))
+    # The data is order in data(z, x, y). Therefore, a transpose is needed:
+    data = np.transpose(data, axes=(1, 2, 0))
+    # Finally, flip the data in the y-axis:
+    data = np.flip(data, axis=0)
     # Check wrong label numbering
     data = check_binary(data)
 
@@ -155,7 +152,6 @@ def import_heidi(path, z, x, y, d):
     except Exception as e:
         print('Error:', e)
         return None
-
 
 # ------------------------------------------------------------------------------------------------- #
 

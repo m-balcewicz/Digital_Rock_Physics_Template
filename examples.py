@@ -1,5 +1,5 @@
 import MakeModel
-from import_data import import_tiff
+from import_data import import_2d_tiff
 from show_data import visualize_plane
 
 # dir_path_raw = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics/Examples/400cube_raw'

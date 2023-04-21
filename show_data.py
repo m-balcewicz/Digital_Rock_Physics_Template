@@ -70,7 +70,7 @@ def visualize_plane(data, type, slice=None, plane='xy', subvolume=None, labels=N
 
 
     if title is not None:
-        plt.title(f'slice: {slice}')
+        plt.title(f'{title}')
 
 
 
