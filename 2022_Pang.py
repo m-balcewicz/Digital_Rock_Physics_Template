@@ -1,5 +1,5 @@
 from label_data import label_binary
-from import_data import import_raw
+from import_export_data import import_raw
 from save_table import save_table
 from show_data import visualize_plane
 from subvolume_data import create_subvolume
@@ -40,7 +40,7 @@ if import_raw_files_800 == 1:
     data_1_23_800cube_raw = import_raw(dir_path_1_23_800cube_raw, raw_size)
     data_1_29_800cube_raw = import_raw(dir_path_1_29_800cube_raw, raw_size)
     data_2_7_800cube_raw = import_raw(dir_path_2_7_800cube_raw, raw_size)
-    print('raw data 800cube is imported')
+    print('raw data_normal 800cube is imported')
 else:
     print('No raw files imported')
 
@@ -54,7 +54,7 @@ if import_segmented_files_800 == 1:
     data_1_23_800cube = import_raw(dir_path_1_23_800cube, raw_size)
     data_1_29_800cube = import_raw(dir_path_1_29_800cube, raw_size)
     data_2_7_800cube = import_raw(dir_path_2_7_800cube, raw_size)
-    print('segmented data 800cube is imported')
+    print('segmented data_normal 800cube is imported')
 else:
     print('No segmented files imported')
 
@@ -102,7 +102,7 @@ if import_raw_files_400 == 1:
     data_1_23_400cube_raw = import_raw(dir_path_1_23_400cube_raw, subvolume_size)
     data_1_29_400cube_raw = import_raw(dir_path_1_29_400cube_raw, subvolume_size)
     data_2_7_400cube_raw = import_raw(dir_path_2_7_400cube_raw, subvolume_size)
-    print('raw data 400cube is imported')
+    print('raw data_normal 400cube is imported')
 else:
     print('No raw files imported')
 
@@ -116,7 +116,7 @@ if import_segmented_files_400 == 1:
     data_1_23_400cube = import_raw(dir_path_1_23_400cube, subvolume_size)
     data_1_29_400cube = import_raw(dir_path_1_29_400cube, subvolume_size)
     data_2_7_400cube = import_raw(dir_path_2_7_400cube, subvolume_size)
-    print('segmented data 400cube is imported')
+    print('segmented data_normal 400cube is imported')
 
     fractions_1_12_400cube = get_fractions(data_1_12_400cube)
     save_table(fractions_1_12_400cube, varname='Sandstone_1_12_400cube')

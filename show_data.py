@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------------------------- #
 # ------------------------------------------------------------------------------------------------- #
-# This is a script to visualize CT data (int8)
+# This is a script to visualize CT data_normal (int8)
 # 31-03-2022
 # Martin Balcewicz (Bochum University of Applied Sciences)
 # website: https://rockphysics.org/people/members/martin-balcewicz
@@ -26,7 +26,7 @@ def visualize_plane(data, type, slice=None, plane='xy', subvolume=None, labels=N
     cmap_set = 'ocean'
 
     dimensions = data.shape
-    center = np.array([dimensions[0]/2, dimensions[0]/2])
+    center = np.array([dimensions[0] / 2, dimensions[0] / 2])
 
     # set the font size and typeface for all text in the plot
     plt.rcParams.update({'font.size': 14, 'font.family': 'Arial'})
@@ -47,13 +47,31 @@ def visualize_plane(data, type, slice=None, plane='xy', subvolume=None, labels=N
     else:
         slice = int(dimensions[0] / 2)
 
-
     if plane == 'yz':
-        plt.pcolormesh(data[slice, :, :], cmap=cmap_set)
+        plt.pcolormesh(data[:, :, slice], cmap=cmap_set)
+        # Get the current Axes object
+        ax = plt.gca()
+        # Invert the Y-axis
+        ax.invert_xaxis()
+        # Set the X-axis and Y-axis labels
+        plt.xlabel('Y-axis')
+        plt.ylabel('Z-axis')
+
     elif plane == 'xz':
         plt.pcolormesh(data[:, slice, :], cmap=cmap_set)
-    else:
-        plt.pcolormesh(data[:, :, slice], cmap=cmap_set)
+        # Set the X-axis and Y-axis labels
+        plt.xlabel('X-axis')
+        plt.ylabel('Z-axis')
+
+    elif plane == 'xy':
+        plt.pcolormesh(data[slice, :, :], cmap=cmap_set)
+        # Get the current Axes object
+        ax = plt.gca()
+        # Invert the Y-axis
+        ax.invert_xaxis()
+        # Set the X-axis and Y-axis labels
+        plt.xlabel('X-axis')
+        plt.ylabel('Y-axis')
 
     if subvolume is not None:
         rect = plt.Rectangle(center - subvolume / 2, subvolume, subvolume, fill=False, linewidth=2, edgecolor='r')
@@ -68,11 +86,8 @@ def visualize_plane(data, type, slice=None, plane='xy', subvolume=None, labels=N
 
     plt.gca().set_aspect('equal', 'box')
 
-
     if title is not None:
         plt.title(f'{title}')
-
-
 
     return F1
 

@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------------------------- #
 # ------------------------------------------------------------------------------------------------- #
-# This is a script to calculate the fractions of a data set
+# This is a script to calculate the fractions of a data_normal set
 # 14-04-2022
 # Martin Balcewicz (Bochum University of Applied Sciences)
 # website: https://rockphysics.org/people/members/martin-balcewicz
@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from tabulate import tabulate
 
-from import_data import import_raw
+from import_export_data import import_raw
 from save_table import save_table
 
 

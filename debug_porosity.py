@@ -1,14 +1,14 @@
 from scipy import ndimage
 from tifffile import tifffile
 
-from import_data import import_raw, import_2d_tiff, import_3d_tiff
+from import_export_data import import_raw, import_2d_tiff, import_3d_tiff
 from show_data import visualize_plane
 from fractions_data import get_fractions
 import platform
 import numpy as np
 from tqdm import tqdm
 import cc3d
-from export_data import export_raw, export_3d_tif
+import import_export_data as ie
 
 data_100cube_raw = import_raw('./subvolume/100cube.raw', dimension=100)
 data_100cube_2d_tiff = import_2d_tiff('./subvolume/2D_Tiff', type=2)
@@ -26,11 +26,10 @@ fig_data_1_12_100cube_3d_tiff = visualize_plane(data_100cube_3d_tiff, type=2, sl
 fig_data_1_12_100cube_3d_tiff.show()
 
 
-
 total_porosity = get_fractions(data_100cube_2d_tiff)
 print(total_porosity)
 
-export_raw(data_100cube_raw, path='./subvolume', varname='export_1' )
+ie.export_raw(data_100cube_raw, path='./subvolume', varname='export_4')
 
 # labels_out = cc3d.connected_components(data_100cube, connectivity=6)
 # fig_connected_6 = visualize_plane(labels_out, type=2, slice=99)
@@ -43,10 +42,10 @@ export_raw(data_100cube_raw, path='./subvolume', varname='export_1' )
 
 
 """
-def compute_connectivity(data, connectivity):
+def compute_connectivity(data_normal, connectivity):
     # Create a zero-filled array to store the connectivity counts
     global neighbourhood
-    connectivity_counts = np.zeros_like(data)
+    connectivity_counts = np.zeros_like(data_normal)
 
     # Define the neighbourhood based on the desired connectivity
     if connectivity == 6:
@@ -70,21 +69,21 @@ def compute_connectivity(data, connectivity):
                                   [-1, -1, 1], [-1, -1, 0], [-1, -1, -1]])
 
     # Iterate over each element in the array
-    for i in range(data.shape[0]):
-        for j in range(data.shape[1]):
-            for k in range(data.shape[2]):
+    for i in range(data_normal.shape[0]):
+        for j in range(data_normal.shape[1]):
+            for k in range(data_normal.shape[2]):
                 # Check if the element is equal to 1
-                if data[i, j, k] == 1:
+                if data_normal[i, j, k] == 1:
                     # Count the number of adjacent elements that are also equal to 1
                     count = 0
                     for n in neighbourhood:
                         ni = i + n[0]
                         nj = j + n[1]
                         nk = k + n[2]
-                        if ni >= 0 and ni < data.shape[0] and \
-                                nj >= 0 and nj < data.shape[1] and \
-                                nk >= 0 and nk < data.shape[2] and \
-                                data[ni, nj, nk] == 1:
+                        if ni >= 0 and ni < data_normal.shape[0] and \
+                                nj >= 0 and nj < data_normal.shape[1] and \
+                                nk >= 0 and nk < data_normal.shape[2] and \
+                                data_normal[ni, nj, nk] == 1:
                             count += 1
                     # Store the connectivity count in the connectivity_counts array
                     connectivity_counts[i, j, k] = count
@@ -193,16 +192,16 @@ elif running_os == 'Windows' or running_os == 'Linux':
 # plt.figure()
 # plt.title("Labelled volume")
 # plt.imshow(labelled[midSlice], cmap=spam.label.randomCmap)
-# plt.savefig('/data/GZB/mbalcewicz/SCIENCE_WORLD/STUDIES/2023_PYTHON_POROSITY/spam-figure-2.png', format='png')
+# plt.savefig('/data_normal/GZB/mbalcewicz/SCIENCE_WORLD/STUDIES/2023_PYTHON_POROSITY/spam-figure-2.png', format='png')
 
 
 
-# Save the data as a text file
-np.savetxt("data.txt", data, header=header, fmt=fmt, delimiter="|")
+# Save the data_normal as a text file
+np.savetxt("data_normal.txt", data_normal, header=header, fmt=fmt, delimiter="|")
 # Define the headers for the ascii file
 header = "Phase Count Fraction"
 
-# Define the format string for the data columns
+# Define the format string for the data_normal columns
 fmt = ["%.0f", "%.8e", "%.8f"]
 
 

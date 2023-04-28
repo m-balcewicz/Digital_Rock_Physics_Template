@@ -1,5 +1,4 @@
 import numpy as np
-from export_data import export_raw
 
 
 def make_model(size, num_phases):

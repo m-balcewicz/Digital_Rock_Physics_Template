@@ -1,4 +1,4 @@
-# This is a script to visualize CT data (int8)
+# This is a script to visualize CT data_normal (int8)
 # 04-05-2022
 # Martin Balcewicz (Bochum University of Applied Sciences)
 # website: https://rockphysics.org/people/members/martin-balcewicz
@@ -6,7 +6,8 @@
 import numpy as np
 import os
 from datetime import datetime
-from export_data import export_raw
+import import_export_data as ie
+
 
 def create_subvolume(data, set_subvolume, name, directory=None):
     x, y, z = data.shape
@@ -31,19 +32,19 @@ def create_subvolume(data, set_subvolume, name, directory=None):
 
     t = datetime.now().strftime("%Y%m%d")
     varname = str(t)
-    varname = str(name + '_' + str(set_subvolume)+'cube')
+    varname = str(name + '_' + str(set_subvolume) + 'cube')
 
     if directory is not None:
-        path_temp =  os.path.join(directory, 'subvolume')
+        path_temp = os.path.join(directory, 'subvolume')
         if not os.path.exists(path_temp):
             os.mkdir(path_temp)
-        export_raw(data_subvolume, path=path_temp, varname=varname)
+        ie.export_raw(data_subvolume, path=path_temp, varname=varname)
 
     else:
         # create the subvolume directory if it does not already exist
         if not os.path.exists('subvolume'):
             os.mkdir('subvolume')
             # Save new data_subvolume as a 'uint8' raw file
-            export_raw(data_subvolume, path='subvolume', varname=varname)
+            ie.export_raw(data_subvolume, path='subvolume', varname=varname)
 
     return data_subvolume

@@ -1,16 +1,16 @@
 import MakeModel
-from import_data import import_2d_tiff
+from import_export_data import import_2d_tiff
 from show_data import visualize_plane
 
 # dir_path_raw = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics/Examples/400cube_raw'
 # dir_path_segmented = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics/Examples/400cube_segmented'
 # dir_path_segmented = '/Volumes/mbalcewicz/SCIENCE_WORLD/STUDIES/2022_PANG/Avizo_Segmentation/SANDSTONE/Sandstone_1_12-files/EXPORT/Sandstone_1_12_segmented.raw'
 # data_raw = import_ct(dir_path_raw, 1)
-# data_raw = data_raw[0]  # the imported data file is a tuple
+# data_raw = data_raw[0]  # the imported data_normal file is a tuple
 # show_ct(data_raw, 1, 100)
 
 # data_segmented = import_ct(dir_path_segmented, 2)
-# data_segmented = data_segmented[0]  # the imported data file is a tuple
+# data_segmented = data_segmented[0]  # the imported data_normal file is a tuple
 # figure = show_ct(data_segmented, 2, 100)
 
 # ------------------------------------------------------------------------------------------------- #
@@ -21,8 +21,8 @@ from show_data import visualize_plane
 
 # from PIL import Image
 
-# data = import_ct('/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics/Subvolume_320cube', 1)
-# show_ct(data, 1, 100)
+# data_normal = import_ct('/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics/Subvolume_320cube', 1)
+# show_ct(data_normal, 1, 100)
 
 # path = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics/Subvolume_320cube/subvolume_320cube_0000.tif'
 # my_image = io.imread("/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics/Subvolume_320cube/subvolume_320cube_0000.tif")
@@ -79,8 +79,8 @@ from show_data import visualize_plane
 #     data_man[:, :, i] = page
 # binaries = np.unique(data_man)
 # print('## RAW CT image is loaded')
-# print(type(data))
-# slice = data[:, :, 1]
+# print(type(data_normal))
+# slice = data_normal[:, :, 1]
 # print(f'shape of the image: {np.shape(slice)}')
 # print(f'size of the image: {np.size(slice)}')
 # plt.imshow(slice, cmap='gray')
@@ -91,8 +91,7 @@ from show_data import visualize_plane
 # March 2023
 from MakeModel import make_model
 from show_data import visualize_plane
-from export_data import export_raw
-from import_data import import_raw
+import import_export_data as ie
 from subvolume_data import create_subvolume
 import numpy as np
 from control_data import check_binary
@@ -100,7 +99,7 @@ from control_data import check_binary
 dir_path_segmented = './subvolume/Sandstone_1_29_400cube.raw'
 #
 size = 400
-data_segmented = import_raw(dir_path_segmented, size)
+data_segmented = ie.import_raw(dir_path_segmented, size)
 # phases = np.unique(data_segmented)
 # print(phases)
 data = check_binary(data_segmented)[0]
@@ -110,16 +109,16 @@ type = 2
 slice = int(np.shape(data)[0] / 2)
 plane = 'xy'
 fig = visualize_plane(data, type, slice, plane)
-# data = data_segmented
+# data_normal = data_segmented
 # type = 2
-# slice = int(np.shape(data)[0]/2)
-# show_ct(data, type, slice, 'xy')
+# slice = int(np.shape(data_normal)[0]/2)
+# show_ct(data_normal, type, slice, 'xy')
 
 # data_subvolume = create_subvolume(data_segmented, 400, varname)
 
 # num_phases = 2
-# # data = make_model(size, num_phases)
+# # data_normal = make_model(size, num_phases)
 # figure1 = show_ct(data_segmented, 2, 350, 'xy')
-# path = './data'
+# path = './data_normal'
 # varname = 'homogeneous_model_800cube'
-# export_model(data, path, varname)
+# export_model(data_normal, path, varname)

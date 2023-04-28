@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------------------------- #
 # ------------------------------------------------------------------------------------------------- #
-# This is a script to label CT data (int8)
+# This is a script to label CT data_normal (int8)
 # 14-04-2023
 # Martin Balcewicz (Bochum University of Applied Sciences)
 # website: https://rockphysics.org/people/members/martin-balcewicz

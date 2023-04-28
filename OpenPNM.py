@@ -14,7 +14,7 @@ if __name__ == "__main__":
     im = data['im']
 
 
-    # %% Note meta data for this image
+    # %% Note meta data_normal for this image
     data = {
         'shape': {
             'x': im.shape[0],

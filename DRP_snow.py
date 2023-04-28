@@ -23,11 +23,11 @@ project = ws.new project(name=filename_output)
 # Read input
 path = './Examples/Sandstone_1_12_800cube_TOTAL_POROSITY.raw'
 
-# Load the binary data
+# Load the binary data_normal
 with open(path, 'rb') as f:
     data = f.read()
 
-# Convert the binary data to a 3D array
+# Convert the binary data_normal to a 3D array
 data = np.frombuffer(data, dtype='uint8').reshape((800, 800, 800))
 
 # Read multiprocessing pool
@@ -39,7 +39,7 @@ porosity = ps.metrics.porosity(data)
 new_log_entry(f'porosity: {porosity}')
 
 start = time.time()
-#snow_output = ps.networks.snow2(phases=data, voxel_size=2.8e-6, parallelization={'cores': 24})
+#snow_output = ps.networks.snow2(phases=data_normal, voxel_size=2.8e-6, parallelization={'cores': 24})
 snow_output = ps.networks.snow2(phases=data, voxel_size=2.8e-6)
 end = time.time()
 

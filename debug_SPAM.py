@@ -3,7 +3,7 @@ import spam.deformation
 import spam.DIC
 import spam.datasets
 
-# Load data
+# Load data_normal
 snow = spam.datasets.loadSnow()
 
 # Define transformation to apply
@@ -13,7 +13,7 @@ transformation = {'t': [0.0, 3.0, 2.5],
 # Convert this into a deformation function
 Phi = spam.deformation.computePhi(transformation)
 
-# Apply this to snow data
+# Apply this to snow data_normal
 snowDeformed = spam.DIC.applyPhi(snow, Phi=Phi)
 
 # Show the difference between the initial and the deformed image.
