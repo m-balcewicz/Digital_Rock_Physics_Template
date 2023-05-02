@@ -6,4 +6,4 @@ __pycache__/
 projects/
 
 # Exceptions to ignore
-!\projects/testing/*
+!projects/testing/*
