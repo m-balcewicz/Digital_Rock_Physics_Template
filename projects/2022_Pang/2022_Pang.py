@@ -142,8 +142,8 @@ labels = [(0, 'Pore'),
 if make_figures == 1:
 
     # create figures directory if it doesn't exist
-    if not os.path.exists('figures'):
-        os.makedirs('figures')
+    if not os.path.exists('../../figures'):
+        os.makedirs('../../figures')
 
     if import_raw_files_800 == 1 and import_segmented_files_800 == 1:
         fig_1_12_800cube = visualize_plane(data_1_12_800cube, type=2, slice=subvolume_size, plane='xy',

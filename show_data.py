@@ -160,7 +160,6 @@ def visualize_plane(data, type, slice=None, plane='xy', subvolume=None, labels=N
             plt.xlabel('X-axis (voxel)')
             plt.ylabel('Y-axis (voxel)')
 
-
     if subvolume is not None:
         rect = plt.Rectangle(center - subvolume / 2, subvolume, subvolume, fill=False, linewidth=2, edgecolor='r')
         plt.gca().add_patch(rect)

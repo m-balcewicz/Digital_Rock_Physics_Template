@@ -1,4 +1,9 @@
+# List to ignore
 __pycache__/
 .idea/
 .DS_Store
+./projects/
+
+# Exceptions to ignore
+./projects/testing/*
 
