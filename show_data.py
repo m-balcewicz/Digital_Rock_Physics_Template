@@ -23,7 +23,8 @@ def main():
     print(' ')
 
 
-def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, resolution=None):
+def visualize_plane(data, type, slice=None, plane='xy', subvolume=None, labels=None, title=None, resolution=None):
+    cmap_set = 'ocean'
 
     dimensions = data.shape
     center = np.array([dimensions[0] / 2, dimensions[0] / 2])
@@ -31,12 +32,10 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
     # set the font size and typeface for all text in the plot
     plt.rcParams.update({'font.size': 14, 'font.family': 'Arial'})
 
-    if type == 1 and cmap_set is None:
+    if type == 1:
         cmap_set = 'gray'
-    elif type == 2 and cmap_set is None:
+    elif type == 2:
         cmap_set = 'viridis'
-    elif cmap_set is not None:
-        cmap_set = cmap_set
     else:
         print('## ERROR: Please define type = 1 (for RAW CT images) or type = 2 (for segmented CT images)')
         F1 = 'NaN'
