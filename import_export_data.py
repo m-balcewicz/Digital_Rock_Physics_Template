@@ -35,10 +35,6 @@ def main():
 def import_3d_tiff(path):
     # Load the 3D TIFF file
     data = io.imread(path)
-    # The data_normal is order in data_normal(z, x, y). Therefore, a transpose is needed:
-    # data = np.transpose(data, axes=(1, 2, 0))
-    # Finally, flip the data_normal in the y-axis:
-    # data = np.flip(data, axis=0)
 
     return data
 

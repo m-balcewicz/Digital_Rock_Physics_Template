@@ -24,6 +24,10 @@ def main():
 
 
 def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, resolution=None):
+    '''
+    data: is a numpy array in which each cell will be visualized as a voxel.
+    cmap_set: can be any matplotlib colormap that is available.
+    '''
 
     dimensions = data.shape
     center = np.array([dimensions[0] / 2, dimensions[0] / 2])
