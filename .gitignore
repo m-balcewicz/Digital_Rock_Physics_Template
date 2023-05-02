@@ -2,8 +2,8 @@
 __pycache__/
 .idea/
 .DS_Store
-./projects/
+.projects/
 
 # Exceptions to ignore
-!./projects/testing/*
+!.projects/testing/*
 
