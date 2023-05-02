@@ -1,4 +1,4 @@
-# Some Settings for .gitignore
+# Some settings for .gitignore
 # List to ignore
 __pycache__/
 .idea/
