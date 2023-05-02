@@ -23,11 +23,11 @@ def main():
     print(' ')
 
 
-def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, resolution=None):
-    '''
+def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None):
+    """
     data: is a numpy array in which each cell will be visualized as a voxel.
     cmap_set: can be any matplotlib colormap that is available.
-    '''
+    """
 
     dimensions = data.shape
     center = np.array([dimensions[0] / 2, dimensions[0] / 2])
@@ -60,7 +60,7 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
         # Invert the Y-axis
         ax.invert_xaxis()
 
-        if resolution is not None:
+        if voxel_size is not None:
             # Get the current Axes object
             ax = plt.gca()
             # Get the current tick locations
@@ -69,16 +69,16 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
 
             # Calculate the new tick labels based on the resolution
             # Check if resolution is an integer
-            if isinstance(resolution, int):
+            if isinstance(voxel_size, int):
                 # resolution is an integer
-                xticklabels = [f'{int(tick * resolution)}' for tick in xticks]
-                yticklabels = [f'{int(tick * resolution)}' for tick in yticks]
+                xticklabels = [f'{int(tick * voxel_size)}' for tick in xticks]
+                yticklabels = [f'{int(tick * voxel_size)}' for tick in yticks]
                 plt.xlabel('X-axis (µm)')
                 plt.ylabel('Y-axis (µm)')
             else:
                 # resolution is a float
-                xticklabels = [f'{tick * resolution:.1f}' for tick in xticks]
-                yticklabels = [f'{tick * resolution:.1f}' for tick in yticks]
+                xticklabels = [f'{tick * voxel_size:.1f}' for tick in xticks]
+                yticklabels = [f'{tick * voxel_size:.1f}' for tick in yticks]
                 plt.xlabel('X-axis (µm)')
                 plt.ylabel('Y-axis (µm)')
 
@@ -94,7 +94,7 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
 
     elif plane == 'xz':
         plt.pcolormesh(data[:, slice, :], cmap=cmap_set)
-        if resolution is not None:
+        if voxel_size is not None:
             # Get the current Axes object
             ax = plt.gca()
             # Get the current tick locations
@@ -103,16 +103,16 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
 
             # Calculate the new tick labels based on the resolution
             # Check if resolution is an integer
-            if isinstance(resolution, int):
+            if isinstance(voxel_size, int):
                 # resolution is an integer
-                xticklabels = [f'{int(tick * resolution)}' for tick in xticks]
-                yticklabels = [f'{int(tick * resolution)}' for tick in yticks]
+                xticklabels = [f'{int(tick * voxel_size)}' for tick in xticks]
+                yticklabels = [f'{int(tick * voxel_size)}' for tick in yticks]
                 plt.xlabel('X-axis (µm)')
                 plt.ylabel('Y-axis (µm)')
             else:
                 # resolution is a float
-                xticklabels = [f'{tick * resolution:.1f}' for tick in xticks]
-                yticklabels = [f'{tick * resolution:.1f}' for tick in yticks]
+                xticklabels = [f'{tick * voxel_size:.1f}' for tick in xticks]
+                yticklabels = [f'{tick * voxel_size:.1f}' for tick in yticks]
                 plt.xlabel('X-axis (µm)')
                 plt.ylabel('Y-axis (µm)')
 
@@ -133,7 +133,7 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
         # Invert the Y-axis
         ax.invert_xaxis()
 
-        if resolution is not None:
+        if voxel_size is not None:
             # Get the current Axes object
             ax = plt.gca()
             # Get the current tick locations
@@ -142,16 +142,16 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
 
             # Calculate the new tick labels based on the resolution
             # Check if resolution is an integer
-            if isinstance(resolution, int):
+            if isinstance(voxel_size, int):
                 # resolution is an integer
-                xticklabels = [f'{int(tick * resolution)}' for tick in xticks]
-                yticklabels = [f'{int(tick * resolution)}' for tick in yticks]
+                xticklabels = [f'{int(tick * voxel_size)}' for tick in xticks]
+                yticklabels = [f'{int(tick * voxel_size)}' for tick in yticks]
                 plt.xlabel('X-axis (µm)')
                 plt.ylabel('Y-axis (µm)')
             else:
                 # resolution is a float
-                xticklabels = [f'{tick * resolution:.1f}' for tick in xticks]
-                yticklabels = [f'{tick * resolution:.1f}' for tick in yticks]
+                xticklabels = [f'{tick * voxel_size:.1f}' for tick in xticks]
+                yticklabels = [f'{tick * voxel_size:.1f}' for tick in yticks]
                 plt.xlabel('X-axis (µm)')
                 plt.ylabel('Y-axis (µm)')
 
@@ -182,6 +182,24 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
         plt.title(f'{title}')
 
     return F1
+
+
+def save_fig(figure, name, format=None, dpi=None):
+    # Set default format to "png" if not specified
+    if format is None:
+        format = "png"
+    else:
+        format = format
+    # Set default DPI to 300 for "png" format if not specified
+    if dpi is None:
+        dpi = 300
+    else:
+        dpi = dpi
+    # Save the figure
+    figure.savefig(name + "." + format, dpi=dpi)
+
+    return
+
 
 # ------------------------------------------------------------------------------------------------- #
 

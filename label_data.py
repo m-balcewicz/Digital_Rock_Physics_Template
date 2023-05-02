@@ -6,7 +6,7 @@
 # website: https://rockphysics.org/people/members/martin-balcewicz
 # ------------------------------------------------------------------------------------------------- #
 # ------------------------------------------------------------------------------------------------- #
-import show_data as sc
+import plot_save_figure as sc
 import numpy as np
 
 

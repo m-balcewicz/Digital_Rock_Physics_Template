@@ -1,6 +1,6 @@
 import MakeModel
 from import_export_data import import_2d_tiff
-from show_data import visualize_plane
+from plot_save_figure import visualize_plane
 
 # dir_path_raw = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics/Examples/400cube_raw'
 # dir_path_segmented = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics/Examples/400cube_segmented'
@@ -90,7 +90,7 @@ from show_data import visualize_plane
 # -----------------------------------------------------------------------------
 # March 2023
 from MakeModel import make_model
-from show_data import visualize_plane
+from plot_save_figure import visualize_plane
 import import_export_data as ie
 from subvolume_data import create_subvolume
 import numpy as np

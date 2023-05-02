@@ -2,7 +2,7 @@ from scipy import ndimage
 from tifffile import tifffile
 
 from import_export_data import import_raw, import_2d_tiff, import_3d_tiff
-from show_data import visualize_plane
+from plot_save_figure import visualize_plane
 from fractions_data import get_fractions
 import platform
 import numpy as np
