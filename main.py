@@ -26,10 +26,13 @@ def add_project():
         return
 
     # Create a new Python script with some basic content
-    script_path = os.path.join(project_path, f'{project_id}.py')
+    script_path = os.path.join(project_path, f'main.py')
+    cwd = os.getcwd()
     try:
         with open(script_path, 'w') as file:
             file.write('# New Python script\n\n')
+            file.write('import sys')
+            file.write(f'sys.path.append(\'{cwd}\')')
             file.write('print("Hello, world!")\n')
     except OSError:
         print(f'Error creating Python script: {script_path}')
