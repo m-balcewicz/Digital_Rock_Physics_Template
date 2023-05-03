@@ -77,36 +77,63 @@ def import_2d_tiff(path, type):
     return data
 
 
-def import_raw(path, dimension=None):
-    # Define the shape of the data_normal
-    if dimension is not None:
-        x_size = dimension
-        y_size = dimension
-        z_size = dimension
-    else:
-        raise ValueError("No dimension was set!")
+def import_raw(path, dtype, endian=None, dimension=None):
+    """
+    Import raw data from a binary file.
 
-    # Read the data_normal from the file
-    with open(path, 'rb') as f:
-        data = np.fromfile(f, dtype=np.uint8)
+    Parameters:
+    path (str): Path to the binary file.
+    dtype (str): Data type of the binary file. Valid values are 'uint8' and 'uint16'.
+    endian (str): Endianness of the binary file, if applicable. Valid values are 'big' and 'little'.
+    dimension (int or list of 3 ints): Dimensions of the data. If an int is given, the dimensions are assumed to be equal.
+
+    Returns:
+    A numpy array containing the data.
+
+    Raises:
+    ValueError: If the dtype or endian parameter is invalid, or if the dimension parameter is invalid or missing.
+    IOError: If the file cannot be read.
+    """
+    # Define a dictionary mapping data types and byte orders to their respective numpy dtypes
+    dtype_dict = {'uint8': np.uint8,
+                  'uint16': {'little': np.dtype('<u2'),
+                             'big': np.dtype('>u2')}}
+
+    # Check if the data type and byte order are valid
+    if dtype not in dtype_dict:
+        raise ValueError(f"Invalid dtype value: {dtype}")
+
+    if endian is not None and endian not in dtype_dict[dtype]:
+        raise ValueError(f"Invalid endian value: {endian}")
+
+    # Define the shape of the data
+    if dimension is None:
+        raise ValueError("No dimension was set!")
+    elif isinstance(dimension, int):
+        z_size = y_size = x_size = dimension
+    elif isinstance(dimension, list) and len(dimension) == 3:
+        z_size, y_size, x_size = dimension
+    else:
+        raise ValueError("Invalid dimension value!")
+
+    # Read the data from the file
+    try:
+        with open(path, 'rb') as f:
+            data_type = dtype_dict[dtype]
+            if endian is not None:
+                data_type = data_type[endian]
+            data = np.fromfile(f, dtype=data_type)
+    except IOError as e:
+        raise IOError(f"Unable to read file: {e}") from e
 
     # Reshape the data_normal to the original shape
-    data = data.reshape((z_size, x_size, y_size))
+    data = data.reshape(z_size, y_size, x_size)
 
-    # The data_normal is order in data_normal(z, x, y). Therefore, a transpose is needed:
-    # data = np.transpose(data, axes=(1, 2, 0))
-
-    # Finally, flip the data_normal in the y-axis:
-    # data = np.flip(data, axis=1)
-
-    # if path == './examples/':
-    #     print('+++ examples data imported')
-    # else:
     # Check wrong label numbering
     data = check_binary(data)
 
+    # return data.reshape(z_size, y_size, x_size) if dimension is not None else data
     return data
-
 
 def import_heidi(path, z, x, y, d):
     """
@@ -163,7 +190,7 @@ def import_test(path, dimension=None):
         data = np.fromfile(f, dtype=np.uint8)
 
     # Reshape the data_normal to the original shape
-    data = data.reshape((z_size, y_size, x_size))
+    data = data.reshape(z_size, y_size, x_size)
 
     # The data_normal is order in data_normal(z, x, y). Therefore, a transpose is needed:
     # data = np.transpose(data, axes=(1, 2, 0))
