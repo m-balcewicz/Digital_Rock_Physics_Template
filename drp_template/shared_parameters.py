@@ -22,7 +22,7 @@ def main():
 def write_parameters(shape=None, dimension=None, resolution=None):
     if shape is None or shape is 1:
         # Define if model is a cube or not
-        shape = 1 # 1 is cube, can be -1
+        shape = 1  # 1 is cube, can be -1
         dimension = int(dimension)
         dimension_x = dimension
         dimension_y = dimension
@@ -40,20 +40,20 @@ def write_parameters(shape=None, dimension=None, resolution=None):
     else:
         raise ValueError('Error! You must set a resolution in µm per voxel')
 
-
     # Collect all parameters into a final array
-    arr =
+    # arr =
 
-    filename = os.path.join('./', 'Parfile')
+    filename = os.path.join('../', 'Parfile')
     # Write Parfile to local directory
-    with open(filename, "w") as f:
-        f.write(arr)
+    # with open(filename, "w") as f:
+    #     f.write(arr)
 
     return
+
 
 def read_parameters():
-
     return
+
 
 # ------------------------------------------------------------------------------------------------- #
 

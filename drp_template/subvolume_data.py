@@ -35,16 +35,16 @@ def create_subvolume(data, set_subvolume, name, directory=None):
     varname = str(name + '_' + str(set_subvolume) + 'cube')
 
     if directory is not None:
-        path_temp = os.path.join(directory, 'subvolume')
+        path_temp = os.path.join(directory, '../projects/testing/subvolume')
         if not os.path.exists(path_temp):
             os.mkdir(path_temp)
         ie.export_raw(data_subvolume, path=path_temp, varname=varname)
 
     else:
         # create the subvolume directory if it does not already exist
-        if not os.path.exists('subvolume'):
-            os.mkdir('subvolume')
+        if not os.path.exists('../projects/testing/subvolume'):
+            os.mkdir('../projects/testing/subvolume')
             # Save new data_subvolume as a 'uint8' raw file
-            ie.export_raw(data_subvolume, path='subvolume', varname=varname)
+            ie.export_raw(data_subvolume, path='../projects/testing/subvolume', varname=varname)
 
     return data_subvolume

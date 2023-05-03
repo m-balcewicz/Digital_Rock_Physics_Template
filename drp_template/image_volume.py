@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from test.testing import load_test_data
+from examples.data import load_100cube
 
-data = load_test_data()
+data = load_100cube()
 
 # create a figure and 3D axis
 fig = plt.figure()

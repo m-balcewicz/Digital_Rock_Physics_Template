@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from test.testing import load_test_data
+from examples.data import load_100cube
 
-data = load_test_data()
+data = load_100cube()
 
 # Plot the xy slice
 fig = plt.figure(figsize=(10, 8))

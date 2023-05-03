@@ -1,4 +1,4 @@
 # New Python script
-# test
+# examples
 
 print("Hello, world!")

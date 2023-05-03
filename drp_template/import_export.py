@@ -11,7 +11,7 @@
 import numpy as np
 import vtk
 from skimage import io
-from control_data import check_binary
+from drp_template.data_review import check_binary
 import struct
 import os
 from tifffile import tifffile
@@ -99,8 +99,8 @@ def import_raw(path, dimension=None):
     # Finally, flip the data_normal in the y-axis:
     # data = np.flip(data, axis=1)
 
-    # if path == './test/':
-    #     print('+++ test data imported')
+    # if path == './examples/':
+    #     print('+++ examples data imported')
     # else:
     # Check wrong label numbering
     data = check_binary(data)
@@ -163,7 +163,7 @@ def import_test(path, dimension=None):
         data = np.fromfile(f, dtype=np.uint8)
 
     # Reshape the data_normal to the original shape
-    data = data.reshape((z_size, x_size, y_size))
+    data = data.reshape((z_size, y_size, x_size))
 
     # The data_normal is order in data_normal(z, x, y). Therefore, a transpose is needed:
     # data = np.transpose(data, axes=(1, 2, 0))
@@ -171,7 +171,7 @@ def import_test(path, dimension=None):
     # Finally, flip the data_normal in the y-axis:
     # data = np.flip(data, axis=1)
 
-    print('+++ test data imported')
+    print('+++ examples data imported')
 
     return data
 

@@ -1,10 +1,8 @@
-import numpy as np
 from vtk.numpy_interface import dataset_adapter as dsa
-from vtk.util.numpy_support import numpy_to_vtk
 from paraview.simple import *
-from test.testing import load_test_data
+from examples.data import load_100cube
 
-data = load_test_data()
+data = load_100cube()
 
 # Create a VTK dataset from the array
 dataset = dsa.numpyTovtkDataArray(data.ravel(), 'Scalars')

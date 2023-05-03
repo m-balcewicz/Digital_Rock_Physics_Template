@@ -1,18 +1,11 @@
-from scipy import ndimage
-from tifffile import tifffile
-
-from import_export_data import import_raw, import_2d_tiff, import_3d_tiff
-from plot_save_figure import visualize_plane
-from fractions_data import get_fractions
-import platform
-import numpy as np
-from tqdm import tqdm
-import cc3d
-import import_export_data as ie
+from drp_template.import_export_data import import_raw, import_2d_tiff, import_3d_tiff
+from drp_template.plot_save_figure import visualize_plane
+from drp_template.fractions_data import get_fractions
+from drp_template import import_export_data as ie
 
 data_100cube_raw = import_raw('./subvolume/100cube.raw', dimension=100)
-data_100cube_2d_tiff = import_2d_tiff('../../subvolume/2D_Tiff', type=2)
-data_100cube_3d_tiff = import_3d_tiff('../../subvolume/3D_Tiff/100cube.tif')
+data_100cube_2d_tiff = import_2d_tiff('subvolume/2D_Tiff', type=2)
+data_100cube_3d_tiff = import_3d_tiff('subvolume/3D_Tiff/100cube.tif')
 
 slice_no = 99
 
@@ -29,7 +22,7 @@ fig_data_1_12_100cube_3d_tiff.show()
 total_porosity = get_fractions(data_100cube_2d_tiff)
 print(total_porosity)
 
-ie.export_raw(data_100cube_raw, path='../../subvolume', varname='export_4')
+ie.export_raw(data_100cube_raw, path='subvolume', varname='export_4')
 
 # labels_out = cc3d.connected_components(data_100cube, connectivity=6)
 # fig_connected_6 = visualize_plane(labels_out, type=2, slice=99)
