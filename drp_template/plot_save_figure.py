@@ -25,8 +25,28 @@ def main():
 
 def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None):
     """
-    data: is a numpy array in which each cell will be visualized as a voxel.
-    cmap_set: can be any matplotlib colormap that is available.
+    This is some text.
+
+    Parameters:
+    -----------
+    data :
+        is a numpy array in which each cell will be visualized as a voxel.
+    type :
+        Data type can be 'raw' or 'binary'
+    cmap_set :
+        can be any matplotlib colormap that is available.
+    slice :
+        some text
+    plane :
+        some text
+    subvolume :
+        some text
+    labels :
+        some text
+    title :
+        some text
+    voxel_size :
+        some text
     """
 
     dimensions = data.shape
@@ -35,9 +55,9 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
     # set the font size and typeface for all text in the plot
     plt.rcParams.update({'font.size': 14, 'font.family': 'Arial'})
 
-    if type == 1 and cmap_set is None:
+    if type == 'raw' and cmap_set is None:
         cmap_set = 'gray'
-    elif type == 2 and cmap_set is None:
+    elif type == 'binary' and cmap_set is None:
         cmap_set = 'viridis'
     elif cmap_set is not None:
         cmap_set = cmap_set
@@ -170,7 +190,7 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
         plt.gca().add_patch(rect)
 
     plt.axis('tight')
-    if labels is not None and type == 2:
+    if labels is not None and type == 'binary':
         cbar = plt.colorbar(orientation='vertical', ticks=[m for m in range(len(labels))])
         cbar.ax.set_yticklabels([label[1] for label in labels])
     else:

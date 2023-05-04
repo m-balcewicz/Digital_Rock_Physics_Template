@@ -19,6 +19,7 @@ from drp_template.data_review import check_binary
 import struct
 import os
 from tifffile import tifffile
+
 '''
 This script will import and export a range of data sets, e.g. tiff sequences or 3D-raw files. 
 If tiff sequences are selected than the user has... 
@@ -56,39 +57,35 @@ def import_2d_tiff(path, type):
 
     """
     print('importing . . .')
-    if type == 'raw':
-        file_Listing = io.imread_collection(f'{path}/*.tif*')
-        first_image = file_Listing[0]
-        rows, cols = first_image.shape
-        pages = len(file_Listing)
-        data = np.zeros((rows, cols, pages))
-        for m in range(pages):
-            page = file_Listing[m]
-            data[:, :, m] = page
-        print('+++ RAW CT image is loaded')
+    try:
+        if type == 'raw':
+            file_listing = io.imread_collection(f'{path}/*.tif*', plugin='tifffile')
+            first_image = file_listing[0]
+            cols, rows = first_image.shape
+            slices = len(file_listing)
+            data = np.zeros((slices, cols, rows))
+            for m in range(slices):
+                page = file_listing[m]
+                data[m, :, :] = page
 
-    elif type == 'segmented':
-        file_Listing = io.imread_collection(f'{path}/*.tif*')
-        first_image = file_Listing[0]
-        rows, cols = first_image.shape
-        pages = len(file_Listing)
-        data = np.zeros((rows, cols, pages))
-        for m in range(pages):
-            data[:, :, m] = file_Listing[m]
-        data = data.astype(np.int8)
-        print('+++ segmented CT image is loaded')
+        elif type == 'binary':
+            file_listing = io.imread_collection(f'{path}/*.tif*')
+            first_image = file_listing[0]
+            rows, cols = first_image.shape
+            slices = len(file_listing)
+            data = np.zeros((slices, rows, cols))
+            for m in range(slices):
+                data[m, :, :] = file_listing[m]
+            data = data.astype(np.int8)
 
-        # Check wrong label numbering
-        data = check_binary(data)
+            # Check wrong label numbering
+            data = check_binary(data)
 
-    else:
-        print('## ERROR: Please define type = 1 (for RAW CT images) or type = 2 (for segmented CT images)')
-        binaries = 'NaN'
-        return
+    except IOError as e:
+        raise IOError(f"Unable to read file: {e}") from e
 
-    # Flip the y-axis of the array
-    data = np.flip(data, axis=0)
-
+    # # Flip the y-axis of the array
+    data = np.flip(data, axis=1)
     return data
 
 
@@ -315,7 +312,6 @@ def export_raw(data, path=None, varname=None, dtype='unit8', endian='little'):
            f"dimension (z, y, x): {data.shape}\n" \
            f"type: {dtype}\n" \
            f"endian: {endian}\n"
-
 
     with open(os.path.join(path, varname + '_info.txt'), 'w') as f:
         f.write(info)
