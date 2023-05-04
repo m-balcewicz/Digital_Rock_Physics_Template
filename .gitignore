@@ -6,5 +6,5 @@ __pycache__/
 projects/
 !projects/
 projects/*
-!projects/testing/
+!projects/debugging/
 

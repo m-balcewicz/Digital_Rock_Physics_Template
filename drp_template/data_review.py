@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 
 
@@ -12,3 +13,23 @@ def check_binary(data):
         data = data - 1
 
     return data
+
+
+def check_endian(data):
+    endian_data = data.dtype.byteorder
+    endian_native = sys.byteorder
+    if endian_data == '<':
+        print("little-endian byte order")
+    elif endian_data == '>':
+        print("big-endian byte order")
+    elif endian_data == '=':
+        if endian_native == 'little':
+            print("little-endian byte order")
+        elif endian_native == 'big':
+            print("big-endian byte order")
+        else:
+            raise ValueError("Invalid endian!")
+    else:
+        raise ValueError("Invalid endian!")
+
+    return endian_data

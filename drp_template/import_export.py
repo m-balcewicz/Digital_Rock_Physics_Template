@@ -8,14 +8,17 @@
 # 2 = segmented
 # ------------------------------------------------------------------------------------------------- #
 # ------------------------------------------------------------------------------------------------- #
+import sys
+
 import numpy as np
 import vtk
 from skimage import io
+
+import drp_template
 from drp_template.data_review import check_binary
 import struct
 import os
 from tifffile import tifffile
-
 '''
 This script will import and export a range of data sets, e.g. tiff sequences or 3D-raw files. 
 If tiff sequences are selected than the user has... 
@@ -33,6 +36,7 @@ def main():
 
 
 def import_3d_tiff(path):
+    print('importing . . .')
     # Load the 3D TIFF file
     data = io.imread(path)
 
@@ -40,7 +44,19 @@ def import_3d_tiff(path):
 
 
 def import_2d_tiff(path, type):
-    if type == 1:
+    """
+    Import raw data from a binary file.
+
+    Parameters:
+    -----------
+    path : str
+        Path to directory with multiple 2D tiff files.
+    type : str
+        Data type of the binary file. Valid values are 'raw' and 'segmented'.
+
+    """
+    print('importing . . .')
+    if type == 'raw':
         file_Listing = io.imread_collection(f'{path}/*.tif*')
         first_image = file_Listing[0]
         rows, cols = first_image.shape
@@ -49,9 +65,9 @@ def import_2d_tiff(path, type):
         for m in range(pages):
             page = file_Listing[m]
             data[:, :, m] = page
-        binaries = np.unique(data)
-        print('## RAW CT image is loaded')
-    elif type == 2:
+        print('+++ RAW CT image is loaded')
+
+    elif type == 'segmented':
         file_Listing = io.imread_collection(f'{path}/*.tif*')
         first_image = file_Listing[0]
         rows, cols = first_image.shape
@@ -60,8 +76,7 @@ def import_2d_tiff(path, type):
         for m in range(pages):
             data[:, :, m] = file_Listing[m]
         data = data.astype(np.int8)
-        binaries = np.unique(data)
-        print('## segmented CT image is loaded')
+        print('+++ segmented CT image is loaded')
 
         # Check wrong label numbering
         data = check_binary(data)
@@ -82,18 +97,27 @@ def import_raw(path, dtype, endian=None, dimension=None):
     Import raw data from a binary file.
 
     Parameters:
-    path (str): Path to the binary file.
-    dtype (str): Data type of the binary file. Valid values are 'uint8' and 'uint16'.
-    endian (str): Endianness of the binary file, if applicable. Valid values are 'big' and 'little'.
-    dimension (int or list of 3 ints): Dimensions of the data. If an int is given, the dimensions are assumed to be equal.
+    -----------
+    path : str
+        Path to the binary file.
+    dtype : str
+        Data type of the binary file. Valid values are 'uint8' and 'uint16'.
+    endian : str
+        Endianness of the binary file, if applicable. Valid values are 'big' and 'little'.
+    dimension : int or list of 3 ints
+        Dimensions of the data. If an int is given, the dimensions are assumed to be equal.
 
     Returns:
+    --------
     A numpy array containing the data.
 
     Raises:
-    ValueError: If the dtype or endian parameter is invalid, or if the dimension parameter is invalid or missing.
-    IOError: If the file cannot be read.
+    --------
+    ValueError : If the dtype or endian parameter is invalid, or if the dimension parameter is invalid or missing.
+
+    IOError : If the file cannot be read.
     """
+    print('importing . . .')
     # Define a dictionary mapping data types and byte orders to their respective numpy dtypes
     dtype_dict = {'uint8': np.uint8,
                   'uint16': {'little': np.dtype('<u2'),
@@ -134,6 +158,7 @@ def import_raw(path, dtype, endian=None, dimension=None):
 
     # return data.reshape(z_size, y_size, x_size) if dimension is not None else data
     return data
+
 
 def import_heidi(path, z, x, y, d):
     """
@@ -191,30 +216,109 @@ def import_test(path, dimension=None):
 
     # Reshape the data_normal to the original shape
     data = data.reshape(z_size, y_size, x_size)
-
-    # The data_normal is order in data_normal(z, x, y). Therefore, a transpose is needed:
-    # data = np.transpose(data, axes=(1, 2, 0))
-
-    # Finally, flip the data_normal in the y-axis:
-    # data = np.flip(data, axis=1)
-
     print('+++ examples data imported')
 
     return data
 
 
-def export_raw(data, path, varname):
+def export_raw(data, path=None, varname=None, dtype='unit8', endian='little'):
+    """
+    Export raw data to a binary file with optional dimension, dtype and endian specification.
+    Also writes an ASCII file with information about the exported data.
+
+    Parameters:
+    -----------
+    data : ndarray
+        The data to be exported.
+    path : str
+        The directory path to save the exported data.
+    varname : str
+        The name of the variable being exported.
+    dtype : str, optional
+        The data type of the exported data. Can be 'uint8' or 'uint16'. Default is 'uint8'.
+    endian : str, optional
+        The byte order of the exported data, if dtype is 'uint16'. Can be 'big' or 'little'. Default is None.
+
+    Returns:
+    --------
+    None
+    """
     # Create the directory if it doesn't exist
-    os.makedirs(path, exist_ok=True)
+    if path is None:
+        path = os.getcwd()
+    else:
+        os.makedirs(path, exist_ok=True)
+
+    if varname is None:
+        varname = 'output'
 
     # Flatten the data array
     flat_data = data.flatten()
 
     # Pack the flattened data array into a bytes object
-    packed_data = struct.pack(f'>{data.size}B', *flat_data)  # data.size indicating the total number of bytes
+    endian_check_data = data.dtype.byteorder
+    endian_check_sys = sys.byteorder
 
-    with open(os.path.join(path, varname + '.raw'), 'wb') as f:
-        f.write(packed_data)
+    if dtype == 'uint8':
+        # Flatten the data array
+        flat_data = data.flatten()
+
+        packed_data = struct.pack(f'>{data.size}B', *flat_data)
+
+        # Write the packed data to file
+        with open(os.path.join(path, varname + '.raw'), 'wb') as f:
+            f.write(packed_data)
+
+    elif dtype == 'uint16':
+        if endian == 'little':
+            if endian_check_data == '<':
+                with open(os.path.join(path, varname + '_le.raw'), 'wb') as f:
+                    data.tofile(f, sep='', format='<')
+
+            elif endian_check_data == '>':
+                with open(os.path.join(path, varname + '_le.raw'), 'wb') as f:
+                    data.tofile(f, sep='', format='<')
+
+            elif endian_check_data == '=' and endian_check_sys == 'big':
+                with open(os.path.join(path, varname + '_le.raw'), 'wb') as f:
+                    data.tofile(f, sep='', format='<')
+
+            elif endian_check_data == '=' and endian_check_sys == 'little':
+                with open(os.path.join(path, varname + '_le.raw'), 'wb') as f:
+                    data.tofile(f, sep='', format='<')
+
+        elif endian == 'big':
+            if endian_check_data == '<':
+                with open(os.path.join(path, varname + '_be.raw'), 'wb') as f:
+                    data.tofile(f, sep='', format='>')
+
+            elif endian_check_data or endian_check_sys == '>':
+                with open(os.path.join(path, varname + '_be.raw'), 'wb') as f:
+                    data.tofile(f, sep='', format='>')
+
+            elif endian_check_data == '=' and endian_check_sys == 'little':
+                with open(os.path.join(path, varname + '_be.raw'), 'wb') as f:
+                    data.tofile(f, sep='', format='>')
+
+            elif endian_check_data == '=' and endian_check_sys == 'big':
+                with open(os.path.join(path, varname + '_be.raw'), 'wb') as f:
+                    data.tofile(f, sep='', format='>')
+        else:
+            raise ValueError("Invalid endian value!")
+    else:
+        raise ValueError("Invalid dtype value!")
+
+    # Write the ASCII file with information about the exported data
+    info = f"This data was created by Digital Rock Physics Template\n" \
+           f"by Martin Balcewicz (martin.balcewicz@rockphysics.org)\n\n" \
+           f"data: {varname}\n" \
+           f"dimension (z, y, x): {data.shape}\n" \
+           f"type: {dtype}\n" \
+           f"endian: {endian}\n"
+
+
+    with open(os.path.join(path, varname + '_info.txt'), 'w') as f:
+        f.write(info)
 
 
 def export_3d_tif(data, path, varname):
@@ -254,7 +358,7 @@ def export_2d_tif(data, path, varname):
 def export_vtk(array_3d, path, varname):
     # Validate input: must be a 3D numpy array
     assert isinstance(array_3d, np.ndarray) and array_3d.ndim == 3, \
-           "Input data must be a 3D numpy array"
+        "Input data must be a 3D numpy array"
 
     # Create the directory if it doesn't exist
     os.makedirs(path, exist_ok=True)
@@ -293,6 +397,7 @@ def export_vtk(array_3d, path, varname):
     writer.Write()
 
     print(f"VTK file saved to {output_filename}")
+
 
 # ------------------------------------------------------------------------------------------------- #
 
