@@ -1,8 +1,8 @@
 # debugging ideas
-from examples.data import load_100cube
+from examples.data import load_raw_cube
 
 
-data = load_100cube()
+data = load_raw_cube()
 
 # path_out = '/subvolume'
 # # ie.export_vtk(data, path=path_out, varname='export')

@@ -8,12 +8,6 @@
 # ------------------------------------------------------------------------------------------------- #
 import os
 
-import numpy as np
-from tabulate import tabulate
-
-from import_export_data import import_raw
-
-
 def main():
     print('-------------------------------------------------------------------------------------------------')
     print('-------------------------------------------------------------------------------------------------')
@@ -31,9 +25,9 @@ def save_table(table, varname='table', path=None):
         filename = os.path.join(path, f"{varname}.txt")
     else:
         # create figures directory if it doesn't exist
-        if not os.path.exists('../projects/2022_Pang/tables'):
-            os.makedirs('../projects/2022_Pang/tables')
-        filename = os.path.join("../projects/2022_Pang/tables", f"{varname}.txt")
+        if not os.path.exists('tables'):
+            os.makedirs('tables')
+        filename = os.path.join("tables", f"{varname}.txt")
 
     # Write the table to the txt file with the increasing number in the filename
     with open(filename, "w") as f:

@@ -6,10 +6,10 @@
 import numpy as np
 import os
 from datetime import datetime
-import import_export_data as ie
+import drp_template.import_export as ie
 
 
-def create_subvolume(data, set_subvolume, name, directory=None):
+def create_subvolume(data, set_subvolume, name, directory=None, dtype='uint8', endian='little'):
     x, y, z = data.shape
 
     # calculate center of sample
@@ -35,16 +35,16 @@ def create_subvolume(data, set_subvolume, name, directory=None):
     varname = str(name + '_' + str(set_subvolume) + 'cube')
 
     if directory is not None:
-        path_temp = os.path.join(directory, '../projects/debugging/subvolume')
+        path_temp = os.path.join(directory, 'subvolume')
         if not os.path.exists(path_temp):
             os.mkdir(path_temp)
         ie.export_raw(data_subvolume, path=path_temp, varname=varname)
 
     else:
         # create the subvolume directory if it does not already exist
-        if not os.path.exists('../projects/debugging/subvolume'):
-            os.mkdir('../projects/debugging/subvolume')
+        if not os.path.exists('subvolume'):
+            os.mkdir('subvolume')
             # Save new data_subvolume as a 'uint8' raw file
-            ie.export_raw(data_subvolume, path='../projects/debugging/subvolume', varname=varname)
+            ie.export_raw(data_subvolume, path='subvolume', varname=varname, dtype=dtype, endian=endian)
 
     return data_subvolume

@@ -8,11 +8,6 @@
 # ------------------------------------------------------------------------------------------------- #
 import numpy as np
 import pandas as pd
-from tabulate import tabulate
-
-from import_export_data import import_raw
-from save_table import save_table
-
 
 def main():
     print('-------------------------------------------------------------------------------------------------')

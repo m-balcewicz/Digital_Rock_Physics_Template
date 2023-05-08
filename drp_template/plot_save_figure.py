@@ -52,9 +52,9 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
     dimensions = data.shape
     center = np.array([dimensions[0] / 2, dimensions[0] / 2])
 
-    # set the font size and typeface for all text in the plot
-    plt.rcParams.update({'font.size': 14, 'font.family': 'Arial'})
-
+    # # set the font size and typeface for all text in the plot
+    # plt.rcParams.update({'font.size': 14, 'font.family': 'Arial'})
+    #
     if type == 'raw' and cmap_set is None:
         cmap_set = 'gray'
     elif type == 'binary' and cmap_set is None:
@@ -63,26 +63,54 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
         cmap_set = cmap_set
     else:
         print('## ERROR: Please define type = 1 (for RAW CT images) or type = 2 (for segmented CT images)')
-        F1 = 'NaN'
+        fig = 'NaN'
 
-    F1 = plt.figure()
+    # get the minimum and maximum values of the data
+    vmin = np.amin(data)
+    vmax = np.amax(data)
 
     if slice is not None:
         slice = slice
-
     else:
         slice = int(dimensions[0] / 2)
 
     if plane == 'yz':
-        plt.pcolormesh(data[:, :, slice], cmap=cmap_set)
-        # Get the current Axes object
-        ax = plt.gca()
+        # set the font size and typeface for all text in the plot
+        plt.rcParams.update({'font.size': 18, 'font.family': 'Arial'})
+
+        fig = plt.figure(figsize=(8, 6))
+        ax = fig.add_axes([0.15, 0.1, 0.75, 0.8])  # left, bottom, width, height
+
+        im = ax.pcolormesh(data[:, :, slice], cmap=cmap_set, vmin=vmin, vmax=vmax)
+        ax.set_aspect('equal', 'box')
+
+        # Add a colorbar to the left of the plot
+        cax = fig.add_axes([0.18, 0.1, 0.03, 0.8])  # left, bottom, width, height
+        cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+        cbar.ax.yaxis.tick_left()
+
+        if labels is not None and type == 'binary':
+            cbar.ax.yaxis.set_label_position("right")
+            cbar.ax.yaxis.tick_right()
+            cbar.set_ticks(np.arange(len(labels)))
+            cbar.ax.set_yticklabels([label.replace('_', '\n') for label in labels])
+        else:
+            cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+
+        cbar.ax.yaxis.tick_left()
+
+        plt.axis('tight')
+
         # Invert the Y-axis
         ax.invert_xaxis()
 
+        # Move the y-axis to the right side
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+        ax.spines["left"].set_visible(False)
+        ax.spines["right"].set_visible(True)
+
         if voxel_size is not None:
-            # Get the current Axes object
-            ax = plt.gca()
             # Get the current tick locations
             xticks = ax.get_xticks()
             yticks = ax.get_yticks()
@@ -93,14 +121,14 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
                 # resolution is an integer
                 xticklabels = [f'{int(tick * voxel_size)}' for tick in xticks]
                 yticklabels = [f'{int(tick * voxel_size)}' for tick in yticks]
-                plt.xlabel('X-axis (µm)')
-                plt.ylabel('Y-axis (µm)')
+                ax.set_xlabel('Y-axis (µm)')
+                ax.set_ylabel('Z-axis (µm)')
             else:
                 # resolution is a float
                 xticklabels = [f'{tick * voxel_size:.1f}' for tick in xticks]
                 yticklabels = [f'{tick * voxel_size:.1f}' for tick in yticks]
-                plt.xlabel('X-axis (µm)')
-                plt.ylabel('Y-axis (µm)')
+                ax.set_xlabel('Y-axis (µm)')
+                ax.set_ylabel('Z-axis (µm)')
 
             # Set the new tick locations and labels
             ax.xaxis.set_major_locator(FixedLocator(xticks))
@@ -108,15 +136,51 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
             ax.yaxis.set_major_locator(FixedLocator(yticks))
             ax.yaxis.set_major_formatter(FixedFormatter(yticklabels))
         else:
-            # Set the Y-axis and Z-axis labels
-            plt.xlabel('Y-axis (voxel)')
-            plt.ylabel('Z-axis (voxel)')
+            # Set the x-axis and y-axis titles
+            ax.set_xlabel('Y-axis (voxel)')
+            ax.set_ylabel('Z-axis (voxel)')
+
+        # Add a title if given
+        if title is not None:
+            plt.title(f'{title}', fontsize=20, fontweight='bold', y=1.01, x=10.5, ha='center')
 
     elif plane == 'xz':
-        plt.pcolormesh(data[:, slice, :], cmap=cmap_set)
+        # set the font size and typeface for all text in the plot
+        plt.rcParams.update({'font.size': 18, 'font.family': 'Arial'})
+
+        fig = plt.figure(figsize=(8, 6))
+        ax = fig.add_axes([0.15, 0.1, 0.75, 0.8])  # left, bottom, width, height
+
+        im = ax.pcolormesh(data[:, slice, :], cmap=cmap_set, vmin=vmin, vmax=vmax)
+        ax.set_aspect('equal', 'box')
+
+        # Add a colorbar to the right of the plot
+        cax = fig.add_axes([0.84, 0.1, 0.03, 0.8])  # left, bottom, width, height
+        cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+        cbar.ax.yaxis.tick_right()
+
+        if labels is not None and type == 'binary':
+            cbar.ax.yaxis.set_label_position("left")
+            cbar.ax.yaxis.tick_left()
+            cbar.set_ticks(np.arange(len(labels)))
+            cbar.ax.set_yticklabels([label.replace('_', '\n') for label in labels])
+        else:
+            cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+
+        cbar.ax.yaxis.tick_right()
+
+        plt.axis('tight')
+
+        # # Invert the Y-axis
+        # ax.invert_xaxis()
+
+        # Move the y-axis to the left side
+        ax.yaxis.tick_left()
+        ax.yaxis.set_label_position("left")
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_visible(True)
+
         if voxel_size is not None:
-            # Get the current Axes object
-            ax = plt.gca()
             # Get the current tick locations
             xticks = ax.get_xticks()
             yticks = ax.get_yticks()
@@ -127,14 +191,14 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
                 # resolution is an integer
                 xticklabels = [f'{int(tick * voxel_size)}' for tick in xticks]
                 yticklabels = [f'{int(tick * voxel_size)}' for tick in yticks]
-                plt.xlabel('X-axis (µm)')
-                plt.ylabel('Y-axis (µm)')
+                ax.set_xlabel('X-axis (µm)')
+                ax.set_ylabel('Z-axis (µm)')
             else:
                 # resolution is a float
                 xticklabels = [f'{tick * voxel_size:.1f}' for tick in xticks]
                 yticklabels = [f'{tick * voxel_size:.1f}' for tick in yticks]
-                plt.xlabel('X-axis (µm)')
-                plt.ylabel('Y-axis (µm)')
+                ax.set_xlabel('X-axis (µm)')
+                ax.set_ylabel('Z-axis (µm)')
 
             # Set the new tick locations and labels
             ax.xaxis.set_major_locator(FixedLocator(xticks))
@@ -142,66 +206,112 @@ def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume
             ax.yaxis.set_major_locator(FixedLocator(yticks))
             ax.yaxis.set_major_formatter(FixedFormatter(yticklabels))
         else:
-            # Set the X-axis and Z-axis labels
-            plt.xlabel('X-axis (voxel)')
-            plt.ylabel('Z-axis (voxel)')
+            # Set the x-axis and y-axis titles
+            ax.set_xlabel('X-axis (voxel)')
+            ax.set_ylabel('Z-axis (voxel)')
+
+        # Add a title if given
+        if title is not None:
+            plt.title(f'{title}', fontsize=20, fontweight='bold', y=1.01, x=-10.5, ha='center')
 
     elif plane == 'xy':
-        plt.pcolormesh(data[slice, :, :], cmap=cmap_set)
-        # Get the current Axes object
-        ax = plt.gca()
-        # Invert the Y-axis
+        # set the font size and typeface for all text in the plot
+        plt.rcParams.update({'font.size': 18, 'font.family': 'Arial'})
+
+        fig = plt.figure(figsize=(8, 6))
+        ax = fig.add_axes([0.15, 0.1, 0.75, 0.8])  # left, bottom, width, height
+
+        im = ax.pcolormesh(data[slice, :, :], cmap=cmap_set, vmin=vmin, vmax=vmax)
+        ax.set_aspect('equal', 'box')
+
+
+        # Add a colorbar to the left of the plot
+        cax = fig.add_axes([0.17, 0.1, 0.03, 0.8])  # left, bottom, width, height
+        cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+        cbar.ax.yaxis.tick_left()
+
+        if labels is not None and type == 'binary':
+            cbar.ax.yaxis.set_label_position("right")
+            cbar.ax.yaxis.tick_right()
+            cbar.set_ticks(np.arange(len(labels)))
+            cbar.ax.set_yticklabels([label.replace('_', '\n') for label in labels])
+        else:
+            cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+
+        cbar.ax.yaxis.tick_left()
+
+
+        plt.axis('tight')
+
         ax.invert_xaxis()
 
+        # Move the y-axis to the right side
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+        ax.spines["left"].set_visible(False)
+        ax.spines["right"].set_visible(True)
+
         if voxel_size is not None:
-            # Get the current Axes object
-            ax = plt.gca()
             # Get the current tick locations
             xticks = ax.get_xticks()
             yticks = ax.get_yticks()
 
-            # Calculate the new tick labels based on the resolution
-            # Check if resolution is an integer
+            # # Calculate the new tick labels based on the resolution
+            # # Check if resolution is an integer
+            # if isinstance(voxel_size, int):
+            #     # resolution is an integer
+            #     xticklabels = [f'{int(tick * voxel_size)}' for tick in xticks]
+            #     yticklabels = [f'{int(tick * voxel_size)}' for tick in yticks]
+            #     ax.set_xlabel('X-axis (µm)')
+            #     ax.set_ylabel('Y-axis (µm)')
+            # else:
+            #     # resolution is a float
+            #     xticklabels = [f'{tick * voxel_size:.1f}' for tick in xticks]
+            #     yticklabels = [f'{tick * voxel_size:.1f}' for tick in yticks]
+            #     ax.set_xlabel('X-axis (µm)')
+            #     ax.set_ylabel('Y-axis (µm)')
+            #
+            # # Set the new tick locations and labels
+            # ax.xaxis.set_major_locator(FixedLocator(xticks))
+            # ax.xaxis.set_major_formatter(FixedFormatter(xticklabels))
+            # ax.yaxis.set_major_locator(FixedLocator(yticks))
+            # ax.yaxis.set_major_formatter(FixedFormatter(yticklabels))
+
+            # Calculate the new tick labels based on the resolution and desired number of ticks
             if isinstance(voxel_size, int):
                 # resolution is an integer
-                xticklabels = [f'{int(tick * voxel_size)}' for tick in xticks]
-                yticklabels = [f'{int(tick * voxel_size)}' for tick in yticks]
-                plt.xlabel('X-axis (µm)')
-                plt.ylabel('Y-axis (µm)')
+                xticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(xticks[0], xticks[-1], 4)]
+                yticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(yticks[0], yticks[-1], 4)]
+                ax.set_xlabel('X-axis (µm)')
+                ax.set_ylabel('Y-axis (µm)')
             else:
                 # resolution is a float
-                xticklabels = [f'{tick * voxel_size:.1f}' for tick in xticks]
-                yticklabels = [f'{tick * voxel_size:.1f}' for tick in yticks]
-                plt.xlabel('X-axis (µm)')
-                plt.ylabel('Y-axis (µm)')
+                xticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(xticks[0], xticks[-1], 4)]
+                yticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(yticks[0], yticks[-1], 4)]
+                ax.set_xlabel('X-axis (µm)')
+                ax.set_ylabel('Y-axis (µm)')
 
             # Set the new tick locations and labels
-            ax.xaxis.set_major_locator(FixedLocator(xticks))
+            ax.xaxis.set_major_locator(FixedLocator(np.linspace(xticks[0], xticks[-1], 4)))
             ax.xaxis.set_major_formatter(FixedFormatter(xticklabels))
-            ax.yaxis.set_major_locator(FixedLocator(yticks))
+            ax.yaxis.set_major_locator(FixedLocator(np.linspace(yticks[0], yticks[-1], 4)))
             ax.yaxis.set_major_formatter(FixedFormatter(yticklabels))
-        else:
-            # Set the X-axis and Y-axis labels
-            plt.xlabel('X-axis (voxel)')
-            plt.ylabel('Y-axis (voxel)')
 
+        else:
+            # Set the x-axis and y-axis titles
+            ax.set_xlabel('X-axis (voxel)')
+            ax.set_ylabel('Y-axis (voxel)')
+
+        # Add a title if given
+        if title is not None:
+            plt.title(f'{title}', fontsize=20, fontweight='bold', y=1.01, x=10.5, ha='center')
+
+    # Add subvolume rectangle if given
     if subvolume is not None:
         rect = plt.Rectangle(center - subvolume / 2, subvolume, subvolume, fill=False, linewidth=2, edgecolor='r')
-        plt.gca().add_patch(rect)
+        ax.add_patch(rect)
 
-    plt.axis('tight')
-    if labels is not None and type == 'binary':
-        cbar = plt.colorbar(orientation='vertical', ticks=[m for m in range(len(labels))])
-        cbar.ax.set_yticklabels([label[1] for label in labels])
-    else:
-        cbar = plt.colorbar(orientation='vertical')
-
-    plt.gca().set_aspect('equal', 'box')
-
-    if title is not None:
-        plt.title(f'{title}')
-
-    return F1
+    return fig
 
 
 def save_fig(figure, name, format=None, dpi=None):
