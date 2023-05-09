@@ -1,5 +1,5 @@
 from drp_template.import_export_data import import_raw, import_2d_tiff, import_3d_tiff
-from drp_template.plot_save_figure import visualize_plane
+from drp_template.plot_save_figure import plot_slice
 from drp_template.fractions_data import get_fractions
 from drp_template import import_export_data as ie
 
@@ -9,13 +9,13 @@ data_100cube_3d_tiff = import_3d_tiff('subvolume/3D_Tiff/100cube.tif')
 
 slice_no = 99
 
-fig_data_1_12_100cube_2d_tiff = visualize_plane(data_100cube_2d_tiff, type=2, slice=slice_no, title='2D Tiff')
+fig_data_1_12_100cube_2d_tiff = plot_slice(data_100cube_2d_tiff, type=2, slice=slice_no, title='2D Tiff')
 fig_data_1_12_100cube_2d_tiff.show()
 
-fig_data_1_12_100cube_raw = visualize_plane(data_100cube_raw, type=2, slice=slice_no, title='3D Raw')
+fig_data_1_12_100cube_raw = plot_slice(data_100cube_raw, type=2, slice=slice_no, title='3D Raw')
 fig_data_1_12_100cube_raw.show()
 
-fig_data_1_12_100cube_3d_tiff = visualize_plane(data_100cube_3d_tiff, type=2, slice=slice_no, title='3D Tiff')
+fig_data_1_12_100cube_3d_tiff = plot_slice(data_100cube_3d_tiff, type=2, slice=slice_no, title='3D Tiff')
 fig_data_1_12_100cube_3d_tiff.show()
 
 

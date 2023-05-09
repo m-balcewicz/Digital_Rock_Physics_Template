@@ -1,6 +1,6 @@
 # May 2023
 import sys
-from drp_template.plot_save_figure import visualize_plane, save_fig
+from drp_template.plot_save_figure import plot_slice, save_fig
 import drp_template.import_export as ie
 import drp_template.data_review
 import numpy as np
@@ -21,7 +21,7 @@ print(f'importd data is: {check_endian}')
 # data = ie.import_3d_tiff(dir_path_3d_tif)
 
 plane = 'xy'
-fig = visualize_plane(data=data, type=1, plane=plane, cmap_set='coolwarm', slice=0)
+fig = plot_slice(data=data, type=1, cmap_set='coolwarm', slice=0, plane=plane)
 fig.show()
 
 # save_fig(figure=fig, name='/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/SCIENCE_WORLD/STUDIES/2022_CONCRETE_TRIAX_CT_PERTH'
@@ -57,5 +57,5 @@ with open('output_le.raw', 'wb') as f:
 dir = 'output_le.raw'
 data_test = ie.import_raw(path=dir, dtype='uint16', endian='big', dimension=dimensions)
 check_endian = drp_template.data_review.check_endian(data_test)
-fig = visualize_plane(data=data_test, type=1, plane=plane, cmap_set='coolwarm', slice=0)
+fig = plot_slice(data=data_test, type=1, cmap_set='coolwarm', slice=0, plane=plane)
 fig.show()

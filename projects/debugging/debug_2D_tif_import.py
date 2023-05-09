@@ -1,8 +1,8 @@
 import drp_template.import_export as ie
-from drp_template.plot_save_figure import visualize_plane, save_fig
+from drp_template.plot_save_figure import plot_slice, save_fig
 
 data = ie.import_2d_tiff(path='S-4-X', type='raw')
 plane = 'xy'
-fig = visualize_plane(data=data, type='raw', plane=plane, slice=49)
+fig = plot_slice(data=data, type='raw', slice=49, plane=plane)
 fig.show()
 sa

@@ -23,7 +23,7 @@ def main():
     print(' ')
 
 
-def visualize_plane(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None):
+def plot_slice(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None):
     """
     This is some text.
 
