@@ -27,7 +27,7 @@ def label_binary(data, type=2):
 
         # Set the values that match the current unique value to 1
         data_temp[data == unique[m]] = 1
-        fig = sc.plot_slice(data_temp, type, slice, plane='xy')
+        fig = sc.plot_slice(data_temp, slice, plane='xy')
         fig.show()
 
         # Prompt the user to name the presented phase and store the input in labels[m]

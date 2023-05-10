@@ -7,11 +7,11 @@ data_raw = ie.import_raw(f'{path_in}/100cube.raw', dimension=100)
 
 
 slice_no = 49  # This is a characteristic 2D within the 3D volume
-fig_data_1_12_100cube_xy = plot_slice(data_raw, type=2, slice=slice_no, plane='xy', title='XY')
+fig_data_1_12_100cube_xy = plot_slice(data_raw, slice=slice_no, plane='xy', title='XY')
 fig_data_1_12_100cube_xy.show()
-fig_data_1_12_100cube_xy = plot_slice(data_raw, type=2, slice=slice_no, plane='xz', title=f'XZ')
+fig_data_1_12_100cube_xy = plot_slice(data_raw, slice=slice_no, plane='xz', title=f'XZ')
 fig_data_1_12_100cube_xy.show()
-fig_data_1_12_100cube_xy = plot_slice(data_raw, type=2, slice=slice_no, plane='yz', title='YZ')
+fig_data_1_12_100cube_xy = plot_slice(data_raw, slice=slice_no, plane='yz', title='YZ')
 fig_data_1_12_100cube_xy.show()
 
 # ie.export_raw(data_raw, path=path_out, varname='export_raw')

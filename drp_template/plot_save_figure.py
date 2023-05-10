@@ -11,6 +11,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FixedFormatter
 import numpy as np
+import drp_template.default_parameters as params
 
 
 def main():
@@ -23,7 +24,7 @@ def main():
     print(' ')
 
 
-def plot_slice(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None):
+def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None):
     """
     This is some text.
 
@@ -52,18 +53,12 @@ def plot_slice(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None
     dimensions = data.shape
     center = np.array([dimensions[0] / 2, dimensions[0] / 2])
 
-    # # set the font size and typeface for all text in the plot
-    # plt.rcParams.update({'font.size': 14, 'font.family': 'Arial'})
-    #
-    if type == 'raw' and cmap_set is None:
-        cmap_set = 'gray'
-    elif type == 'binary' and cmap_set is None:
-        cmap_set = 'viridis'
-    elif cmap_set is not None:
-        cmap_set = cmap_set
+    if cmap_set is None:
+        cmap_set = params.cmap
     else:
-        print('## ERROR: Please define type = 1 (for RAW CT images) or type = 2 (for segmented CT images)')
-        fig = 'NaN'
+        cmap_set = cmap_set
+
+    params.default_figure()
 
     # get the minimum and maximum values of the data
     vmin = np.amin(data)
@@ -75,17 +70,15 @@ def plot_slice(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None
         slice = int(dimensions[0] / 2)
 
     if plane == 'yz':
-        # set the font size and typeface for all text in the plot
-        plt.rcParams.update({'font.size': 18, 'font.family': 'Arial'})
-
-        fig = plt.figure(figsize=(8, 6))
-        ax = fig.add_axes([0.15, 0.1, 0.75, 0.8])  # left, bottom, width, height
+        # create a new figure and axes using the default parameters
+        fig = plt.figure(figsize=params.figsize)
+        ax = fig.add_axes(params.x_axes)  # left, bottom, width, height
 
         im = ax.pcolormesh(data[:, :, slice], cmap=cmap_set, vmin=vmin, vmax=vmax)
         ax.set_aspect('equal', 'box')
 
         # Add a colorbar to the left of the plot
-        cax = fig.add_axes([0.18, 0.1, 0.03, 0.8])  # left, bottom, width, height
+        cax = fig.add_axes(params.l_axes)  # left, bottom, width, height
         cbar = fig.colorbar(im, cax=cax, orientation='vertical')
         cbar.ax.yaxis.tick_left()
 
@@ -145,17 +138,15 @@ def plot_slice(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None
             plt.title(f'{title}', fontsize=20, fontweight='bold', y=1.01, x=10.5, ha='center')
 
     elif plane == 'xz':
-        # set the font size and typeface for all text in the plot
-        plt.rcParams.update({'font.size': 18, 'font.family': 'Arial'})
-
-        fig = plt.figure(figsize=(8, 6))
-        ax = fig.add_axes([0.15, 0.1, 0.75, 0.8])  # left, bottom, width, height
+        # create a new figure and axes using the default parameters
+        fig = plt.figure(figsize=params.figsize)
+        ax = fig.add_axes(params.x_axes)  # left, bottom, width, height
 
         im = ax.pcolormesh(data[:, slice, :], cmap=cmap_set, vmin=vmin, vmax=vmax)
         ax.set_aspect('equal', 'box')
 
         # Add a colorbar to the right of the plot
-        cax = fig.add_axes([0.84, 0.1, 0.03, 0.8])  # left, bottom, width, height
+        cax = fig.add_axes(params.r_axes)  # left, bottom, width, height
         cbar = fig.colorbar(im, cax=cax, orientation='vertical')
         cbar.ax.yaxis.tick_right()
 
@@ -215,18 +206,15 @@ def plot_slice(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None
             plt.title(f'{title}', fontsize=20, fontweight='bold', y=1.01, x=-10.5, ha='center')
 
     elif plane == 'xy':
-        # set the font size and typeface for all text in the plot
-        plt.rcParams.update({'font.size': 18, 'font.family': 'Arial'})
-
-        fig = plt.figure(figsize=(8, 6))
-        ax = fig.add_axes([0.15, 0.1, 0.75, 0.8])  # left, bottom, width, height
+        # create a new figure and axes using the default parameters
+        fig = plt.figure(figsize=params.figsize)
+        ax = fig.add_axes(params.x_axes)
 
         im = ax.pcolormesh(data[slice, :, :], cmap=cmap_set, vmin=vmin, vmax=vmax)
         ax.set_aspect('equal', 'box')
 
-
         # Add a colorbar to the left of the plot
-        cax = fig.add_axes([0.17, 0.1, 0.03, 0.8])  # left, bottom, width, height
+        cax = fig.add_axes(params.l_axes)  # left, bottom, width, height
         cbar = fig.colorbar(im, cax=cax, orientation='vertical')
         cbar.ax.yaxis.tick_left()
 
@@ -239,7 +227,6 @@ def plot_slice(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None
             cbar = fig.colorbar(im, cax=cax, orientation='vertical')
 
         cbar.ax.yaxis.tick_left()
-
 
         plt.axis('tight')
 
@@ -314,7 +301,13 @@ def plot_slice(data, type, cmap_set=None, slice=None, plane='xy', subvolume=None
     return fig
 
 
-def save_fig(figure, name, format=None, dpi=None):
+
+
+
+
+
+
+def save_figure(figure, name, format=None, dpi=None):
     # Set default format to "png" if not specified
     if format is None:
         format = "png"

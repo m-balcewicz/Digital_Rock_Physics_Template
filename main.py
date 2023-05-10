@@ -33,8 +33,8 @@ def add_project():
     try:
         with open(script_path, 'w') as file:
             file.write('# New Python script\n\n')
-            # file.write('import sys\n')
-            # file.write(f'sys.path.append(\'{cwd}\')\n\n')
+            file.write('import sys\n')
+            file.write(f'sys.path.append(\'{cwd}\')\n\n')
             file.write('if __name__ == \'__main__\':\n')
             file.write('    print("Hello, world!")\n')
     except OSError:
