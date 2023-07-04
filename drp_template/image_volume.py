@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from examples.data import load_raw_cube
+from examples.load_models import raw_cube
 
-data = load_raw_cube()
+data = raw_cube()
 
 # create a figure and 3D axis
 fig = plt.figure()

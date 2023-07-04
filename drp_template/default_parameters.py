@@ -2,10 +2,11 @@ import matplotlib.pyplot as plt
 from cmcrameri import cm
 
 # specific parameters for figures
-figsize = (8, 6)
-x_axes = [0.15, 0.11, 0.75, 0.8]         # left, bottom, width, height
-l_axes = [0.17, 0.11, 0.03, 0.8]         # preliminary for the colorbar: on the left side
-r_axes = [0.85, 0.11, 0.03, 0.8]         # preliminary for the colorbar: on the right side
+figsize = (10, 6)
+x_axes_right = [0.15, 0.11, 0.75, 0.8]         # left, bottom, width, height
+x_axes_left = [0.085, 0.11, 0.75, 0.8]         # left, bottom, width, height
+l_axes = [0.22, 0.11, 0.03, 0.8]         # preliminary for the colorbar: on the left side
+r_axes = [0.735, 0.11, 0.03, 0.8]         # preliminary for the colorbar: on the right side
 # colormap after:  Crameri, Fabio: Scientific colour maps, https://zenodo.org/record/1243862, (2021)
 cmap = cm.batlow                         # default colormap
 linewidth = 2
@@ -14,7 +15,7 @@ linecolor = 'white'
 
 def default_figure():
     # set the default figure size
-    plt.rcParams['figure.figsize'] = (8, 6)
+    plt.rcParams['figure.figsize'] = (10, 6)
 
     # set the background color of the figure
     plt.rcParams['figure.facecolor'] = 'white'

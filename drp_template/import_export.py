@@ -53,7 +53,7 @@ def import_2d_tiff(path, type):
     path : str
         Path to directory with multiple 2D tiff files.
     type : str
-        Data type of the binary file. Valid values are 'raw' and 'segmented'.
+        Data type of the binary file. Valid values are 'raw' and 'binary'.
 
     """
     print('importing . . .')
@@ -89,7 +89,7 @@ def import_2d_tiff(path, type):
     return data
 
 
-def import_raw(path, dtype, endian=None, dimension=None):
+def import_raw(path, dtype, dimension, type, endian=None):
     """
     Import raw data from a binary file.
 
@@ -128,7 +128,7 @@ def import_raw(path, dtype, endian=None, dimension=None):
         raise ValueError(f"Invalid endian value: {endian}")
 
     # Define the shape of the data
-    if dimension is None:
+    if dimension is False:
         raise ValueError("No dimension was set!")
     elif isinstance(dimension, int):
         z_size = y_size = x_size = dimension
@@ -151,7 +151,7 @@ def import_raw(path, dtype, endian=None, dimension=None):
     data = data.reshape(z_size, y_size, x_size)
 
     # Check wrong label numbering
-    data = check_binary(data)
+    data = check_binary(data=data)
 
     # return data.reshape(z_size, y_size, x_size) if dimension is not None else data
     return data
@@ -255,6 +255,7 @@ def export_raw(data, path=None, varname=None, dtype='unit8', endian='little'):
     # Pack the flattened data array into a bytes object
     endian_check_data = data.dtype.byteorder
     endian_check_sys = sys.byteorder
+    print(f'check: {endian_check_data}')
 
     if dtype == 'uint8':
         # Flatten the data array
@@ -316,6 +317,7 @@ def export_raw(data, path=None, varname=None, dtype='unit8', endian='little'):
     with open(os.path.join(path, varname + '_info.txt'), 'w') as f:
         f.write(info)
 
+    print(f'. . . raw data ({dtype}) saved in {path}')
 
 def export_3d_tif(data, path, varname):
     # Create the directory if it doesn't exist

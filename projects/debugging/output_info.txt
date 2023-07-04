@@ -1,7 +1,0 @@
-This data was created by Digital Rock Physics Template
-by Martin Balcewicz (martin.balcewicz@rockphysics.org)
-
-data: output
-dimension (z, y, x): (100, 400, 500)
-type: uint16
-endian: big

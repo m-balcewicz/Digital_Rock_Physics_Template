@@ -3,7 +3,7 @@ import numpy as np
 import drp_template.import_export as ie
 
 
-def load_raw_cube(**kwargs):
+def raw_cube(**kwargs):
     """
     Loads examples data from a raw file.
 
@@ -39,7 +39,7 @@ def load_raw_cube(**kwargs):
 
     return cube_raw
 
-def load_binary_cube(**kwargs):
+def binary_cube(**kwargs):
     """
     Loads examples data from a raw file.
 
@@ -68,7 +68,7 @@ def load_binary_cube(**kwargs):
 
     return cube_binary
 
-def load_binary_fracture(**kwargs):
+def binary_fracture(**kwargs):
     """
     Loads examples data from a raw file.
 

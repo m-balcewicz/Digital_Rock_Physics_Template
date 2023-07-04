@@ -1,3 +1,3 @@
-__all__ = ["data", "example_3D_irregular_raw.py"]
+__all__ = ["load_models.py", "example_3D_irregular_raw.py"]
 
-from .data import load_raw_cube
+from .load_models import raw_cube

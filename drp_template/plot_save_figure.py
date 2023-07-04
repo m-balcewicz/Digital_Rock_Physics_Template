@@ -72,7 +72,7 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
     if plane == 'yz':
         # create a new figure and axes using the default parameters
         fig = plt.figure(figsize=params.figsize)
-        ax = fig.add_axes(params.x_axes)  # left, bottom, width, height
+        ax = fig.add_axes(params.x_axes_right)  # left, bottom, width, height
 
         im = ax.pcolormesh(data[:, :, slice], cmap=cmap_set, vmin=vmin, vmax=vmax)
         ax.set_aspect('equal', 'box')
@@ -80,13 +80,11 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
         # Add a colorbar to the left of the plot
         cax = fig.add_axes(params.l_axes)  # left, bottom, width, height
         cbar = fig.colorbar(im, cax=cax, orientation='vertical')
-        cbar.ax.yaxis.tick_left()
 
-        if labels is not None and type == 'binary':
+        if labels is not None:
             cbar.ax.yaxis.set_label_position("right")
-            cbar.ax.yaxis.tick_right()
             cbar.set_ticks(np.arange(len(labels)))
-            cbar.ax.set_yticklabels([label.replace('_', '\n') for label in labels])
+            cbar.ax.set_yticklabels([labels[tick] for tick in np.arange(len(labels))])
         else:
             cbar = fig.colorbar(im, cax=cax, orientation='vertical')
 
@@ -108,25 +106,24 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
             xticks = ax.get_xticks()
             yticks = ax.get_yticks()
 
-            # Calculate the new tick labels based on the resolution
-            # Check if resolution is an integer
+            # Calculate the new tick labels based on the resolution and desired number of ticks
             if isinstance(voxel_size, int):
                 # resolution is an integer
-                xticklabels = [f'{int(tick * voxel_size)}' for tick in xticks]
-                yticklabels = [f'{int(tick * voxel_size)}' for tick in yticks]
+                xticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(xticks[0], xticks[-1], 5)]
+                yticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(yticks[0], yticks[-1], 5)]
                 ax.set_xlabel('Y-axis (µm)')
                 ax.set_ylabel('Z-axis (µm)')
             else:
                 # resolution is a float
-                xticklabels = [f'{tick * voxel_size:.1f}' for tick in xticks]
-                yticklabels = [f'{tick * voxel_size:.1f}' for tick in yticks]
+                xticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(xticks[0], xticks[-1], 5)]
+                yticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(yticks[0], yticks[-1], 5)]
                 ax.set_xlabel('Y-axis (µm)')
                 ax.set_ylabel('Z-axis (µm)')
 
             # Set the new tick locations and labels
-            ax.xaxis.set_major_locator(FixedLocator(xticks))
+            ax.xaxis.set_major_locator(FixedLocator(np.linspace(xticks[0], xticks[-1], 5)))
             ax.xaxis.set_major_formatter(FixedFormatter(xticklabels))
-            ax.yaxis.set_major_locator(FixedLocator(yticks))
+            ax.yaxis.set_major_locator(FixedLocator(np.linspace(yticks[0], yticks[-1], 5)))
             ax.yaxis.set_major_formatter(FixedFormatter(yticklabels))
         else:
             # Set the x-axis and y-axis titles
@@ -140,7 +137,7 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
     elif plane == 'xz':
         # create a new figure and axes using the default parameters
         fig = plt.figure(figsize=params.figsize)
-        ax = fig.add_axes(params.x_axes)  # left, bottom, width, height
+        ax = fig.add_axes(params.x_axes_left)  # left, bottom, width, height
 
         im = ax.pcolormesh(data[:, slice, :], cmap=cmap_set, vmin=vmin, vmax=vmax)
         ax.set_aspect('equal', 'box')
@@ -148,22 +145,16 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
         # Add a colorbar to the right of the plot
         cax = fig.add_axes(params.r_axes)  # left, bottom, width, height
         cbar = fig.colorbar(im, cax=cax, orientation='vertical')
-        cbar.ax.yaxis.tick_right()
 
-        if labels is not None and type == 'binary':
-            cbar.ax.yaxis.set_label_position("left")
-            cbar.ax.yaxis.tick_left()
+        if labels is not None:
             cbar.set_ticks(np.arange(len(labels)))
-            cbar.ax.set_yticklabels([label.replace('_', '\n') for label in labels])
+            # Use the label_dict to get the string corresponding to the numerical value
+            cbar.ax.set_yticklabels([labels[tick] for tick in np.arange(len(labels))])
         else:
             cbar = fig.colorbar(im, cax=cax, orientation='vertical')
-
         cbar.ax.yaxis.tick_right()
 
         plt.axis('tight')
-
-        # # Invert the Y-axis
-        # ax.invert_xaxis()
 
         # Move the y-axis to the left side
         ax.yaxis.tick_left()
@@ -176,25 +167,24 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
             xticks = ax.get_xticks()
             yticks = ax.get_yticks()
 
-            # Calculate the new tick labels based on the resolution
-            # Check if resolution is an integer
+            # Calculate the new tick labels based on the resolution and desired number of ticks
             if isinstance(voxel_size, int):
                 # resolution is an integer
-                xticklabels = [f'{int(tick * voxel_size)}' for tick in xticks]
-                yticklabels = [f'{int(tick * voxel_size)}' for tick in yticks]
+                xticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(xticks[0], xticks[-1], 5)]
+                yticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(yticks[0], yticks[-1], 5)]
                 ax.set_xlabel('X-axis (µm)')
-                ax.set_ylabel('Z-axis (µm)')
+                ax.set_ylabel('Y-axis (µm)')
             else:
                 # resolution is a float
-                xticklabels = [f'{tick * voxel_size:.1f}' for tick in xticks]
-                yticklabels = [f'{tick * voxel_size:.1f}' for tick in yticks]
+                xticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(xticks[0], xticks[-1], 5)]
+                yticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(yticks[0], yticks[-1], 5)]
                 ax.set_xlabel('X-axis (µm)')
-                ax.set_ylabel('Z-axis (µm)')
+                ax.set_ylabel('Y-axis (µm)')
 
             # Set the new tick locations and labels
-            ax.xaxis.set_major_locator(FixedLocator(xticks))
+            ax.xaxis.set_major_locator(FixedLocator(np.linspace(xticks[0], xticks[-1], 5)))
             ax.xaxis.set_major_formatter(FixedFormatter(xticklabels))
-            ax.yaxis.set_major_locator(FixedLocator(yticks))
+            ax.yaxis.set_major_locator(FixedLocator(np.linspace(yticks[0], yticks[-1], 5)))
             ax.yaxis.set_major_formatter(FixedFormatter(yticklabels))
         else:
             # Set the x-axis and y-axis titles
@@ -208,7 +198,7 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
     elif plane == 'xy':
         # create a new figure and axes using the default parameters
         fig = plt.figure(figsize=params.figsize)
-        ax = fig.add_axes(params.x_axes)
+        ax = fig.add_axes(params.x_axes_right)
 
         im = ax.pcolormesh(data[slice, :, :], cmap=cmap_set, vmin=vmin, vmax=vmax)
         ax.set_aspect('equal', 'box')
@@ -216,15 +206,20 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
         # Add a colorbar to the left of the plot
         cax = fig.add_axes(params.l_axes)  # left, bottom, width, height
         cbar = fig.colorbar(im, cax=cax, orientation='vertical')
-        cbar.ax.yaxis.tick_left()
 
-        if labels is not None and type == 'binary':
-            cbar.ax.yaxis.set_label_position("right")
-            cbar.ax.yaxis.tick_right()
+        # # Set the ticks on the colorbar
+        # cbar.set_ticks(np.linspace(vmin, vmax, num=6))
+        #
+        # # Set the tick labels to the corresponding values
+        # tick_labels = [vmin] + [f"{v:.2f}" for v in np.linspace(vmin, vmax, num=4)] + [vmax]
+        # cbar.ax.set_yticklabels(tick_labels)
+
+        if labels is not None:
             cbar.set_ticks(np.arange(len(labels)))
-            cbar.ax.set_yticklabels([label.replace('_', '\n') for label in labels])
+            # Use the label_dict to get the string corresponding to the numerical value
+            cbar.ax.set_yticklabels([labels[tick] for tick in np.arange(len(labels))])
         else:
-            cbar = fig.colorbar(im, cax=cax, orientation='vertical')
+            pass
 
         cbar.ax.yaxis.tick_left()
 
@@ -243,45 +238,24 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
             xticks = ax.get_xticks()
             yticks = ax.get_yticks()
 
-            # # Calculate the new tick labels based on the resolution
-            # # Check if resolution is an integer
-            # if isinstance(voxel_size, int):
-            #     # resolution is an integer
-            #     xticklabels = [f'{int(tick * voxel_size)}' for tick in xticks]
-            #     yticklabels = [f'{int(tick * voxel_size)}' for tick in yticks]
-            #     ax.set_xlabel('X-axis (µm)')
-            #     ax.set_ylabel('Y-axis (µm)')
-            # else:
-            #     # resolution is a float
-            #     xticklabels = [f'{tick * voxel_size:.1f}' for tick in xticks]
-            #     yticklabels = [f'{tick * voxel_size:.1f}' for tick in yticks]
-            #     ax.set_xlabel('X-axis (µm)')
-            #     ax.set_ylabel('Y-axis (µm)')
-            #
-            # # Set the new tick locations and labels
-            # ax.xaxis.set_major_locator(FixedLocator(xticks))
-            # ax.xaxis.set_major_formatter(FixedFormatter(xticklabels))
-            # ax.yaxis.set_major_locator(FixedLocator(yticks))
-            # ax.yaxis.set_major_formatter(FixedFormatter(yticklabels))
-
             # Calculate the new tick labels based on the resolution and desired number of ticks
             if isinstance(voxel_size, int):
                 # resolution is an integer
-                xticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(xticks[0], xticks[-1], 4)]
-                yticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(yticks[0], yticks[-1], 4)]
+                xticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(xticks[0], xticks[-1], 5)]
+                yticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(yticks[0], yticks[-1], 5)]
                 ax.set_xlabel('X-axis (µm)')
                 ax.set_ylabel('Y-axis (µm)')
             else:
                 # resolution is a float
-                xticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(xticks[0], xticks[-1], 4)]
-                yticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(yticks[0], yticks[-1], 4)]
+                xticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(xticks[0], xticks[-1], 5)]
+                yticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(yticks[0], yticks[-1], 5)]
                 ax.set_xlabel('X-axis (µm)')
                 ax.set_ylabel('Y-axis (µm)')
 
             # Set the new tick locations and labels
-            ax.xaxis.set_major_locator(FixedLocator(np.linspace(xticks[0], xticks[-1], 4)))
+            ax.xaxis.set_major_locator(FixedLocator(np.linspace(xticks[0], xticks[-1], 5)))
             ax.xaxis.set_major_formatter(FixedFormatter(xticklabels))
-            ax.yaxis.set_major_locator(FixedLocator(np.linspace(yticks[0], yticks[-1], 4)))
+            ax.yaxis.set_major_locator(FixedLocator(np.linspace(yticks[0], yticks[-1], 5)))
             ax.yaxis.set_major_formatter(FixedFormatter(yticklabels))
 
         else:

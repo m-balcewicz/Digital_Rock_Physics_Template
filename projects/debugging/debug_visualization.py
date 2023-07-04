@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from drp_template import plot_slice, check_binary
-from examples.data import load_raw_cube, load_binary_cube
+from examples.load_models import raw_cube, binary_cube
 
-data_raw = load_raw_cube()
-data_binary = load_binary_cube()
+data_raw = raw_cube()
+data_binary = binary_cube()
 
 data_binary = check_binary(data_binary)
 
