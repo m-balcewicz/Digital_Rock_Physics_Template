@@ -29,6 +29,25 @@ def get_dir_info(directory):
     return file_info_list
 
 
+def list_dir_info(directory, extension):
+    """
+    List all files with a specific extension in a directory.
+
+    Args:
+        directory (str): The directory to search for files.
+        extension (str): The file extension to filter the files.
+
+    Returns:
+        list: A list of file names with the specified extension in the directory.
+
+    """
+    directory_listing = []
+    for file in os.listdir(directory):
+        if file.endswith(extension):
+            directory_listing.append(file)
+    return directory_listing
+
+
 # ------------------------------------------------------------------------------------------------- #
 
 if __name__ == '__main__':

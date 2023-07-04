@@ -1,4 +1,4 @@
-from drp_template import import_export_data as ie
+from drp_template import import_export as ie
 from drp_template.plot_save_figure import plot_slice
 
 path_in = '/Volumes/mbalcewicz/SCIENCE_WORLD/STUDIES/2023_PYTHON_POROSITY/PerGeos/PerGeos_EXPORT'

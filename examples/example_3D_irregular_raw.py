@@ -29,7 +29,7 @@ fig.show()
 
 ie.export_raw(data=data, path='/Users/martin/Library/Mobile '
                               'Documents/com~apple~CloudDocs/MYDATA/SCIENCE_WORLD/STUDIES/2022_CONCRETE_TRIAX_CT_PERTH/Large_Sample_S-1-Z',
-              varname='S-1-Z_big_endian', dtype='uint16', endian='big')
+              filename='S-1-Z_big_endian', dtype='uint16', endian='big')
 print('Finished')
 
 ## READ exported big-endian file

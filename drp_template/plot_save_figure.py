@@ -8,6 +8,8 @@
 # 2 = segmented
 # ------------------------------------------------------------------------------------------------- #
 # ------------------------------------------------------------------------------------------------- #
+import glob
+
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FixedFormatter
 import numpy as np
@@ -281,7 +283,7 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
 
 
 
-def save_figure(figure, name, format=None, dpi=None):
+def save_figure(figure, filename=None, format=None, dpi=None):
     # Set default format to "png" if not specified
     if format is None:
         format = "png"
@@ -292,8 +294,31 @@ def save_figure(figure, name, format=None, dpi=None):
         dpi = 300
     else:
         dpi = dpi
-    # Save the figure
-    figure.savefig(name + "." + format, dpi=dpi)
+
+    if filename is not None:
+        # Save the figure
+        figure.savefig(filename + "." + format, dpi=dpi)
+    else:
+        # Find the highest existing index
+        existing_files = glob.glob("figure_*.png")
+        existing_indices = [int(filename.split("_")[1].split(".")[0]) for filename in existing_files]
+        highest_index = max(existing_indices) if existing_indices else 0
+
+        # Increment the index for the new file
+        new_index = highest_index + 1
+
+        # Format the index with leading zeros using %
+        index_formatted = "%03d" % new_index
+
+        # Use the index in the filename
+        filename = f"figure_{index_formatted}"
+
+        # Save the figure
+        figure.savefig(filename + "." + format, dpi=dpi)
+
+
+
+
 
     return
 

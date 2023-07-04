@@ -89,7 +89,7 @@ def import_2d_tiff(path, type):
     return data
 
 
-def import_raw(path, dtype, dimension, type, endian=None):
+def import_raw(path, dtype, dimension, endian=None):
     """
     Import raw data from a binary file.
 
@@ -218,7 +218,7 @@ def import_test(path, dimension=None):
     return data
 
 
-def export_raw(data, path=None, varname=None, dtype='unit8', endian='little'):
+def export_raw(data, path=None, filename=None, dtype='unit8', endian='little'):
     """
     Export raw data to a binary file with optional dimension, dtype and endian specification.
     Also writes an ASCII file with information about the exported data.
@@ -246,8 +246,8 @@ def export_raw(data, path=None, varname=None, dtype='unit8', endian='little'):
     else:
         os.makedirs(path, exist_ok=True)
 
-    if varname is None:
-        varname = 'output'
+    if filename is None:
+        filename = 'output'
 
     # Flatten the data array
     flat_data = data.flatten()
@@ -264,42 +264,42 @@ def export_raw(data, path=None, varname=None, dtype='unit8', endian='little'):
         packed_data = struct.pack(f'>{data.size}B', *flat_data)
 
         # Write the packed data to file
-        with open(os.path.join(path, varname + '.raw'), 'wb') as f:
+        with open(os.path.join(path, filename + '.raw'), 'wb') as f:
             f.write(packed_data)
 
     elif dtype == 'uint16':
         if endian == 'little':
             if endian_check_data == '<':
-                with open(os.path.join(path, varname + '_le.raw'), 'wb') as f:
+                with open(os.path.join(path, filename + '_le.raw'), 'wb') as f:
                     data.tofile(f, sep='', format='<')
 
             elif endian_check_data == '>':
-                with open(os.path.join(path, varname + '_le.raw'), 'wb') as f:
+                with open(os.path.join(path, filename + '_le.raw'), 'wb') as f:
                     data.tofile(f, sep='', format='<')
 
             elif endian_check_data == '=' and endian_check_sys == 'big':
-                with open(os.path.join(path, varname + '_le.raw'), 'wb') as f:
+                with open(os.path.join(path, filename + '_le.raw'), 'wb') as f:
                     data.tofile(f, sep='', format='<')
 
             elif endian_check_data == '=' and endian_check_sys == 'little':
-                with open(os.path.join(path, varname + '_le.raw'), 'wb') as f:
+                with open(os.path.join(path, filename + '_le.raw'), 'wb') as f:
                     data.tofile(f, sep='', format='<')
 
         elif endian == 'big':
             if endian_check_data == '<':
-                with open(os.path.join(path, varname + '_be.raw'), 'wb') as f:
+                with open(os.path.join(path, filename + '_be.raw'), 'wb') as f:
                     data.tofile(f, sep='', format='>')
 
             elif endian_check_data or endian_check_sys == '>':
-                with open(os.path.join(path, varname + '_be.raw'), 'wb') as f:
+                with open(os.path.join(path, filename + '_be.raw'), 'wb') as f:
                     data.tofile(f, sep='', format='>')
 
             elif endian_check_data == '=' and endian_check_sys == 'little':
-                with open(os.path.join(path, varname + '_be.raw'), 'wb') as f:
+                with open(os.path.join(path, filename + '_be.raw'), 'wb') as f:
                     data.tofile(f, sep='', format='>')
 
             elif endian_check_data == '=' and endian_check_sys == 'big':
-                with open(os.path.join(path, varname + '_be.raw'), 'wb') as f:
+                with open(os.path.join(path, filename + '_be.raw'), 'wb') as f:
                     data.tofile(f, sep='', format='>')
         else:
             raise ValueError("Invalid endian value!")
@@ -309,12 +309,12 @@ def export_raw(data, path=None, varname=None, dtype='unit8', endian='little'):
     # Write the ASCII file with information about the exported data
     info = f"This data was created by Digital Rock Physics Template\n" \
            f"by Martin Balcewicz (martin.balcewicz@rockphysics.org)\n\n" \
-           f"data: {varname}\n" \
+           f"data: {filename}\n" \
            f"dimension (z, y, x): {data.shape}\n" \
            f"type: {dtype}\n" \
            f"endian: {endian}\n"
 
-    with open(os.path.join(path, varname + '_info.txt'), 'w') as f:
+    with open(os.path.join(path, filename + '_info.txt'), 'w') as f:
         f.write(info)
 
     print(f'. . . raw data ({dtype}) saved in {path}')

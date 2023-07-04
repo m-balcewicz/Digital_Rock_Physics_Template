@@ -38,13 +38,13 @@ def create_subvolume(data, set_subvolume, name, directory=None, dtype='uint8', e
         path_temp = os.path.join(directory, 'subvolume')
         if not os.path.exists(path_temp):
             os.mkdir(path_temp)
-        ie.export_raw(data_subvolume, path=path_temp, varname=varname)
+        ie.export_raw(data_subvolume, path=path_temp, filename=varname)
 
     else:
         # create the subvolume directory if it does not already exist
         if not os.path.exists('subvolume'):
             os.mkdir('subvolume')
             # Save new data_subvolume as a 'uint8' raw file
-            ie.export_raw(data_subvolume, path='subvolume', varname=varname, dtype=dtype, endian=endian)
+            ie.export_raw(data_subvolume, path='subvolume', filename=varname, dtype=dtype, endian=endian)
 
     return data_subvolume

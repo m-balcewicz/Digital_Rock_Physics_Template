@@ -22,7 +22,7 @@ fig_data_1_12_100cube_3d_tiff.show()
 total_porosity = get_fractions(data_100cube_2d_tiff)
 print(total_porosity)
 
-ie.export_raw(data_100cube_raw, path='subvolume', varname='export_4')
+ie.export_raw(data_100cube_raw, path='subvolume', filename='export_4')
 
 # labels_out = cc3d.connected_components(data_100cube, connectivity=6)
 # fig_connected_6 = visualize_plane(labels_out, type=2, slice=99)
