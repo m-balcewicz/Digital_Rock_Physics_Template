@@ -195,8 +195,9 @@ def import_moduli(path):
     z = n1
     x = n2
     y = n3
+    d = n4
 
-    data_shape = (z, x, y)  # Define the shape of your data
+    data_shape = (z, x, y, d)  # Define the shape of your data
 
     data = np.memmap(path, dtype='>f4', mode='r', shape=data_shape, order="F")
     # order: Fortran ordering or C ordering
