@@ -13,8 +13,6 @@ import sys
 import numpy as np
 import vtk
 from skimage import io
-
-import drp_template
 from drp_template.data_review import check_binary
 import struct
 import os
@@ -157,45 +155,55 @@ def import_raw(path, dtype, dimension, endian=None):
     return data
 
 
-def import_heidi(path, z, x, y, d):
+def import_moduli(path):
     """
-    Reads big-endian binary data_normal from the 'moduli' file at the specified path,
-    reads the header entries from the 'moduliheader' file in the same directory,
-    parses the header entries to get the dimensions of the data_normal, and returns a
-    NumPy array containing the reshaped data_normal.
+    Reads binary data and corresponding header information from HEIDI files.
+
+    Parameters:
+        path (str): Path to the binary file without the '.header' extension.
+
+    Returns:
+        tuple: A tuple containing the following elements:
+            - data (ndarray): Numpy array containing the binary data.
+            - z (int): Number of elements in the first dimension of the data array.
+            - x (int): Number of elements in the second dimension of the data array.
+            - y (int): Number of elements in the third dimension of the data array.
+            - seed (int): Seed value extracted from the header information.
+            - inclusion (int): Inclusion value extracted from the header information.
+            - scatterer (int): Scatterer value extracted from the header information.
     """
-    try:
-        # Construct paths to the 'moduli' and 'moduliheader' files in the given directory
-        moduli_file = os.path.join(path, 'moduli')
-        header_file = os.path.join(path, 'moduliheader')
+    # Read header entries
+    header_file = path + 'header'
+    with open(header_file, 'r') as f:
+        lines = f.readlines()
 
-        # Read binary data_normal from the 'moduli' file and interpret it as big-endian floats
-        with open(moduli_file, 'rb') as fid:
-            data = np.array(struct.unpack('>{}f'.format(os.path.getsize(moduli_file) // 4), fid.read()))
+    header = {}
 
-        # Read the header entries from the 'moduliheader' file and parse them to get the dimensions
-        # Read the header entries from the 'moduliheader' file as text and parse them to get the dimensions
-        with open(header_file, 'r') as f:
-            header = f.readlines()  # [2:6]
-            # z, x, y, d = [int(line.strip().split()[-1]) for line in header_entries]
+    for line in lines:
+        line = line.strip()
+        if '=' in line:
+            key, value = line.split('=')
+            key = key.strip()
+            value = value.strip()
+            header[key] = value
 
-        # # Define a regular expression pattern to match the "nX=YYYYYY" format
-        # pattern = r"n(\d)=(\d+)"
-        #
-        # # Find all matches of the pattern in the header string
-        # matches = re.findall(pattern, header_file)
-        #
-        # # Extract the second group of each match (the number part), convert to int, and store in a NumPy array
-        # dimensions = np.array([int(match[1]) for match in matches])
+    n1 = int(header['n1'])
+    n2 = int(header['n2'])
+    n3 = int(header['n3'])
+    n4 = int(header['n4'])
 
-        # Reshape the data_normal into a 4D array with the parsed dimensions
-        data = data.reshape(z, x, y, d)
+    z = n1
+    x = n2
+    y = n3
 
-        return data, header
+    data_shape = (z, x, y)  # Define the shape of your data
 
-    except Exception as e:
-        print('Error:', e)
-        return None
+    data = np.memmap(path, dtype='>f4', mode='r', shape=data_shape, order="F")
+    # order: Fortran ordering or C ordering
+    # dtype: big-endian
+    # mode: read
+
+    return data
 
 
 def import_test(path, dimension=None):
