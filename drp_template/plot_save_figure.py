@@ -277,183 +277,171 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
     return fig
 
 
-def plot_moduli(data, image=0, slice=None, voxel_size=None):
+def plot_moduli(data_moduli, image=2, slice=None, voxel_size=None):
     """
     Create a visualization of seismic data from a HEIDI file.
 
     Parameters:
-        data (array): Name of the HEIDI moduli.
+        data_moduli (array): Name of the HEIDI file.
         image (int): Type of image to display. Options are 1 == 'P-wave modulus',
             2 == 'Shear modulus', and 3 == 'Density'. Default is 'P-wave modulus'.
-        voxel_size(int): The resolution of the volume in voxel/µm
 
     Returns:
         matplotlib.figure.Figure: The created figure object.
 
     """
     # Create the figure
-    figure = plt.figure(figsize=(10, 16.2))
+    if image == -1:
+        figure = plt.figure(figsize=(20, 5))
+    else:
+        figure = plt.figure(figsize=(10, 8))
 
-    # Set the font family and size
-    # plt.rcParams['font.family'] = 'Courier New'
+    # Define image titles and labels
     plt.rcParams['font.size'] = 20
+    titles = ['P-wave modulus', 'Shear modulus', 'Density']
+    labels = [r'$\mathrm{(GPa)}$', r'$\mathrm{(GPa)}$', r'$\mathrm{(kg/m^3)}$']
 
     if slice is not None:
         slice = slice
     else:
-        dimensions = data.shape
-        slice = int(dimensions[1] / 2)
+        slice = int(np.shape(data_moduli)[1] / 2)
 
-    # Plot the specified image
-    if image == 0:
-        plt.pcolormesh(data[:, :, slice, 0] * 1e-9, cmap=cm.batlow)
-        plt.title('P-wave modulus')
+    if image >= 0:
+        index = image
+        if len(np.shape(data_moduli)) == 3:
+            data = data_moduli[:, :, index] * 1e-9 if index != 2 else data_moduli[:, :, index]
+        elif len(np.shape(data_moduli)) == 4:
+            data = data_moduli[:, :, slice, index] * 1e-9 if index != 2 else data_moduli[:, :, slice, index]
+        else:
+            raise ValueError('Check your data_moduli dimensions')
+
+        plt.pcolormesh(data, cmap=cm.batlow)
+        plt.title(titles[index])
         cbar = plt.colorbar()
-        # Set the label for the colorbar as LaTeX expression
-        label = r'$\mathrm{(GPa)}$'
-        cbar.set_label(label)
-        # Set the font family of the colorbar label to Courier New
+        cbar.set_label(labels[index])
         label_text = cbar.ax.yaxis.label
-        # label_text.set_family('Courier New')
-        # label_text.set_fontname('Courier New')
-        label_text.set_fontsize(20)  # Set the desired font size
+        label_text.set_fontsize(20)
 
         if voxel_size is not None:
-            # Get the current tick labels
+            dz = voxel_size
             x_tick_labels = plt.gca().get_xticklabels()
             y_tick_labels = plt.gca().get_yticklabels()
-
-            # Convert the tick labels to a list
             x_tick_labels = [float(label.get_text()) for label in x_tick_labels]
             y_tick_labels = [float(label.get_text()) for label in y_tick_labels]
-
-            # Compute new tick labels with two digits precision
-            new_x_tick_labels = [f'{label * voxel_size:.0f}' for i, label in enumerate(x_tick_labels)]
-            new_y_tick_labels = [f'{label * voxel_size:.0f}' for i, label in enumerate(y_tick_labels)]
-
-            # Set the new tick labels
+            new_x_tick_labels = [f'{label * dz:.0f}' if i == 0 else f'{label * dz:.2f}' for i, label in enumerate(x_tick_labels)]
+            new_y_tick_labels = [f'{label * dz:.0f}' if i == 0 else f'{label * dz:.2f}' for i, label in enumerate(y_tick_labels)]
             plt.gca().set_xticklabels(new_x_tick_labels)
             plt.gca().set_yticklabels(new_y_tick_labels)
-
-            plt.xlabel('X-axis (µm)')
-            plt.ylabel('Y-axis (µm)')
+            plt.xlabel('width (m)')
+            plt.ylabel('height (m)')
         else:
             plt.xlabel('width (grid points)')
             plt.ylabel('height (grid points)')
 
-    elif image == 1:
-        plt.pcolormesh(data[:, :, slice, 1] * 1e-9, cmap=cm.batlow)
-        plt.title('Shear modulus')
-        cbar = plt.colorbar()
-        # Set the label for the colorbar as LaTeX expression
-        label = r'$\mathrm{(GPa)}$'
-        cbar.set_label(label)
-        # Set the font family of the colorbar label to Courier New
-        label_text = cbar.ax.yaxis.label
-        # label_text.set_family('Courier New')
-        # label_text.set_fontname('Courier New')
-        label_text.set_fontsize(20)  # Set the desired font size
-
-        if voxel_size is not None:
-            # Get the current tick labels
-            x_tick_labels = plt.gca().get_xticklabels()
-            y_tick_labels = plt.gca().get_yticklabels()
-
-            # Convert the tick labels to a list
-            x_tick_labels = [float(label.get_text()) for label in x_tick_labels]
-            y_tick_labels = [float(label.get_text()) for label in y_tick_labels]
-
-            # Compute new tick labels with two digits precision
-            new_x_tick_labels = [f'{label * voxel_size:.0f}' for i, label in enumerate(x_tick_labels)]
-            new_y_tick_labels = [f'{label * voxel_size:.0f}' for i, label in enumerate(y_tick_labels)]
-
-            # Set the new tick labels
-            plt.gca().set_xticklabels(new_x_tick_labels)
-            plt.gca().set_yticklabels(new_y_tick_labels)
-
-            plt.xlabel('X-axis (µm)')
-            plt.ylabel('Y-axis (µm)')
-        else:
-            plt.xlabel('width (grid points)')
-            plt.ylabel('height (grid points)')
-
-    elif image == 2:
-        plt.pcolormesh(data[:, :, slice, 2], cmap=cm.batlow)
-        plt.title('Density')
-        cbar = plt.colorbar()
-        # Set the label for the colorbar as LaTeX expression
-        label = r'$\mathrm{(kg/m^3)}$'
-        cbar.set_label(label)
-        # Set the font family of the colorbar label to Courier New
-        label_text = cbar.ax.yaxis.label
-        # label_text.set_family('Courier New')
-        # label_text.set_fontname('Courier New')
-        label_text.set_fontsize(20)  # Set the desired font size
-
-        if voxel_size is not None:
-            # Get the current tick labels
-            x_tick_labels = plt.gca().get_xticklabels()
-            y_tick_labels = plt.gca().get_yticklabels()
-
-            # Convert the tick labels to a list
-            x_tick_labels = [float(label.get_text()) for label in x_tick_labels]
-            y_tick_labels = [float(label.get_text()) for label in y_tick_labels]
-
-            # Compute new tick labels with two digits precision
-            new_x_tick_labels = [f'{label * voxel_size:.0f}' for i, label in enumerate(x_tick_labels)]
-            new_y_tick_labels = [f'{label * voxel_size:.0f}' for i, label in enumerate(y_tick_labels)]
-
-            # Set the new tick labels
-            plt.gca().set_xticklabels(new_x_tick_labels)
-            plt.gca().set_yticklabels(new_y_tick_labels)
-
-            plt.xlabel('X-axis (µm)')
-            plt.ylabel('Y-axis (µm)')
-        else:
-            plt.xlabel('width (grid points)')
-            plt.ylabel('height (grid points)')
+        plt.gca().set_aspect('equal')
 
     elif image == -1:
-        figure = plt.figure(figsize=(20, 9.35))
+        for i, index in enumerate([0, 1, 2]):
+            plt.subplot(1, 3, i + 1, aspect='equal')
 
-        plt.subplot(1, 3, 1)
-        plt.pcolormesh(data[:, :, slice, 0] * 1e-9, cmap=cm.batlow)
-        plt.title('P-wave modulus')
-        cbar = plt.colorbar()
-        # Set the label for the colorbar as LaTeX expression
-        label = r'$\mathrm{(GPa)}$'
-        cbar.set_label(label)
+            if len(np.shape(data_moduli)) == 3:
+                data = data_moduli[:, :, index] * 1e-9 if index != 2 else data_moduli[:, :, index]
+            elif len(np.shape(data_moduli)) == 4:
+                data = data_moduli[:, :, slice, index] * 1e-9 if index != 2 else data_moduli[:, :, slice, index]
+            else:
+                raise ValueError('Check your data_moduli dimensions')
 
+            plt.pcolormesh(data, cmap=cm.batlow)
+            plt.title(titles[index])
+            cbar = plt.colorbar()
+            cbar.set_label(labels[index])
+            label_text = cbar.ax.yaxis.label
+            label_text.set_fontsize(20)
+
+            if voxel_size is not None:
+                dz = voxel_size
+                x_tick_labels = plt.gca().get_xticklabels()
+                y_tick_labels = plt.gca().get_yticklabels()
+                x_tick_labels = [float(label.get_text()) for label in x_tick_labels]
+                y_tick_labels = [float(label.get_text()) for label in y_tick_labels]
+                new_x_tick_labels = [f'{label * dz:.0f}' if i == 0 else f'{label * dz:.2f}' for i, label in enumerate(x_tick_labels)]
+                new_y_tick_labels = [f'{label * dz:.0f}' if i == 0 else f'{label * dz:.2f}' for i, label in enumerate(y_tick_labels)]
+                plt.gca().set_xticklabels(new_x_tick_labels)
+                plt.gca().set_yticklabels(new_y_tick_labels)
+                plt.xlabel('width (m)')
+                plt.ylabel('height (m)')
+            else:
+                plt.xlabel('width (grid points)')
+                plt.ylabel('height (grid points)')
+
+        plt.tight_layout()
+
+    else:
+        raise ValueError('Please define a correct imaging condition')
+    return figure
+
+def plot_snap(data_snap, snapshot=0, slice=None, voxel_size=None, title="Maximum Amplitude"):
+    """
+    Create a visualization of seismic data from a HEIDI file.
+
+    Parameters:
+        data_snap (array): Name of the HEIDI file.
+        image (int): Type of image to display. Options are 1 == 'P-wave modulus',
+            2 == 'Shear modulus', and 3 == 'Density'. Default is 'P-wave modulus'.
+
+    Returns:
+        matplotlib.figure.Figure: The created figure object.
+
+    """
+    # Create the figure
+    figure = plt.figure(figsize=(10, 8))
+
+    # Define image titles and labels
+    plt.rcParams['font.size'] = 20
+    titles = ['P-wave modulus', 'Shear modulus', 'Density']
+    labels = [r'$\mathrm{(GPa)}$', r'$\mathrm{(GPa)}$', r'$\mathrm{(kg/m^3)}$']
+
+    if slice is not None:
+        slice = slice
+    else:
+        slice = int(np.shape(data_snap)[1] / 2)
+
+
+    if len(np.shape(data_snap)) == 3:
+        data = data_snap[:, :, snapshot]
+    elif len(np.shape(data_snap)) == 4:
+        data = data_snap[:, :, slice, snapshot]
+    else:
+        raise ValueError('Check your data_moduli dimensions')
+
+    plt.pcolormesh(data, cmap=cm.batlow)
+    plt.title(title)
+    plt.colorbar()
+    aa = 1.e1
+    plt.clim(-aa, aa)
+
+    if voxel_size is not None:
+        dz = voxel_size
+        x_tick_labels = plt.gca().get_xticklabels()
+        y_tick_labels = plt.gca().get_yticklabels()
+        x_tick_labels = [float(label.get_text()) for label in x_tick_labels]
+        y_tick_labels = [float(label.get_text()) for label in y_tick_labels]
+        new_x_tick_labels = [f'{label * dz:.0f}' if i == 0 else f'{label * dz:.2f}' for i, label in enumerate(x_tick_labels)]
+        new_y_tick_labels = [f'{label * dz:.0f}' if i == 0 else f'{label * dz:.2f}' for i, label in enumerate(y_tick_labels)]
+        plt.gca().set_xticklabels(new_x_tick_labels)
+        plt.gca().set_yticklabels(new_y_tick_labels)
+        plt.xlabel('width (m)')
+        plt.ylabel('height (m)')
+    else:
         plt.xlabel('width (grid points)')
         plt.ylabel('height (grid points)')
 
-        plt.subplot(1, 3, 2)
-        plt.pcolormesh(data[:, :, slice, 1] * 1e-9, cmap=cm.batlow)
-        plt.title('Shear modulus')
-        cbar = plt.colorbar()
-        # Set the label for the colorbar as LaTeX expression
-        label = r'$\mathrm{(GPa)}$'
-        cbar.set_label(label)
-        plt.xlabel('width (grid points)')
+    plt.gca().set_aspect('equal')
+    plt.gca().set_facecolor('white')
+    plt.tight_layout()
 
-        plt.subplot(1, 3, 3)
-        plt.pcolormesh(data[:, :, slice, 2], cmap=cm.batlow)
-        plt.title('Density')
-        cbar = plt.colorbar()
-        # Set the label for the colorbar as LaTeX expression
-        label = r'$\mathrm{(kg/m^3)}$'
-        cbar.set_label(label)
-        # Set the font family of the colorbar label to Courier New
-        # label_text = cbar.ax.yaxis.label
-        # label_text.set_family('Courier New')
-        # label_text.set_fontname('Courier New')
-        # label_text.set_fontsize(20)  # Set the desired font size
-        plt.xlabel('width (grid points)')
-
-        plt.tight_layout()  # Optional, to improve the spacing between subplots
-    else:
-        raise ValueError("Invalid image type. Options are 'P-wave modulus', 'S-wave modulus', and 'Density'.")
-
+    # else:
+    #     raise ValueError('Please define a correct imaging condition')
     return figure
 
 

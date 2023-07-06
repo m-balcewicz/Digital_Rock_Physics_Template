@@ -195,16 +195,65 @@ def import_moduli(path):
     z = n1
     x = n2
     y = n3
-    d = n4
-
-    data_shape = (z, x, y, d)  # Define the shape of your data
+    if n4 > 1:
+        d = n4
+        data_shape = (z, x, y, d)  # Define the shape of your data
+    else:
+        data_shape = (z, x, y)  # Define the shape of your data
 
     data = np.memmap(path, dtype='>f4', mode='r', shape=data_shape, order="F")
     # order: Fortran ordering or C ordering
     # dtype: big-endian
     # mode: read
 
-    return data
+    return data, header
+
+def import_snap(filename):
+    """
+    Reads a header file and imports zsnap, xsnap, or ysnap data from a binary file.
+
+    Args:
+        path (str): The path to the directory containing the header and binary files.
+
+    Returns:
+        numpy.memmap: The moduli data stored in a memory-mapped array.
+
+    """
+    # Read header entries
+    header_file = filename + 'header'
+    with open(header_file, 'r') as f:
+        lines = f.readlines()
+
+    header = {}
+
+    for line in lines:
+        line = line.strip()
+        if '=' in line:
+            key, value = line.split('=')
+            key = key.strip()
+            value = value.strip()
+            header[key] = value
+
+    n1 = int(header['n1'])
+    n2 = int(header['n2'])
+    n3 = int(header['n3'])
+    n4 = int(header['n4'])
+
+    z = n1
+    x = n2
+    y = n3
+    if n4 > 1:
+        d = n4
+        data_shape = (z, x, y, d)  # Define the shape of your data
+    else:
+        data_shape = (z, x, y)  # Define the shape of your data
+
+    data = np.memmap(filename, dtype='>f4', mode='r', shape=data_shape, order="F")
+    # order: Fortran ordering or C ordering
+    # dtype: big-endian
+    # mode: read
+
+    return data, header
 
 
 def import_test(path, dimension=None):
