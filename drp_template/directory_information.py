@@ -29,22 +29,30 @@ def get_dir_info(directory):
     return file_info_list
 
 
-def list_dir_info(directory, extension):
+def list_dir_info(directory, extension=None):
     """
-    List all files with a specific extension in a directory.
+    List all files with a specific extension in a directory,
+    or list all subfolders if no extension is provided.
 
     Args:
-        directory (str): The directory to search for files.
-        extension (str): The file extension to filter the files.
+        directory (str): The directory to search for files and subfolders.
+        extension (str, optional): The file extension to filter the files.
+                                   Default is None.
 
     Returns:
-        list: A list of file names with the specified extension in the directory.
+        list: A list of file names with the specified extension in the directory,
+              or a list of subfolder names in the directory.
 
     """
     directory_listing = []
-    for file in os.listdir(directory):
-        if file.endswith(extension):
-            directory_listing.append(file)
+    for entry in os.scandir(directory):
+        if entry.is_dir():
+            directory_listing.append(entry.name)
+
+    if extension is not None:
+        directory_listing = [file for file in directory_listing
+                             if any(file.endswith(extension) for file in os.listdir(os.path.join(directory, file)))]
+
     return directory_listing
 
 

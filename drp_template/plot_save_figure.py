@@ -282,6 +282,7 @@ def plot_moduli(data_moduli, image=2, slice=None, voxel_size=None):
     Create a visualization of seismic data from a HEIDI file.
 
     Parameters:
+        slice:
         data_moduli (array): Name of the HEIDI file.
         image (int): Type of image to display. Options are 1 == 'P-wave modulus',
             2 == 'Shear modulus', and 3 == 'Density'. Default is 'P-wave modulus'.
@@ -292,19 +293,21 @@ def plot_moduli(data_moduli, image=2, slice=None, voxel_size=None):
     """
     # Create the figure
     if image == -1:
-        figure = plt.figure(figsize=(20, 5))
+        figure = plt.figure(figsize=(20, 9.4))
     else:
-        figure = plt.figure(figsize=(10, 8))
+        figure = plt.figure(figsize=(9, 10.8))
+
+
+    if slice is not None:
+        slice = slice
+    else:
+        dimensions = data_moduli.shape
+        slice = int(dimensions[1] / 2)
 
     # Define image titles and labels
     plt.rcParams['font.size'] = 20
     titles = ['P-wave modulus', 'Shear modulus', 'Density']
     labels = [r'$\mathrm{(GPa)}$', r'$\mathrm{(GPa)}$', r'$\mathrm{(kg/m^3)}$']
-
-    if slice is not None:
-        slice = slice
-    else:
-        slice = int(np.shape(data_moduli)[1] / 2)
 
     if image >= 0:
         index = image
@@ -339,13 +342,17 @@ def plot_moduli(data_moduli, image=2, slice=None, voxel_size=None):
             plt.ylabel('height (grid points)')
 
         plt.gca().set_aspect('equal')
+        # Get the current axis of the figure
+        ax = figure.gca()
+        # Invert the y-axis
+        ax.invert_yaxis()
 
     elif image == -1:
         for i, index in enumerate([0, 1, 2]):
-            plt.subplot(1, 3, i + 1, aspect='equal')
+            plt.subplot(1, 3, i + 1)
 
             if len(np.shape(data_moduli)) == 3:
-                data = data_moduli[:, :, index] * 1e-9 if index != 2 else data_moduli[:, :, index]
+                data = data_moduli[:, slice, index] * 1e-9 if index != 2 else data_moduli[:, slice, index]
             elif len(np.shape(data_moduli)) == 4:
                 data = data_moduli[:, :, slice, index] * 1e-9 if index != 2 else data_moduli[:, :, slice, index]
             else:
@@ -358,27 +365,41 @@ def plot_moduli(data_moduli, image=2, slice=None, voxel_size=None):
             label_text = cbar.ax.yaxis.label
             label_text.set_fontsize(20)
 
-            if voxel_size is not None:
-                dz = voxel_size
-                x_tick_labels = plt.gca().get_xticklabels()
-                y_tick_labels = plt.gca().get_yticklabels()
-                x_tick_labels = [float(label.get_text()) for label in x_tick_labels]
-                y_tick_labels = [float(label.get_text()) for label in y_tick_labels]
-                new_x_tick_labels = [f'{label * dz:.0f}' if i == 0 else f'{label * dz:.2f}' for i, label in enumerate(x_tick_labels)]
-                new_y_tick_labels = [f'{label * dz:.0f}' if i == 0 else f'{label * dz:.2f}' for i, label in enumerate(y_tick_labels)]
-                plt.gca().set_xticklabels(new_x_tick_labels)
-                plt.gca().set_yticklabels(new_y_tick_labels)
-                plt.xlabel('width (m)')
-                plt.ylabel('height (m)')
+            if i == 0:
+                if voxel_size is not None:
+                    dz = voxel_size
+                    x_tick_labels = plt.gca().get_xticklabels()
+                    y_tick_labels = plt.gca().get_yticklabels()
+                    x_tick_labels = [float(label.get_text()) for label in x_tick_labels]
+                    y_tick_labels = [float(label.get_text()) for label in y_tick_labels]
+                    new_x_tick_labels = [f'{label * dz:.0f}' if i == 0 else f'{label * dz:.2f}' for i, label in enumerate(x_tick_labels)]
+                    new_y_tick_labels = [f'{label * dz:.0f}' if i == 0 else f'{label * dz:.2f}' for i, label in enumerate(y_tick_labels)]
+                    plt.gca().set_xticklabels(new_x_tick_labels)
+                    plt.gca().set_yticklabels(new_y_tick_labels)
+                    plt.xlabel('width (m)')
+                    plt.ylabel('height (m)')
+                else:
+                    plt.xlabel('width (grid points)')
+                    plt.ylabel('height (grid points)')
             else:
-                plt.xlabel('width (grid points)')
-                plt.ylabel('height (grid points)')
+                if voxel_size is not None:
+                    dz = voxel_size
+                    x_tick_labels = plt.gca().get_xticklabels()
+                    x_tick_labels = [float(label.get_text()) for label in x_tick_labels]
+                    new_x_tick_labels = [f'{label * dz:.0f}' if i == 0 else f'{label * dz:.2f}' for i, label in enumerate(x_tick_labels)]
+                    plt.gca().set_xticklabels(new_x_tick_labels)
+                    plt.xlabel('width (m)')
+                else:
+                    plt.xlabel('width (grid points)')
+
+            ax = figure.gca()
+            ax.invert_yaxis()
 
         plt.tight_layout()
-
-    else:
-        raise ValueError('Please define a correct imaging condition')
     return figure
+
+
+
 
 def plot_snap(data_snap, snapshot=0, slice=None, voxel_size=None, title="Maximum Amplitude"):
     """
