@@ -27,6 +27,24 @@ def default_figure():
     plt.rcParams['figure.subplot.top'] = 0.8            # height
 
     # set the font family and size
-    plt.rcParams['font.family'] = 'Courier New'
+    # plt.rcParams['font.family'] = 'Courier New'
+    # plt.rcParams['font.family'] = 'Arial'
+    plt.rcParams['font.size'] = 20
+
+def default_data_figure():
+    # set the default figure size
+    plt.rcParams['figure.figsize'] = (12, 7)
+
+    # set the background color of the figure
+    plt.rcParams['figure.facecolor'] = 'white'
+
+    # set the default x-axes position
+    plt.rcParams['figure.subplot.left'] = 0.15          # left
+    plt.rcParams['figure.subplot.bottom'] = 0.11        # bottom
+    plt.rcParams['figure.subplot.right'] = 0.75         # width
+    # plt.rcParams['figure.subplot.top'] = 0.8            # height
+
+    # set the font family and size
+    # plt.rcParams['font.family'] = 'Courier New'
     # plt.rcParams['font.family'] = 'Arial'
     plt.rcParams['font.size'] = 20
