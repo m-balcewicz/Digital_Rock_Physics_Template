@@ -1,10 +1,6 @@
 # May 2023
-import sys
-from drp_template.plot_save_figure import plot_slice, save_figure
-import drp_template.import_export as ie
-import drp_template.data_review
-import numpy as np
-from drp_template.data_review import check_binary
+from tools.drp_template import plot_slice
+import tools.drp_template.import_export as ie
 
 # dir_path_segmented = '/Volumes/mbalcewicz/SCIENCE_WORLD/STUDIES/2022_CONCRETE/PerGeos_Segmentation/PerGeos_Export/S-4-X_0_1-MPa_subvolume_600_600_988.tif'
 # data = ie.import_3d_tiff(dir_path_segmented)
@@ -14,7 +10,7 @@ dir_path_raw = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDAT
 dimensions = [200, 2283, 2283]
 data = ie.import_raw(path=dir_path_raw, dtype='uint16', endian='little', dimension=dimensions)
 
-check_endian = drp_template.data_review.check_endian(data)
+check_endian = tools.drp_template.data_review.check_endian(data)
 print(f'importd data is: {check_endian}')
 
 # dir_path_3d_tif = '/Volumes/mbalcewicz/SCIENCE_WORLD/STUDIES/2022_CONCRETE/PerGeos_Segmentation/LARGE_SAMPLES/S-1-Z/PerGeos_Export/S-1-Z.tif'
@@ -37,7 +33,7 @@ dir_path_big = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDAT
               '-1-Z/S-1-Z_big_endian.raw'
 dimensions = [200, 2283, 2283]
 data_big = ie.import_raw(path=dir_path_big, dtype='uint16', endian='little', dimension=dimensions)
-check_endian = drp_template.data_review.check_endian(data_big)
+check_endian = tools.drp_template.data_review.check_endian(data_big)
 print(f'importd data is: {check_endian}')
 
 
@@ -56,6 +52,6 @@ with open('output_le.raw', 'wb') as f:
 
 dir = 'output_le.raw'
 data_test = ie.import_raw(path=dir, dtype='uint16', endian='big', dimension=dimensions)
-check_endian = drp_template.data_review.check_endian(data_test)
+check_endian = tools.drp_template.data_review.check_endian(data_test)
 fig = plot_slice(data=data_test, cmap_set='coolwarm', slice=0, plane=plane)
 fig.show()

@@ -6,7 +6,7 @@
 # website: https://rockphysics.org/people/members/martin-balcewicz
 # ------------------------------------------------------------------------------------------------- #
 # ------------------------------------------------------------------------------------------------- #
-from drp_template import plot_slice
+from tools.drp_template import plot_slice
 import numpy as np
 
 

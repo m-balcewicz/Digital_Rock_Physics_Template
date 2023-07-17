@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-import drp_template.default_parameters as params
+import tools.default_parameters as params
 
 
 def plot_histogram(data, dtype='uint16'):

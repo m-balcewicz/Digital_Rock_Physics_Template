@@ -12,7 +12,7 @@ import glob
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FixedFormatter
 import numpy as np
-import drp_template.default_parameters as params
+import tools.default_parameters as params
 from cmcrameri import cm
 
 

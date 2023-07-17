@@ -1,6 +1,5 @@
-import drp_template
-from drp_template.plot_save_figure import plot_slice
-import drp_template.import_export as ie
+from tools.drp_template import plot_slice
+import tools.drp_template.import_export as ie
 
 
 
@@ -11,6 +10,6 @@ data_in = ie.import_raw(path=dir_path_raw, dtype='uint16', endian='little', dime
 fig = plot_slice(data=data_in, cmap_set='coolwarm', slice=49, plane=plane)
 fig.show()
 
-drp_template.data_review.check_endian(data_in)
-output = drp_template.change_endianess.little_to_big(data_in)
+tools.drp_template.data_review.check_endian(data_in)
+output = tools.drp_template.change_endianess.little_to_big(data_in)
 ie.export_raw(data=output, dtype='uint16', endian='big')

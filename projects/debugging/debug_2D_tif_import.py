@@ -1,5 +1,5 @@
-import drp_template.import_export as ie
-from drp_template.plot_save_figure import plot_slice, save_figure
+import tools.drp_template.import_export as ie
+from tools.drp_template import plot_slice
 
 data = ie.import_2d_tiff(path='S-4-X', type='raw')
 plane = 'xy'

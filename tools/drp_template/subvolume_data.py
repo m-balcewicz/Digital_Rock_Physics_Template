@@ -3,10 +3,9 @@
 # Martin Balcewicz (Bochum University of Applied Sciences)
 # website: https://rockphysics.org/people/members/martin-balcewicz
 
-import numpy as np
 import os
 from datetime import datetime
-import drp_template.import_export as ie
+import tools.drp_template.import_export as ie
 
 
 def create_subvolume(data, set_subvolume, name, directory=None, dtype='uint8', endian='little'):

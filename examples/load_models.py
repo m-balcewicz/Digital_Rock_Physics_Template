@@ -1,6 +1,5 @@
 import os
-import numpy as np
-import drp_template.import_export as ie
+import tools.drp_template.import_export as ie
 
 
 def raw_cube(**kwargs):

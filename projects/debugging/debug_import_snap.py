@@ -1,5 +1,5 @@
-from drp_template.import_export import import_snap, import_moduli
-from drp_template.plot_save_figure import plot_snap, plot_moduli, save_figure
+from tools.drp_template import import_snap, import_moduli
+from tools.drp_template import plot_snap, plot_moduli
 
 path = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics_Template/projects' \
        '/2022_Pang/zsnap'
