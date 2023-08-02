@@ -41,7 +41,7 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
     slice :
         some text
     plane :
-        some text
+        Set plane to 'xy', 'xz', or 'yz'
     subvolume :
         some text
     labels :

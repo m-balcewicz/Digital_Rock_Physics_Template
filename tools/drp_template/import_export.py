@@ -154,6 +154,28 @@ def import_raw(path, dtype, dimension, endian=None):
     # return data.reshape(z_size, y_size, x_size) if dimension is not None else data
     return data
 
+def import_csv(path, dimension):
+    """
+    Reads a header file and imports moduli data from a binary file.
+
+    Args:
+        path (str): The path to the directory containing the header and binary files.
+
+    Returns:
+        numpy.memmap: The moduli data stored in a memory-mapped array.
+
+    """
+    z = dimension[0]
+    x = dimension[1]
+    y = dimension[2]
+
+    data_shape = (z, x, y)  # Define the shape of your data
+
+    data = np.genfromtxt(path, dtype=np.float32, delimiter=',')
+    data = data.reshape(data_shape)
+
+    return data
+
 
 def import_moduli(path):
     """
