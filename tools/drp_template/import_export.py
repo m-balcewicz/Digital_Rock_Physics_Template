@@ -171,8 +171,9 @@ def import_csv(path, dimension):
 
     data_shape = (z, x, y)  # Define the shape of your data
 
-    data = np.genfromtxt(path, dtype=np.float32, delimiter=',')
+    data = np.genfromtxt(path, dtype=np.int32, delimiter=',')
     data = data.reshape(data_shape)
+    data = check_binary(data)
 
     return data
 

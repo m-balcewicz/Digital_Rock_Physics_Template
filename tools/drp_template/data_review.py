@@ -7,9 +7,13 @@ def check_binary(data):
 
     if min(unique_phases) == 0:
         print('+++ nice data!')
-
-    else:
-        print('+++ automatic adjustment is needed')
+    elif min(unique_phases) == -1:
+        print("+++ automatic adjustment is needed")
+        print(f"min value: {min(unique_phases)}")
+        data = data + 1
+    elif min(unique_phases) == 1:
+        print("+++ automatic adjustment is needed")
+        print(f"min value: {min(unique_phases)}")
         data = data - 1
 
     return data
