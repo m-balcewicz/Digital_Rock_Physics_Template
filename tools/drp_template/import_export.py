@@ -99,7 +99,7 @@ def import_raw(path, dtype, dimension, endian=None):
         Data type of the binary file. Valid values are 'uint8' and 'uint16'.
     endian : str
         Endianness of the binary file, if applicable. Valid values are 'big' and 'little'.
-    dimension : int or list of 3 ints
+    dimension : int or list of 3 ints (z, y, x-dimension)
         Dimensions of the data. If an int is given, the dimensions are assumed to be equal.
 
     Returns:
@@ -131,6 +131,8 @@ def import_raw(path, dtype, dimension, endian=None):
     elif isinstance(dimension, int):
         z_size = y_size = x_size = dimension
     elif isinstance(dimension, list) and len(dimension) == 3:
+        # TODO: Add to check if endian is set! else must be an error.
+        # TODO: change dimensions to (z, x, y)
         z_size, y_size, x_size = dimension
     else:
         raise ValueError("Invalid dimension value!")
