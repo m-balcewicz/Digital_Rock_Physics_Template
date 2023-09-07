@@ -1,6 +1,11 @@
 # Some settings for .gitignore
 # List to ignore
 __pycache__/
+__init__.py
+examples/__init__.py
+tools/__init__.py
+tools/drp_template/__init__.py
+tools/rp_template/__init__.py
 .idea/
 .DS_Store
 projects/
