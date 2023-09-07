@@ -299,7 +299,7 @@ def import_test(path, dimension=None):
     return data
 
 
-def export_raw(data, path=None, filename=None, dtype='unit8', endian='little'):
+def export_raw(data, path=None, filename=None, voxel_size=None, dtype='unit8', endian='little'):
     """
     Export raw data to a binary file with optional dimension, dtype and endian specification.
     Also writes an ASCII file with information about the exported data.
@@ -393,9 +393,10 @@ def export_raw(data, path=None, filename=None, dtype='unit8', endian='little'):
            f"data: {filename}\n" \
            f"dimension (z, y, x): {data.shape}\n" \
            f"type: {dtype}\n" \
-           f"endian: {endian}\n"
+           f"endian: {endian}\n"\
+           f"voxel size (voxel/μm): {voxel_size}\n" if voxel_size is not None else ""
 
-    with open(os.path.join(path, filename + '_info.txt'), 'w') as f:
+    with open(os.path.join(path, filename + '_header.txt'), 'w', encoding="utf-8") as f:
         f.write(info)
 
     print(f'. . . raw data ({dtype}) saved in {path}')

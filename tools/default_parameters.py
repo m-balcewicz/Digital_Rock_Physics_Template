@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 from cmcrameri import cm
 
 # specific parameters for figures
-figsize = (10, 6)
+figsize = (12, 8)
+# figsize = (10, 6)
 x_axes_right = [0.15, 0.11, 0.75, 0.8]         # left, bottom, width, height
 x_axes_left = [0.085, 0.11, 0.75, 0.8]         # left, bottom, width, height
 l_axes = [0.22, 0.11, 0.03, 0.8]         # preliminary for the colorbar: on the left side
