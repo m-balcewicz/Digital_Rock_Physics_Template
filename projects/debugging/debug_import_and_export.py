@@ -1,4 +1,6 @@
 import os
+
+import numpy as np
 from tools.drp_template import import_export as ie
 from tools.drp_template import plot_slice
 
@@ -13,7 +15,16 @@ fig_data_1_12_100cube_xy.show()
 fig_data_1_12_100cube_xy = plot_slice(data_binary, slice=slice_no, plane='xy', title='XY')
 fig_data_1_12_100cube_xy.show()
 
+# extract pore space
+set_pore = 0
+im_pore = np.where(data_binary == set_pore, set_pore, -1)
+im_pore = np.where(im_pore == set_pore, 1, im_pore)
+im_pore = np.where(im_pore == -1, 0, im_pore)
 
-# ie.export_raw(data_raw, path=path_out, varname='export_raw')
+fig_data_pore_xy = plot_slice(im_pore, slice=slice_no, plane='xy', title='XY')
+fig_data_pore_xy.show()
+
+
+ie.export_raw(im_pore, path=None, filename='im_pore', dtype='uint8', endian='little')
 # ie.export_3d_tif(data_raw, path=path_out, varname='export_tif')
 # ie.export_2d_tif(data_raw, path=path_out, varname='export_data')

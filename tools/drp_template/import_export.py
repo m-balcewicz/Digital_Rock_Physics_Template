@@ -301,7 +301,7 @@ def import_test(path, dimension=None):
     return data
 
 
-def export_raw(data, path=None, filename=None, voxel_size=None, dtype='unit8', endian='little'):
+def export_raw(data, path=None, filename=None, voxel_size=None, dtype='uint8', endian='little'):
     """
     Export raw data to a binary file with optional dimension, dtype and endian specification.
     Also writes an ASCII file with information about the exported data.
@@ -338,14 +338,14 @@ def export_raw(data, path=None, filename=None, voxel_size=None, dtype='unit8', e
     # Pack the flattened data array into a bytes object
     endian_check_data = data.dtype.byteorder
     endian_check_sys = sys.byteorder
-    print(f'check: {endian_check_data}')
+    # print(f'check: {endian_check_data}')
+
 
     if dtype == 'uint8':
         # Flatten the data array
         flat_data = data.flatten()
 
         packed_data = struct.pack(f'>{data.size}B', *flat_data)
-
         # Write the packed data to file
         with open(os.path.join(path, filename + '.raw'), 'wb') as f:
             f.write(packed_data)
@@ -401,7 +401,7 @@ def export_raw(data, path=None, filename=None, voxel_size=None, dtype='unit8', e
     with open(os.path.join(path, filename + '_header.txt'), 'w', encoding="utf-8") as f:
         f.write(info)
 
-    print(f'. . . raw data ({dtype}) saved in {path}')
+    print(f'. . . raw data ({dtype}) saved as {path}/{filename}.raw')
 
 def export_3d_tif(data, path, varname):
     # Create the directory if it doesn't exist
