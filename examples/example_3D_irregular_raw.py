@@ -1,6 +1,6 @@
 # May 2023
-from tools.drp_template import plot_slice
-import tools.drp_template.import_export as ie
+from barbara.drp_template import plot_slice
+import barbara.drp_template.import_export as ie
 
 # dir_path_segmented = '/Volumes/mbalcewicz/SCIENCE_WORLD/STUDIES/2022_CONCRETE/PerGeos_Segmentation/PerGeos_Export/S-4-X_0_1-MPa_subvolume_600_600_988.tif'
 # data = ie.import_3d_tiff(dir_path_segmented)

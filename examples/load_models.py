@@ -1,5 +1,5 @@
 import os
-import tools.drp_template.import_export as ie
+import barbara.drp_template.import_export as ie
 
 
 def raw_cube(**kwargs):
@@ -20,7 +20,7 @@ def raw_cube(**kwargs):
     examples_dir = os.path.join(script_dir, "..", "examples")
 
     # Construct the path to data.raw relative to the examples directory
-    data_path = os.path.join(examples_dir, "data_raw.raw")
+    data_path = os.path.join(examples_dir, "data_100cube.raw")
 
     dimension = 100
 

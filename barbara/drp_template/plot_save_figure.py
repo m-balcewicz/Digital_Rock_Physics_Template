@@ -12,7 +12,7 @@ import glob
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FixedFormatter
 import numpy as np
-import barbarakit.default_parameters as params
+import barbara.default_parameters as params
 from cmcrameri import cm
 
 

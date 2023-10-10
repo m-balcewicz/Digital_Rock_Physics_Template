@@ -1,7 +1,7 @@
 # debugging ideas
-from tools.drp_template import plot_slice
-from tools.drp_template import plot_histogram
-from tools.drp_template import import_raw
+from barbara.drp_template import plot_slice
+from barbara.drp_template import plot_histogram
+from barbara.drp_template import import_raw
 
 path = 'fracture_raw.raw'
 data = import_raw(path=path, dtype='uint16', dimension=400, endian='little')

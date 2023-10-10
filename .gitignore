@@ -1,11 +1,12 @@
 # Some settings for .gitignore
 # List to ignore
 __pycache__/
-__init__.py
-examples/__init__.py
-tools/__init__.py
-!tools/drp_template/__init__.py
-!tools/rp_template/__init__.py
+DRP.log
+# Ignore .py files in the examples folder
+examples/*.py
+examples/*.raw
+examples/*.tif
+examples/tiff_sequences/*
 .idea/
 .DS_Store
 projects/

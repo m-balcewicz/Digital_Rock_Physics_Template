@@ -5,3 +5,4 @@ scikit-image~=0.20.0
 tifffile~=2023.4.12
 pandas~=2.0.0
 cmcrameri~=1.4
+porespy~=2.3.0
