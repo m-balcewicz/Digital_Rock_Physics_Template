@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-import barbarakit.default_parameters as params
+import barbara.default_parameters as params
 
 
 def plot_histogram(data, dtype='uint16'):

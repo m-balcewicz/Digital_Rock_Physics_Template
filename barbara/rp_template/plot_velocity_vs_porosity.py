@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import barbarakit.default_parameters as params
+import barbara.default_parameters as params
 from cmcrameri import cm
 
 def velocity_vs_porosity(porosity, VP, VS, samples, legend_location='best', legend_bbox_to_anchor=(1, 1)):

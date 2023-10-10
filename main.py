@@ -4,7 +4,7 @@ import os
 
 
 # Press ⇧F10 to execute it or replace it with your drp_template.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+# Press Double ⇧ to search everywhere for classes, files, tools windows, actions, and settings.
 
 def main():
     print('-------------------------------------------------------------------------------------------------')

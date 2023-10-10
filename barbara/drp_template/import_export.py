@@ -13,7 +13,7 @@ import sys
 import numpy as np
 import vtk
 from skimage import io
-from barbarakit.tools.data_review import check_binary
+from barbara.tools.data_review import check_binary
 import struct
 import os
 from tifffile import tifffile
@@ -402,6 +402,7 @@ def export_raw(data, path=None, filename=None, voxel_size=None, dtype='uint8', e
         f.write(info)
 
     print(f'. . . raw data ({dtype}) saved as {path}/{filename}.raw')
+
 
 def export_3d_tif(data, path, varname):
     # Create the directory if it doesn't exist
