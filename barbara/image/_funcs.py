@@ -66,14 +66,13 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
     # SETTINGS
     # Get the directory of the currently executing script (your module or package)
     package_directory = os.path.dirname(os.path.abspath(__file__))
-    print(f"what is my director? {package_directory}")
+
     # Construct the relative path to the JSON file
     relative_path = os.path.join('..', 'default_params', 'default_figure_settings.json')
-    print(f"relative path: {relative_path}")
+
     # Combine the package directory and the relative path to get the absolute path
     json_file_path = os.path.join(package_directory, relative_path)
-    print(f"json_file_path: {json_file_path}")
-    
+
     default_figure_settings = read_parameters_file(paramsfile=json_file_path, paramsvars=None)
     im_left = default_figure_settings.get('im_left')
     im_right = default_figure_settings.get('im_right')
