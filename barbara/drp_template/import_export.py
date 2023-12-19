@@ -340,7 +340,6 @@ def export_raw(data, path=None, filename=None, voxel_size=None, dtype='uint8', e
     endian_check_sys = sys.byteorder
     # print(f'check: {endian_check_data}')
 
-
     if dtype == 'uint8':
         # Flatten the data array
         flat_data = data.flatten()
@@ -390,13 +389,22 @@ def export_raw(data, path=None, filename=None, voxel_size=None, dtype='uint8', e
         raise ValueError("Invalid dtype value!")
 
     # Write the ASCII file with information about the exported data
+    if voxel_size is not None:
+        voxel_size_info = voxel_size
+    else:
+        voxel_size_info = "unknown"
+
     info = f"This data was created by Digital Rock Physics Template\n" \
            f"by Martin Balcewicz (martin.balcewicz@rockphysics.org)\n\n" \
            f"data: {filename}\n" \
            f"dimension (z, y, x): {data.shape}\n" \
            f"type: {dtype}\n" \
            f"endian: {endian}\n"\
-           f"voxel size (voxel/μm): {voxel_size}\n" if voxel_size is not None else ""
+           f"voxel size (voxel/μm): {voxel_size_info}\n"\
+
+    print("Path:", os.path.join(path, filename + '_header.txt'))
+    print("Info:", info)
+    print("Data shape:", data.shape)
 
     with open(os.path.join(path, filename + '_header.txt'), 'w', encoding="utf-8") as f:
         f.write(info)

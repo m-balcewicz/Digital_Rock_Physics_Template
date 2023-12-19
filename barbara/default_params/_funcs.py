@@ -1,5 +1,12 @@
+import json
+import os
+from datetime import datetime
+
+
 __all__ = [
-    'print_style'
+    'print_style',
+    'update_parameters_file',
+    'read_parameters_file'
 ]
 
 
@@ -26,3 +33,91 @@ def print_style(message, style='indented_separator'):
         # Pad shorter lines with spaces to match the maximum length
         print(f"{line.ljust(max_line_length)}")
     print(f"{style_chars * max_line_length}")
+
+
+def update_parameters_file(paramsfile='parameters.json', **kwargs):
+    """
+    Update or create a JSON file with model parameters.
+
+    Parameters:
+    -----------
+    paramsfile : str (optional)
+        Name of the JSON file. Default is 'parameters.json'.
+    **kwargs : dict
+        Arbitrary keyword arguments representing the parameters and their values.
+
+    Returns:
+    None
+    """
+    # Check if the file exists
+    if os.path.isfile(paramsfile):
+        # File exists, load existing data
+        with open(paramsfile, 'r') as file:
+            data = json.load(file)
+    else:
+        # File doesn't exist, create an empty dictionary
+        data = {}
+
+    # Update timestamp
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    data['timestamp'] = timestamp
+
+    # Update or add new parameters
+    data.update(kwargs)
+
+    # Write data back to the file
+    with open(paramsfile, 'w') as file:
+        json.dump(data, file, indent=4)
+
+
+def read_parameters_file(paramsfile='parameters.json', paramsvars=None):
+    """
+    Read specific parameters from a JSON file.
+
+    Parameters:
+    -----------
+    paramsfile : str (optional)
+        Name of the JSON file. Default is 'parameters.json'.
+    paramsvars : str, list, or None (optional)
+        Name or list of variables of parameters to read from the file. If None, all parameters are read.
+
+    Returns:
+    Any
+        The value of the specified parameter or a dictionary of parameter values.
+    ```
+    Example usage
+    nz_value = read_parameters_file(paramsfile='parameters.json', paramsvars='nz')
+    print(nz_value)
+
+    Or with a list of parameter names
+    params_values = read_parameters_file(paramsfile='parameters.json', paramsvars=['nx', 'ny', 'nz'])
+    print(params_values)
+    ```
+    """
+    # Check if the file exists
+    if not os.path.isfile(paramsfile):
+        raise FileNotFoundError(f"The file '{paramsfile}' does not exist.")
+
+    # File exists, load existing data
+    with open(paramsfile, 'r') as file:
+        data = json.load(file)
+
+    # If specific parameter names are provided, get the values
+    if paramsvars:
+        if isinstance(paramsvars, str):
+            # If a single parameter name is provided, return its value
+            return data.get(paramsvars)
+        elif isinstance(paramsvars, list):
+            # If a list of parameter names is provided, return a dictionary of values
+            read_parameters = {param: data.get(param) for param in paramsvars}
+            missing_parameters = [param for param in paramsvars if param not in data]
+
+            if missing_parameters:
+                raise ValueError(f"Parameters not found: {', '.join(missing_parameters)}")
+            else:
+                return list(read_parameters.values())[0] if len(read_parameters) == 1 else read_parameters
+        else:
+            raise ValueError("Invalid type for parameter_names. Use str, list, or None.")
+    else:
+        return data
+

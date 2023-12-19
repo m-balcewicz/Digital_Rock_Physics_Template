@@ -12,6 +12,8 @@ import numpy as np
 
 def label_binary(data):
     # Create the centered slice of a 3D volume
+    print(f"shape data: {np.shape(data)}")
+
     slice = int(np.shape(data)[0] / 2)
 
     # Get the unique values and their counts

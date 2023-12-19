@@ -1,0 +1,15 @@
+{
+    "im_left": 0.25,
+    "im_right": 0.8,
+    "im_bottom": 0.1,
+    "im_width": 0.6,
+    "im_height": 0.8,
+    "cax_width": 0.04,
+    "fig_width": 12,
+    "fig_height": 8,
+    "cax_space_left": 0.2,
+    "cax_space_right": 0.02,
+    "im_title": "Title",
+    "font_size": 14,
+    "font_family": "Tahoma"
+}

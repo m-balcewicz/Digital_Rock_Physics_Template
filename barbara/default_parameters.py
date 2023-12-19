@@ -32,6 +32,7 @@ def default_figure():
     # plt.rcParams['font.family'] = 'Arial'
     plt.rcParams['font.size'] = 20
 
+
 def default_data_figure():
     # set the default figure size
     plt.rcParams['figure.figsize'] = (12, 7)

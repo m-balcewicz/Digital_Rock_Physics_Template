@@ -52,6 +52,8 @@ def plot_slice(data, cmap_set=None, slice=None, plane='xy', subvolume=None, labe
         some text
     """
 
+    print("THIS IS AN OLD VERSION THAT WILL BE SUBSTITUTED BY plot_slice2")
+
     dimensions = data.shape
     center = np.array([dimensions[0] / 2, dimensions[0] / 2])
 
@@ -466,7 +468,7 @@ def plot_snap(data_snap, snapshot=0, slice=None, voxel_size=None, title="Maximum
     return figure
 
 
-def save_figure(figure, filename=None, format=None, dpi=None):
+def save_figure(figure, filename=None, format=None, dpi=None, log=True):
     # Set default format to "png" if not specified
     if format is None:
         format = "png"
@@ -497,7 +499,11 @@ def save_figure(figure, filename=None, format=None, dpi=None):
         filename = f"figure_{index_formatted}"
 
         # Save the figure
-        figure.savefig(filename + "." + format, dpi=dpi)
+        full_path = filename + "." + format
+        figure.savefig(full_path, dpi=dpi)
+
+        if log is True:
+            print(f"Figure saved at: {full_path}")
 
 
 # ------------------------------------------------------------------------------------------------- #

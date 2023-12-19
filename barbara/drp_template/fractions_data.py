@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 import glob
 
+
 def get_fractions(data, labels=None, filename=None):
     """
     Calculate fractions and generate a table. Save the table to a text file with an incremental index.
