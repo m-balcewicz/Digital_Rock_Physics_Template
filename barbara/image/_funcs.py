@@ -16,28 +16,30 @@ __all__ = [
 
 def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None, dark_mode=True):
     """
-    Visualize 2D slices of 3D volumetric data using Matplotlib.
+    Visualize 2D layer of 3D volumetric data using Matplotlib.
 
     Parameters:
     -----------
     data : 3D numpy array
         The volumetric data to be visualized.
-    paramsfile : str
-        Name of the JSON file. Default is 'parameters.json'.
+    paramsfile : str, optional (default='parameters.json')
+        Name of the JSON file containing plotting parameters.
     cmap_set : Matplotlib colormap, optional (default=None)
         The colormap to be used for the plot. If not specified, the default colormap (`batlow`) will be used.
-    slice : int, optional (default=None)
-        The index of the slice along the specified plane. If not provided, the default slice index is set to 0.
+    layer : int, optional (default=None)
+        The index of the slice along the specified plane. If not provided, the default layer index is set to the middle layer.
     plane : str, optional (default='xy')
-        The plane along which the slice will be visualized. Valid values are 'xy', 'yz', or 'xz'.
-    subvolume : tuple of slices, optional (default=None)
-        Specifies a subvolume of the data to visualize. It should be a tuple of slices along each dimension (e.g., `(slice(0, 10), slice(None), slice(20, 30))`).
+        The plane along which the layer will be visualized. Valid values are 'xy', 'yz', or 'xz'.
+    subvolume : int or float, optional (default=None)
+        Specifies a subvolume indicated in the figure.
     labels : list of str, optional (default=None)
-        Labels for each axis. If provided, it should be a list containing three strings corresponding to the X, Y, and Z axes.
+        Labels for the colorbar. Can be a single string or a list.
     title : str, optional (default=None)
         The title of the plot.
-    voxel_size : tuple of floats, optional (default=None)
-        The size of the voxels along each dimension. If provided, it should be a tuple of three floats.
+    voxel_size : int of floats, optional (default=None)
+        The size of the voxels along each dimension.
+    dark_mode : bool, optional (default=True)
+        If True, set a dark background; otherwise, set a light background.
 
     Returns:
     --------
@@ -46,8 +48,8 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, p
     ax : Matplotlib Axes
         The Matplotlib axes object.
 
-    Usage Example:
-    --------------
+    Examples:
+    ---------
     ```python
     import numpy as np
     from plot_slice2 import plot_slice2
@@ -55,12 +57,18 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, p
     # Generate example data
     data = np.random.rand(50, 100, 200)
 
-    # Plot XY plane slice
-    fig, ax = plot_slice2(data, cmap_set='viridis', slice=10, plane='xy', title='XY Plane Slice')
+    # Plot XY plane layer
+    fig, ax = plot_slice2(data, cmap_set='viridis', layer=10, plane='xy', title='XY Plane Layer')
     plt.show()
     ```
 
-    Adjust the parameters based on your specific use case.
+    Notes:
+    ------
+    - The function reads default plotting parameters from a JSON file. Make sure to provide a valid path to the JSON file or use the default if not specified.
+    - The colormap (`cmap_set`) can be either a Matplotlib colormap or a string specifying the colormap name.
+    - The `subvolume` parameter draws a rectangle around a specified subvolume if provided.
+    - The `labels` parameter can be used to customize colorbar ticks.
+
     """
     
     # SETTINGS
@@ -88,6 +96,10 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, p
     im_title = default_figure_settings.get('im_title')
     plt.rcParams['font.size'] = default_figure_settings.get('font_size')
     plt.rcParams['font.family'] = default_figure_settings.get('font_family')
+
+    # Get basic info about data
+    dimensions = data.shape
+    center = np.array([dimensions[0] / 2, dimensions[0] / 2])
 
     if dark_mode:
         text_color = 'white'
@@ -313,6 +325,11 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, p
         cbar.set_ticks(np.arange(len(labels)))
         # Use the label_dict to get the string corresponding to the numerical value
         cbar.ax.set_yticklabels([labels[tick] for tick in np.arange(len(labels))])
+        
+    # Add subvolume rectangle if given
+    if subvolume is not None:
+        rect = plt.Rectangle(center - subvolume / 2, subvolume, subvolume, fill=False, linewidth=2, edgecolor='r')
+        ax.add_patch(rect)
     
 
     return fig, ax

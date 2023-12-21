@@ -35,16 +35,20 @@ def import_model(file_path, dtype, dimensions=None, mode='r', order='C'):
         The order of the data in the file ('C' for row-major, 'F' for column-major). Default is 'C'.
 
     Returns:
+    --------
     model : np.memmap
         Numpy memmap array representing the raw file data.
     used_variables : dict
         Dictionary containing the used variables.
 
     Examples:
-    >>> file_path = 'path/to/your/raw_file.raw'
-    >>> dtype = 'uint16'
-    >>> dimensions = {'nz': 100, 'ny': 200, 'nx': 300}
-    >>> data, used_vars = import_model(file_path, dtype, dimensions=dimensions)
+    ---------
+    ```python
+    file_path = 'path/to/your/raw_file.raw'
+    dtype = 'uint16'
+    dimensions = {'nz': 100, 'ny': 200, 'nx': 300}
+    data, used_vars = import_model(file_path, dtype, dimensions=dimensions)
+    ```
     """
     
     filename, extension = os.path.splitext(os.path.basename(file_path))
