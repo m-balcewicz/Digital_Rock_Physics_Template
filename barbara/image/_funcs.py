@@ -252,6 +252,41 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, p
 
     # Set the color of the colorbar ticks to white
     cbar.ax.tick_params(axis='y', colors=text_color)
+    
+    if voxel_size is not None:
+        # Get the current tick locations
+        xticks = ax.get_xticks()
+        yticks = ax.get_yticks()
+
+        # Calculate the new tick labels based on the resolution and desired number of ticks
+        if isinstance(voxel_size, int):
+            # resolution is an integer
+            xticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(xticks[0], xticks[-1], 5)]
+            yticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(yticks[0], yticks[-1], 5)]
+            ax.set_xlabel('Y-axis (µm)')
+            ax.set_ylabel('Z-axis (µm)')
+        else:
+            # resolution is a float
+            xticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(xticks[0], xticks[-1], 5)]
+            yticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(yticks[0], yticks[-1], 5)]
+            ax.set_xlabel('Y-axis (µm)')
+            ax.set_ylabel('Z-axis (µm)')
+
+        # Set the new tick locations and labels
+        ax.xaxis.set_major_locator(FixedLocator(np.linspace(xticks[0], xticks[-1], 5)))
+        ax.xaxis.set_major_formatter(FixedFormatter(xticklabels))
+        ax.yaxis.set_major_locator(FixedLocator(np.linspace(yticks[0], yticks[-1], 5)))
+        ax.yaxis.set_major_formatter(FixedFormatter(yticklabels))
+    else:
+        # Set the x-axis and y-axis titles
+        ax.set_xlabel('Y-axis (voxel)')
+        ax.set_ylabel('Z-axis (voxel)')
+        
+    if labels is not None:
+        cbar.set_ticks(np.arange(len(labels)))
+        # Use the label_dict to get the string corresponding to the numerical value
+        cbar.ax.set_yticklabels([labels[tick] for tick in np.arange(len(labels))])
+    
 
     return fig, ax
 
