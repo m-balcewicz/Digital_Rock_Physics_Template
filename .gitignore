@@ -18,11 +18,4 @@ DRP.log
 examples/*.py
 examples/*.raw
 examples/*.tif
-barbara/
-!barbara/*
-barbara/default_params
-!barbara/default_params
-barbara/default_params/*
-!barbara/default_params/*
 barbara/default_params/initialization.json
-
