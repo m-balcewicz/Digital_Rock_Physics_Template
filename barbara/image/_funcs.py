@@ -9,12 +9,12 @@ from cmcrameri import cm
 
 
 __all__ = [
-    "plot_slice2",
+    "plot_layer",
     "save_figure2"
 ]
 
 
-def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None, dark_mode=True):
+def plot_layer(data, paramsfile='parameters.json', cmap_set=None, layer=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None, dark_mode=True):
     """
     Visualize 2D layer of 3D volumetric data using Matplotlib.
 
@@ -52,13 +52,13 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, p
     ---------
     ```python
     import numpy as np
-    from plot_slice2 import plot_slice2
+    from plot_layer import plot_layer
 
     # Generate example data
     data = np.random.rand(50, 100, 200)
 
     # Plot XY plane layer
-    fig, ax = plot_slice2(data, cmap_set='viridis', layer=10, plane='xy', title='XY Plane Layer')
+    fig, ax = plot_layer(data, cmap_set='viridis', layer=10, plane='xy', title='XY Plane Layer')
     plt.show()
     ```
 
@@ -255,7 +255,10 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, p
         cbar.ax.yaxis.set_ticks_position('right')
         cbar.ax.yaxis.set_label_position('right')
 
-    title = ax.set_title(im_title, color=text_color)
+    if title is None:
+        title = ax.set_title(im_title, color=text_color)
+    else:
+        title = ax.set_title(title, color=text_color)
     title.set_position((0.5, 1.0))  # Set the position in axes coordinates
 
     # Set the text color of the colormap
