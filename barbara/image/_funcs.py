@@ -263,14 +263,32 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, p
             # resolution is an integer
             xticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(xticks[0], xticks[-1], 5)]
             yticklabels = [f'{int(tick * voxel_size)}' for tick in np.linspace(yticks[0], yticks[-1], 5)]
-            ax.set_xlabel('Y-axis (µm)')
-            ax.set_ylabel('Z-axis (µm)')
+            # Get the current X-axis and Y-axis labels
+            xlabel = ax.get_xlabel()
+            ylabel = ax.get_ylabel()
+
+            # Append the suffix "(µm)" to the labels
+            xlabel += ' (µm)'
+            ylabel += ' (µm)'
+
+            # Set the new X-axis and Y-axis labels
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel(ylabel)
         else:
             # resolution is a float
             xticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(xticks[0], xticks[-1], 5)]
             yticklabels = [f'{tick * voxel_size:.1f}' for tick in np.linspace(yticks[0], yticks[-1], 5)]
-            ax.set_xlabel('Y-axis (µm)')
-            ax.set_ylabel('Z-axis (µm)')
+            # Get the current X-axis and Y-axis labels
+            xlabel = ax.get_xlabel()
+            ylabel = ax.get_ylabel()
+
+            # Append the suffix "(µm)" to the labels
+            xlabel += ' (µm)'
+            ylabel += ' (µm)'
+
+            # Set the new X-axis and Y-axis labels
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel(ylabel)
 
         # Set the new tick locations and labels
         ax.xaxis.set_major_locator(FixedLocator(np.linspace(xticks[0], xticks[-1], 5)))
@@ -278,9 +296,18 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, p
         ax.yaxis.set_major_locator(FixedLocator(np.linspace(yticks[0], yticks[-1], 5)))
         ax.yaxis.set_major_formatter(FixedFormatter(yticklabels))
     else:
-        # Set the x-axis and y-axis titles
-        ax.set_xlabel('Y-axis (voxel)')
-        ax.set_ylabel('Z-axis (voxel)')
+        # Set the x-axis and y-axis labels
+            # Get the current X-axis and Y-axis labels
+            xlabel = ax.get_xlabel()
+            ylabel = ax.get_ylabel()
+
+            # Append the suffix "(µm)" to the labels
+            xlabel += ' (voxel)'
+            ylabel += ' (voxel)'
+
+            # Set the new X-axis and Y-axis labels
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel(ylabel)
         
     if labels is not None:
         cbar.set_ticks(np.arange(len(labels)))

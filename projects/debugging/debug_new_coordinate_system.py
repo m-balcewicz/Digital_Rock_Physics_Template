@@ -31,5 +31,8 @@ labels = ['Pore', 'Matrix']
 fig, ax = plot_slice2(subvolume, paramsfile='subvolume_100_100_100.json', cmap_set="gray", layer=None, plane='xy', subvolume=None, labels=labels, title=None, voxel_size=2.5, dark_mode=False)
 save_figure2(fig, filename='subvolume_plane_xy')
 
-fig, ax = plot_slice2(subvolume, paramsfile='subvolume_100_100_100.json', cmap_set=None, layer=None, plane='xz', subvolume=None, labels=None, title=None, voxel_size=2, dark_mode=True)
+fig, ax = plot_slice2(subvolume, paramsfile='subvolume_100_100_100.json', cmap_set="ocean", layer=None, plane='yz', subvolume=None, labels=labels, title=None, voxel_size=None, dark_mode=True)
+save_figure2(fig, filename='subvolume_plane_yz')
+
+fig, ax = plot_slice2(subvolume, paramsfile='subvolume_100_100_100.json', cmap_set=None, layer=None, plane='xz', subvolume=None, labels=labels, title=None, voxel_size=2, dark_mode=True)
 save_figure2(fig, filename='subvolume_plane_xz')
