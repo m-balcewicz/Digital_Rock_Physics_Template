@@ -19,4 +19,5 @@ examples/*.py
 examples/*.raw
 examples/*.tif
 barbara/tools/maintenance.log
+barbara/default_params/initialization.json
 
