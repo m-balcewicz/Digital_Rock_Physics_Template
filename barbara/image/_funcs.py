@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None, dark_mode=True):
+def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, layer=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None, dark_mode=True):
     """
     Visualize 2D slices of 3D volumetric data using Matplotlib.
 
@@ -22,7 +22,7 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
     -----------
     data : 3D numpy array
         The volumetric data to be visualized.
-    paramsfile : str (optional)
+    paramsfile : str
         Name of the JSON file. Default is 'parameters.json'.
     cmap_set : Matplotlib colormap, optional (default=None)
         The colormap to be used for the plot. If not specified, the default colormap (`batlow`) will be used.
@@ -75,6 +75,7 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
 
     default_figure_settings = read_parameters_file(paramsfile=json_file_path, paramsvars=None)
     im_left = default_figure_settings.get('im_left')
+    im_left_xz = default_figure_settings.get('im_left_xz')
     im_right = default_figure_settings.get('im_right')
     im_bottom = default_figure_settings.get('im_bottom')
     im_width = default_figure_settings.get('im_width')
@@ -95,6 +96,11 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
         text_color = 'black'
         face_color = 'white'
 
+    if cmap_set is None:
+        # Get the default colormap
+        cmap_set = default_figure_settings.get('colormap')
+        # Evaluate the string to get the actual colormap function
+        cmap_set = eval(cmap_set)
 
     # Create a figure and axis
     fig, ax = plt.subplots(figsize=(fig_width, fig_height))  # width, height
@@ -103,27 +109,30 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
     fig.set_facecolor(face_color)
 
     if plane == 'xy':
-        if slice is None:
+        if layer is None:
             nz = read_parameters_file(paramsfile=paramsfile, paramsvars='nz')
-            slice = (nz//2)-1
-        data = data[:, :, slice]
+            layer = (nz//2)-1
+
+        data = data[:, :, layer]
     elif plane == 'yz':
-        if slice is None:
+        if layer is None:
             nx = read_parameters_file(paramsfile=paramsfile, paramsvars='nx')
-            slice = (nx//2)-1
-        data = data[slice, :, :]
+            layer = (nx//2)-1
+
+        data = data[layer, :, :]
     elif plane == 'xz':
-        if slice is None:
+        if layer is None:
             ny = read_parameters_file(paramsfile=paramsfile, paramsvars='ny')
-            slice = (ny//2)-1
-        data = data[:, slice, :]
+            layer = (ny//2)-1
+            
+        data = data[:, layer, :]
     else:
         raise ValueError("Invalid plane. Use 'xy', 'yz', or 'xz'.")
 
     # Transpose the slice to swap dimensions
     data = data.T
-
-    pcm = ax.pcolormesh(data, cmap=cm.batlow)
+    
+    pcm = ax.pcolormesh(data, cmap=cmap_set)
 
     plt.axis('tight')
     ax.set_aspect('equal', 'box')
@@ -214,7 +223,7 @@ def plot_slice2(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
         # Get the position of the subplot area in figure coordinates
         subplot_position = ax.get_position()
 
-        new_position = [im_left, im_bottom, im_width, im_height]  # left, bottom, width, height
+        new_position = [im_left_xz, im_bottom, im_width, im_height]  # left, bottom, width, height
         ax.set_position(new_position)
 
         # Get the positions of the subplot area
