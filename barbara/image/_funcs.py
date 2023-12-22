@@ -9,14 +9,14 @@ from cmcrameri import cm
 
 
 __all__ = [
-    "plot_layer",
+    "plot_slice",
     "save_figure2"
 ]
 
 
-def plot_layer(data, paramsfile='parameters.json', cmap_set=None, layer=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None, dark_mode=True):
+def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None, dark_mode=True):
     """
-    Visualize 2D layer of 3D volumetric data using Matplotlib.
+    Visualize 2D slice of 3D volumetric data using Matplotlib.
 
     Parameters:
     -----------
@@ -26,10 +26,10 @@ def plot_layer(data, paramsfile='parameters.json', cmap_set=None, layer=None, pl
         Name of the JSON file containing plotting parameters.
     cmap_set : Matplotlib colormap, optional (default=None)
         The colormap to be used for the plot. If not specified, the default colormap (`batlow`) will be used.
-    layer : int, optional (default=None)
-        The index of the slice along the specified plane. If not provided, the default layer index is set to the middle layer.
+    slice : int, optional (default=None)
+        The index of the slice along the specified plane. If not provided, the default slice index is set to the middle slice.
     plane : str, optional (default='xy')
-        The plane along which the layer will be visualized. Valid values are 'xy', 'yz', or 'xz'.
+        The plane along which the slice will be visualized. Valid values are 'xy', 'yz', or 'xz'.
     subvolume : int or float, optional (default=None)
         Specifies a subvolume indicated in the figure.
     labels : list of str, optional (default=None)
@@ -52,13 +52,13 @@ def plot_layer(data, paramsfile='parameters.json', cmap_set=None, layer=None, pl
     ---------
     ```python
     import numpy as np
-    from plot_layer import plot_layer
+    from plot_slice import plot_slice
 
     # Generate example data
     data = np.random.rand(50, 100, 200)
 
-    # Plot XY plane layer
-    fig, ax = plot_layer(data, cmap_set='viridis', layer=10, plane='xy', title='XY Plane Layer')
+    # Plot XY plane slice
+    fig, ax = plot_slice(data, cmap_set='viridis', slice=10, plane='xy', title='XY Plane slice')
     plt.show()
     ```
 
@@ -121,23 +121,23 @@ def plot_layer(data, paramsfile='parameters.json', cmap_set=None, layer=None, pl
     fig.set_facecolor(face_color)
 
     if plane == 'xy':
-        if layer is None:
+        if slice is None:
             nz = read_parameters_file(paramsfile=paramsfile, paramsvars='nz')
-            layer = (nz//2)-1
+            slice = (nz//2)-1
 
-        data = data[:, :, layer]
+        data = data[:, :, slice]
     elif plane == 'yz':
-        if layer is None:
+        if slice is None:
             nx = read_parameters_file(paramsfile=paramsfile, paramsvars='nx')
-            layer = (nx//2)-1
+            slice = (nx//2)-1
 
-        data = data[layer, :, :]
+        data = data[slice, :, :]
     elif plane == 'xz':
-        if layer is None:
+        if slice is None:
             ny = read_parameters_file(paramsfile=paramsfile, paramsvars='ny')
-            layer = (ny//2)-1
+            slice = (ny//2)-1
             
-        data = data[:, layer, :]
+        data = data[:, slice, :]
     else:
         raise ValueError("Invalid plane. Use 'xy', 'yz', or 'xz'.")
 
@@ -333,6 +333,20 @@ def plot_layer(data, paramsfile='parameters.json', cmap_set=None, layer=None, pl
     if subvolume is not None:
         rect = plt.Rectangle(center - subvolume / 2, subvolume, subvolume, fill=False, linewidth=2, edgecolor='r')
         ax.add_patch(rect)
+        
+    # Add slice number as text in the bottom right corner
+    slice_text = f"slice: {slice}"
+    text_box = ax.text(
+        0.95,
+        0.05,
+        slice_text,
+        transform=ax.transAxes,
+        color='white',
+        ha='right',
+        va='bottom',
+        fontsize=14,  # Adjust the fontsize as needed
+        bbox=dict(facecolor='gray', alpha=0.5, pad=5)
+    )
     
 
     return fig, ax
