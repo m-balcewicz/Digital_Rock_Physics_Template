@@ -47,7 +47,7 @@ def get_connected_porosity(data, paramsfile='parameters.json'):
     return poreLabel
 
 
-def get_phase_fractions(data, labels=None, filename=None):
+def get_phase_fractions(data, labels=None, filename=None, log=True):
     """
     Calculate fractions and generate a table. Save the table to a text file with an incremental index.
 
@@ -133,6 +133,7 @@ def get_phase_fractions(data, labels=None, filename=None):
         # Save the table to a text file with the filename
         with open(filename, "w") as file:
             file.write(table)
-
-    print(table)
+    if log:
+        print(table)
+        
     return table
