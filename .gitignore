@@ -20,3 +20,10 @@ examples/*.py
 examples/*.raw
 examples/*.tif
 drp_template/default_params/initialization.json
+
+# packaging tools
+dependecy_links.txt
+PKG-INFO
+requires.txt
+SOURCES.txt
+top_level.txt
