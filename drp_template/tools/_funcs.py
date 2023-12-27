@@ -4,7 +4,7 @@ __all__ = [
     'check_binary'
 ]
 
-from barbara.default_params import print_style
+from drp_template.default_params import print_style
 
 
 def check_binary(model, filename):

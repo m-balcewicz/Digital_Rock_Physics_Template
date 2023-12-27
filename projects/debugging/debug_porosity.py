@@ -1,7 +1,7 @@
-from barbara.drp_template import import_raw, import_2d_tiff, import_3d_tiff
-from barbara.drp_template import plot_slice
-from barbara.drp_template import get_fractions
-from barbara.drp_template import import_export_data as ie
+from drp_template.drp_template import import_raw, import_2d_tiff, import_3d_tiff
+from drp_template.drp_template import plot_slice
+from drp_template.drp_template import get_fractions
+from drp_template.drp_template import import_export_data as ie
 
 data_100cube_raw = import_raw('./subvolume/100cube.raw', dimension=100)
 data_100cube_2d_tiff = import_2d_tiff('subvolume/2D_Tiff', type=2)

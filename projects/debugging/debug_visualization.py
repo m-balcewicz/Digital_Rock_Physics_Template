@@ -1,4 +1,4 @@
-from barbara.drp_template import plot_slice, check_binary
+from drp_template.drp_template import plot_slice, check_binary
 from examples.load_models import raw_cube, binary_cube
 
 data_raw = raw_cube()

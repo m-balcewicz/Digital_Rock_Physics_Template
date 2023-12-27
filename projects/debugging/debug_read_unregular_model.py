@@ -1,8 +1,8 @@
 import os
-from barbara.drp_template import import_export as ie
-from barbara.drp_template import plot_slice
-from barbara.drp_template.import_export import import_csv, export_raw
-from barbara.drp_template.data_review import check_binary
+from drp_template.drp_template import import_export as ie
+from drp_template.drp_template import plot_slice
+from drp_template.drp_template.import_export import import_csv, export_raw
+from drp_template.drp_template.data_review import check_binary
 
 path_in = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/SCIENCE_WORLD/STUDIES/2023_Wave_Attenuation_in_Concrete/concrete_sample_AB16_3pcntAir.raw'
 # path_out = '/Volumes/mbalcewicz/SCIENCE_WORLD/STUDIES/2023_PYTHON_POROSITY/PYTHON/PYTHON_EXPORT'

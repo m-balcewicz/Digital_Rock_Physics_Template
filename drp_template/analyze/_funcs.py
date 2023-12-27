@@ -4,7 +4,7 @@ import glob
 import os
 
 from skimage.measure import label
-from barbara.default_params import read_parameters_file, check_output_folder
+from drp_template.default_params import read_parameters_file, check_output_folder
 
 __all__ = [
     "get_connected_porosity",

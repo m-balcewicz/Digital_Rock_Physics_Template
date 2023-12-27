@@ -13,7 +13,7 @@ import sys
 import numpy as np
 import vtk
 from skimage import io
-from barbara.tools.data_review import check_binary
+from drp_template.tools.data_review import check_binary
 import struct
 import os
 from tifffile import tifffile

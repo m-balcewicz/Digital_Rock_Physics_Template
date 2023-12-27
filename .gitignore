@@ -19,4 +19,4 @@ DRP.log
 examples/*.py
 examples/*.raw
 examples/*.tif
-barbara/default_params/initialization.json
+drp_template/default_params/initialization.json

@@ -5,7 +5,7 @@
 
 import os
 from datetime import datetime
-import barbara.drp_template.import_export as ie
+import drp_template.drp_template.import_export as ie
 
 
 def create_subvolume(data, set_subvolume, name, directory=None, dtype='uint8', endian='little'):

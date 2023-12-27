@@ -2,10 +2,10 @@ import os
 import numpy as np
 from tifffile import tifffile
 
-from barbara.default_params import update_parameters_file
-from barbara.tools import check_binary
-from barbara.tools.dirify import mk_dir
-from barbara.tools.logify import mk_log
+from drp_template.default_params import update_parameters_file
+from drp_template.tools import check_binary
+from drp_template.tools.dirify import mk_dir
+from drp_template.tools.logify import mk_log
 import skimage
 from PIL import Image
 

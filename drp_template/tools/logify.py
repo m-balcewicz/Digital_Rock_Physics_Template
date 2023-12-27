@@ -18,7 +18,7 @@ def mk_log(input_str, print_log=True):
     # log_file_path = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/heidi_toolkit/heidi_toolkit.log'
     # log_file_path = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/heidi_toolkit/heidi_toolkit/A-TRM.log'
     # log_file_path = '/DRP.log'
-    log_file_path = '../barbara/tools/maintenance.log'
+    log_file_path = '../drp_template/tools/maintenance.log'
     formatOut = '%Y-%m-%d %H:%M:%S'
 
     try:

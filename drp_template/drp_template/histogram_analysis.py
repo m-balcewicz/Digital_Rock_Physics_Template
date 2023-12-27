@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-import barbara.default_parameters as params
+import drp_template.default_parameters as params
 
 
 def compare_histograms(data_list, data_vars, dtype='uint16', cmap_set=None):

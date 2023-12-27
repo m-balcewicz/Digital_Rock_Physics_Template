@@ -1,8 +1,8 @@
 import os
 
 import numpy as np
-from barbara.drp_template import import_export as ie
-from barbara.drp_template import plot_slice
+from drp_template.drp_template import import_export as ie
+from drp_template.drp_template import plot_slice
 
 path_in = '/Volumes/files/mbalcewicz/SCIENCE_WORLD/STUDIES/2023_PYTHON_POROSITY/PerGeos/PerGeos_EXPORT'
 path_out = '/Volumes/mbalcewicz/SCIENCE_WORLD/STUDIES/2023_PYTHON_POROSITY/PYTHON/PYTHON_EXPORT'

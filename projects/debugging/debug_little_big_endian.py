@@ -1,5 +1,5 @@
-from barbara.drp_template import plot_slice
-import barbara.drp_template.import_export as ie
+from drp_template.drp_template import plot_slice
+import drp_template.drp_template.import_export as ie
 
 
 

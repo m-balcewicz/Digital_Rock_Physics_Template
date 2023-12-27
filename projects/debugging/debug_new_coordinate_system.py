@@ -4,17 +4,17 @@ import sys
 sys.path.append('/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics_Template')
 
 import matplotlib.pyplot as plt
-import barbara.default_parameters as params
+import drp_template.default_parameters as params
 from matplotlib.ticker import FixedLocator, FixedFormatter
 from cmcrameri import cm
 
-from barbara.drp_template import export_raw
-import barbara.input_output as io
-from barbara.drp_template import plot_slice
-from barbara.image import save_figure2, plot_slice
-from barbara.drp_template import get_fractions
-from barbara.drp_template import label_binary
-from barbara.default_params import read_parameters_file, update_parameters_file
+from drp_template.drp_template import export_raw
+import drp_template.input_output as io
+from drp_template.drp_template import plot_slice
+from drp_template.image import save_figure2, plot_slice
+from drp_template.drp_template import get_fractions
+from drp_template.drp_template import label_binary
+from drp_template.default_params import read_parameters_file, update_parameters_file
 
 file_path = '/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics_Template/examples/pore_100_100_400.raw'
 
