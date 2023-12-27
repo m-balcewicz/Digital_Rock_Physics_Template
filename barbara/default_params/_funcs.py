@@ -36,6 +36,7 @@ def print_style(message, style='indented_separator'):
 
 
 def update_parameters_file(paramsfile='parameters.json', **kwargs):
+    # TODO: CREATE ALWAYS THE FOLDER "output"
     """
     Update or create a JSON file with model parameters.
 
