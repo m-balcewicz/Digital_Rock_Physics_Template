@@ -7,14 +7,15 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FixedFormatter
 from cmcrameri import cm
 
-
 __all__ = [
     "plot_slice",
-    "save_figure2"
+    "save_figure2",
+    "plot_histogram"
 ]
 
 
-def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None, dark_mode=True):
+def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None,
+               title=None, voxel_size=None, dark_mode=True):
     """
     Visualize 2D slice of 3D volumetric data using Matplotlib.
 
@@ -70,7 +71,7 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
     - The `labels` parameter can be used to customize colorbar ticks.
 
     """
-    
+
     # SETTINGS
     # Get the directory of the currently executing script (your module or package)
     package_directory = os.path.dirname(os.path.abspath(__file__))
@@ -123,27 +124,27 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
     if plane == 'xy':
         if slice is None:
             nz = read_parameters_file(paramsfile=paramsfile, paramsvars='nz')
-            slice = (nz//2)-1
+            slice = (nz // 2) - 1
 
         data = data[:, :, slice]
     elif plane == 'yz':
         if slice is None:
             nx = read_parameters_file(paramsfile=paramsfile, paramsvars='nx')
-            slice = (nx//2)-1
+            slice = (nx // 2) - 1
 
         data = data[slice, :, :]
     elif plane == 'xz':
         if slice is None:
             ny = read_parameters_file(paramsfile=paramsfile, paramsvars='ny')
-            slice = (ny//2)-1
-            
+            slice = (ny // 2) - 1
+
         data = data[:, slice, :]
     else:
         raise ValueError("Invalid plane. Use 'xy', 'yz', or 'xz'.")
 
     # Transpose the slice to swap dimensions
     data = data.T
-    
+
     pcm = ax.pcolormesh(data, cmap=cmap_set)
 
     plt.axis('tight')
@@ -153,7 +154,7 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
     if plane == 'xy':
         ax.set_xlabel('X-axis', color=text_color)
         ax.set_ylabel('Y-axis', color=text_color)
-        
+
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
         ax.spines["right"].set_visible(True)
@@ -175,11 +176,11 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
         subplot_height = ax.get_position().height
         subplot_bottom = ax.get_position().y0
         subplot_left = ax.get_position().x0
-        
+
         # Set the colorbar position to match the subplot area
         cax_height = subplot_height
         cax_bottom = subplot_bottom
-        cax_left = subplot_left - (subplot_left*cax_space_left)
+        cax_left = subplot_left - (subplot_left * cax_space_left)
         cax = fig.add_axes([cax_left, cax_bottom, cax_width, cax_height])  # left, bottom, width, height
         cbar = fig.colorbar(pcm, cax=cax, orientation='vertical')
 
@@ -189,13 +190,13 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
     elif plane == 'yz':
         ax.set_xlabel('Y-axis', color=text_color)
         ax.set_ylabel('Z-axis', color=text_color)
-        
+
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
         ax.spines["right"].set_visible(True)
-        
+
         # Move the y-axis to the right side
-        ax.invert_xaxis()  
+        ax.invert_xaxis()
         # Set the color of the tick values to white
         ax.tick_params(axis='both', colors=text_color)
 
@@ -210,17 +211,17 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
         subplot_height = ax.get_position().height
         subplot_bottom = ax.get_position().y0
         subplot_left = ax.get_position().x0
-        
+
         # Set the colorbar position to match the subplot area
         cax_height = subplot_height
         cax_bottom = subplot_bottom
-        cax_left = subplot_left - (subplot_left*cax_space_left)
+        cax_left = subplot_left - (subplot_left * cax_space_left)
         cax = fig.add_axes([cax_left, cax_bottom, cax_width, cax_height])  # left, bottom, width, height
         cbar = fig.colorbar(pcm, cax=cax, orientation='vertical')
 
         # Move the colorbar spines to the left
         cbar.ax.yaxis.set_ticks_position('left')
-        cbar.ax.yaxis.set_label_position('left')              
+        cbar.ax.yaxis.set_label_position('left')
     elif plane == 'xz':
         ax.set_xlabel('X-axis', color=text_color)
         ax.set_ylabel('Z-axis', color=text_color)
@@ -243,11 +244,11 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
         subplot_bottom = ax.get_position().y0
         subplot_left = ax.get_position().x0
         subplot_right = subplot_left + ax.get_position().width
-        
+
         # Set the colorbar position to match the subplot area
         cax_height = subplot_height
         cax_bottom = subplot_bottom
-        cax_right = subplot_right + (subplot_right*cax_space_right)
+        cax_right = subplot_right + (subplot_right * cax_space_right)
         cax = fig.add_axes([cax_right, cax_bottom, cax_width, cax_height])  # left, bottom, width, height
         cbar = fig.colorbar(pcm, cax=cax, orientation='vertical')
 
@@ -267,7 +268,7 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
 
     # Set the color of the colorbar ticks to white
     cbar.ax.tick_params(axis='y', colors=text_color)
-    
+
     if voxel_size is not None:
         # Get the current tick locations
         xticks = ax.get_xticks()
@@ -312,28 +313,28 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
         ax.yaxis.set_major_formatter(FixedFormatter(yticklabels))
     else:
         # Set the x-axis and y-axis labels
-            # Get the current X-axis and Y-axis labels
-            xlabel = ax.get_xlabel()
-            ylabel = ax.get_ylabel()
+        # Get the current X-axis and Y-axis labels
+        xlabel = ax.get_xlabel()
+        ylabel = ax.get_ylabel()
 
-            # Append the suffix "(µm)" to the labels
-            xlabel += ' (voxel)'
-            ylabel += ' (voxel)'
+        # Append the suffix "(µm)" to the labels
+        xlabel += ' (voxel)'
+        ylabel += ' (voxel)'
 
-            # Set the new X-axis and Y-axis labels
-            ax.set_xlabel(xlabel)
-            ax.set_ylabel(ylabel)
-        
+        # Set the new X-axis and Y-axis labels
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
     if labels is not None:
         cbar.set_ticks(np.arange(len(labels)))
         # Use the label_dict to get the string corresponding to the numerical value
         cbar.ax.set_yticklabels([labels[tick] for tick in np.arange(len(labels))])
-        
+
     # Add subvolume rectangle if given
     if subvolume is not None:
         rect = plt.Rectangle(center - subvolume / 2, subvolume, subvolume, fill=False, linewidth=2, edgecolor='r')
         ax.add_patch(rect)
-        
+
     # Add slice number as text in the bottom right corner
     slice_text = f"slice: {slice}"
     text_box = ax.text(
@@ -347,10 +348,43 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
         fontsize=14,  # Adjust the fontsize as needed
         bbox=dict(facecolor='gray', alpha=0.5, pad=5)
     )
-    
 
     return fig, ax
 
+
+def plot_histogram(data, dtype='uint16'):
+    if dtype == 'uint8':
+        gray_max = 255
+    elif dtype == 'uint16':
+        gray_max = 65535
+
+    params.default_figure()
+
+    # Calculate maximum number of data points for histogram
+    # max_data_points = len(np.unique(data))
+    # bins_guess = int(np.sqrt(max_data_points))
+    bins_guess = 255
+
+    # Compute histogram of gray-scale intensities
+    hist, bins = np.histogram(data, bins=bins_guess, range=(0, gray_max))
+
+    # Create a color map for the histogram bars
+    cmap = params.cmap
+    colors = cmap(np.linspace(0, 1, len(bins)))
+
+    # Plot histogram as a line plot
+    fig = plt.figure(figsize=params.figsize)
+    ax = fig.add_axes(params.x_axes_right)
+    ax.plot(bins[:-1], hist, color=params.linecolor, linewidth=params.linewidth)
+
+    # Plot histogram using colored bars
+    ax.bar(bins[:-1], hist, width=bins[1] - bins[0], color=colors[:-1], linewidth=0.5)
+
+    ax.set_yscale('log')  # Set y-axis to logarithmic scale
+    ax.set_xlabel('Gray-scale intensity')
+    ax.set_ylabel('Frequency')
+
+    return fig
 
 
 def save_figure2(figure, filename=None, format="png", dpi=300, log=True):
@@ -391,5 +425,4 @@ def save_figure2(figure, filename=None, format="png", dpi=300, log=True):
     figure.savefig(full_path, dpi=dpi)
 
     if log:
-            print(f"Figure saved at: {os.path.abspath(full_path)}")
-
+        print(f"Figure saved at: {os.path.abspath(full_path)}")
