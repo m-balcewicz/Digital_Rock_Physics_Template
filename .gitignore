@@ -5,7 +5,7 @@ __pycache__/
 # folders to ignore
 examples/data/tiff_sequences
 examples/export
-/examples/.ipynb_checkpoints/
+examples/.ipynb_checkpoints/
 examples/output
 .idea/
 .DS_Store
@@ -28,4 +28,5 @@ PKG-INFO
 requires.txt
 SOURCES.txt
 top_level.txt
+
 
