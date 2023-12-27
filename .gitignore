@@ -22,7 +22,7 @@ examples/*.tif
 drp_template/default_params/initialization.json
 
 # packaging tools
-dependecy_links.txt
+dependency_links.txt
 PKG-INFO
 requires.txt
 SOURCES.txt
