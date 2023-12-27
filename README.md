@@ -63,7 +63,12 @@ pip install -r requirements.txt --upgrade
 ```
 Remember to check the package documentation or specific usage instructions for more details.
 
-
+# R O A D M A P
+## Todo list
+- [ ] Convert from `drp_template` and `rp_template` to `barbara`.
+- [ ] Rename `barabra` to `drp`.
+- [ ] Publish DRP_Template.
+- [ ] 
 
 
 # N O T E S
