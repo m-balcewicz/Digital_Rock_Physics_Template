@@ -35,25 +35,33 @@ def print_style(message, style='indented_separator'):
     print(f"{style_chars * max_line_length}")
 
 
-def update_parameters_file(paramsfile='parameters.json', **kwargs):
-    # TODO: CREATE ALWAYS THE FOLDER "output"
+def check_output_folder():
     """
-    Update or create a JSON file with model parameters.
-
-    Parameters:
-    -----------
-    paramsfile : str (optional)
-        Name of the JSON file. Default is 'parameters.json'.
-    **kwargs : dict
-        Arbitrary keyword arguments representing the parameters and their values.
+    Check if the 'output' folder exists in the current directory.
+    If not, create the folder.
 
     Returns:
-    None
+    str: Full path to the 'output' folder.
     """
+    output_folder = 'output'
+
+    # Check if the 'output' folder exists, create if not
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    # Return the full path to the 'output' folder
+    return os.path.abspath(output_folder)
+
+
+def update_parameters_file(paramsfile='parameters.json', **kwargs):
+    # Check output folder
+    output_path = check_output_folder()
+
     # Check if the file exists
-    if os.path.isfile(paramsfile):
+    file_path = os.path.join(output_path, paramsfile)
+    if os.path.isfile(file_path):
         # File exists, load existing data
-        with open(paramsfile, 'r') as file:
+        with open(file_path, 'r') as file:
             data = json.load(file)
     else:
         # File doesn't exist, create an empty dictionary
@@ -67,7 +75,7 @@ def update_parameters_file(paramsfile='parameters.json', **kwargs):
     data.update(kwargs)
 
     # Write data back to the file
-    with open(paramsfile, 'w') as file:
+    with open(file_path, 'w') as file:
         json.dump(data, file, indent=4)
 
 
@@ -95,12 +103,16 @@ def read_parameters_file(paramsfile='parameters.json', paramsvars=None):
     print(params_values)
     ```
     """
+    # Check output folder
+    output_path = check_output_folder()
+
     # Check if the file exists
-    if not os.path.isfile(paramsfile):
-        raise FileNotFoundError(f"The file '{paramsfile}' does not exist.")
+    file_path = os.path.join(output_path, paramsfile)
+    if not os.path.isfile(file_path):
+        raise FileNotFoundError(f"The file '{file_path}' does not exist.")
 
     # File exists, load existing data
-    with open(paramsfile, 'r') as file:
+    with open(file_path, 'r') as file:
         data = json.load(file)
 
     # If specific parameter names are provided, get the values
