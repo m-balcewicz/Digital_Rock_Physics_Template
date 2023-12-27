@@ -22,6 +22,7 @@ examples/*.tif
 drp_template/default_params/initialization.json
 
 # packaging tools
+drp_template.egg-info
 dependency_links.txt
 PKG-INFO
 requires.txt
