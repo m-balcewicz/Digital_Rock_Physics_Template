@@ -6,6 +6,7 @@ __pycache__/
 examples/data/tiff_sequences
 examples/export
 examples/.ipynb_checkpoints
+examples/output
 .idea/
 .DS_Store
 projects/
