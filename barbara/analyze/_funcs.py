@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 import glob
+import os
 
 from skimage.measure import label
-from barbara.default_params import read_parameters_file
+from barbara.default_params import read_parameters_file, check_output_folder
 
 __all__ = [
     "get_connected_porosity",
@@ -105,35 +106,36 @@ def get_phase_fractions(data, labels=None, filename=None, log=True):
     # Convert the DataFrame to a string format
     table = df_table.to_string(index=False)
 
+    # Check output folder
+    output_path = check_output_folder()
+
     if filename is not None:
         # Use the index in the filename
         filename = f"{filename}.txt"
 
         # Save the table to a text file with the filename
-        with open(filename, "w") as file:
+        with open(os.path.join(output_path, filename), "w") as file:
             file.write(table)
     else:
         # Find the highest existing index
-        existing_files = glob.glob("fraction_*.txt")
-        existing_indices = [int(filename.split("_")[1].split(".")[0]) for filename in existing_files]
+        existing_files = glob.glob(os.path.join(output_path, "fraction_*.txt"))
+        existing_indices = [int(os.path.basename(filename).split("_")[1].split(".")[0]) for filename in existing_files]
         highest_index = max(existing_indices) if existing_indices else 0
 
         # Increment the index for the new file
         new_index = highest_index + 1
 
-        # Use the index in the filename
-        filename = f"fraction_{new_index}.txt"
-
         # Format the index with leading zeros using %
-        index_formatted = "%03d" % new_index
+        index_formatted = f"{new_index:03d}"
 
         # Use the index in the filename
-        filename = f"fraction_{index_formatted}.txt"
+        filename = os.path.join(output_path, f"fraction_{index_formatted}.txt")
 
         # Save the table to a text file with the filename
         with open(filename, "w") as file:
             file.write(table)
+
     if log:
         print(table)
-        
+
     return table

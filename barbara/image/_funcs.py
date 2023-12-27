@@ -2,7 +2,7 @@ import glob
 import os
 import numpy as np
 import barbara.default_parameters as params
-from barbara.default_params import read_parameters_file
+from barbara.default_params import read_parameters_file, check_output_folder
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FixedFormatter
 from cmcrameri import cm
@@ -406,10 +406,13 @@ def save_figure2(figure, filename=None, format="png", dpi=300, log=True):
         If True, print the full path where the figure is saved. Default is True.
     """
 
+    # Check output folder
+    output_path = check_output_folder()
+
     if filename is None:
         # Find the highest existing index
-        existing_files = glob.glob("figure_*.png")
-        existing_indices = [int(name.split("_")[1].split(".")[0]) for name in existing_files]
+        existing_files = glob.glob(os.path.join(output_path, "figure_*.png"))
+        existing_indices = [int(os.path.basename(name).split("_")[1].split(".")[0]) for name in existing_files]
         highest_index = max(existing_indices, default=0)
 
         # Increment the index for the new file
@@ -419,10 +422,14 @@ def save_figure2(figure, filename=None, format="png", dpi=300, log=True):
         index_formatted = f"{new_index:03d}"
 
         # Use the index in the filename
-        filename = f"figure_{index_formatted}"
+        filename = os.path.join(output_path, f"figure_{index_formatted}")
+
+    else:
+        # Use the index in the filename
+        filename = os.path.join(output_path, filename)
 
     # Save the figure
-    full_path = os.path.join(filename + "." + format)
+    full_path = f"{filename}.{format}"
     figure.savefig(full_path, dpi=dpi)
 
     if log:

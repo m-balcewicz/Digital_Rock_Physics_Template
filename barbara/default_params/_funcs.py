@@ -5,6 +5,7 @@ from datetime import datetime
 
 __all__ = [
     'print_style',
+    'check_output_folder',
     'update_parameters_file',
     'read_parameters_file'
 ]
