@@ -1,6 +1,17 @@
 # Digital Rock Physics Template
 
-Brief description of your package.
+The Digital Rock Physics Template is a Python package designed to facilitate digital rock physics and rock physics analysis based on the principles outlined in "The Rock Physics Handbook: Tools for Seismic Analysis of Porous Media" by Gary Mavko, Tapan Mukerji, and Jack Dvorkin (2020), DOI: [https://10.1017/9781108333016](https://doi.org/10.1017/9781108333016). This project is not affiliated with or endorsed by "The Rock Physics Handbook" authors or Cambridge University Press.
+
+## Overview
+
+Digital rock physics involves the integration of computational techniques, image analysis, and rock physics models to understand and predict the physical properties of porous media. This package provides a set of tools for working with digital rock data, performing simulations, and visualizing results.
+
+## Features
+
+- **Digital Rock Data Handling:** Import and manipulate digital rock data.
+- **Visualization:** Generate visualizations, including slices and phase fraction tables.
+- **Parameter Management:** Easily update and manage model parameters.
+
 
 ## Installation
 
@@ -54,7 +65,7 @@ Remember to check the package documentation or specific usage instructions for m
 
 
 
-# | - - - - - - - - - - - - - - - - - - - - |
+
 # N O T E S
 ## Global settings
 Since 24.11.2023 the general shape for all models is set to (x, y, z)
