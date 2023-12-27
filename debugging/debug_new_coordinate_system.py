@@ -1,7 +1,7 @@
 # New Python script
 
 import sys
-sys.path.append('/Users/martin/Library/Mobile Documents/com~apple~CloudDocs/MYDATA/CODING_WORLD/PYTHON_WORLD/Digital_Rock_Physics_Template')
+sys.path.append('/')
 
 import matplotlib.pyplot as plt
 import drp_template.default_parameters as params
