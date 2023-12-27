@@ -3,7 +3,7 @@
 __pycache__/
 
 # folders to ignore
-examples/tiff_sequences
+examples/data/tiff_sequences
 examples/export
 examples/.ipynb_checkpoints
 .idea/
