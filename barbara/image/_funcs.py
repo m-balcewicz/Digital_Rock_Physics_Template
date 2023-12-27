@@ -353,6 +353,7 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
 
 
 def plot_histogram(data, dtype='uint16'):
+    # TODO: ADJUST THIS FUNCTION
     if dtype == 'uint8':
         gray_max = 255
     elif dtype == 'uint16':
