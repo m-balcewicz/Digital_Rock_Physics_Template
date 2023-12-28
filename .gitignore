@@ -3,14 +3,14 @@
 __pycache__/
 
 # folders to ignore
-.idea/
+.idea
 .DS_Store
-/examples/data/tiff_sequences
-/examples/export
-/examples/.ipynb_checkpoints/
-/examples/output
-/projects
-/debugging
+examples/data/tiff_sequences
+examples/export
+examples/.ipynb_checkpoints
+examples/output
+projects
+debugging
 
 # files to ignore
 DRP.log
