@@ -1,6 +1,14 @@
 # Some settings for .gitignore
 # List to ignore
 __pycache__/
+drp_template/__pycache__
+drp_template/analyze/__pycache__
+drp_template/default_params/__pycache__
+drp_template/drp_template/__pycache__
+drp_template/image/__pycache__
+drp_template/input_output/__pycache__
+drp_template/rp_template/__pycache__
+drp_template/tools/__pycache__
 
 # folders to ignore
 .idea
@@ -11,6 +19,7 @@ examples/.ipynb_checkpoints
 examples/output
 projects
 debugging
+
 
 # files to ignore
 DRP.log
