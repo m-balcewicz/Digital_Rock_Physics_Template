@@ -99,12 +99,15 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
     dimensions = data.shape
     center = np.array([dimensions[0] / 2, dimensions[0] / 2])
 
+    # Set color scheme based on dark_mode
     if dark_mode:
         text_color = 'white'
         face_color = 'black'
+        edge_color = 'white'
     else:
         text_color = 'black'
         face_color = 'white'
+        edge_color = 'black'
 
     if cmap_set is None:
         # Get the default colormap
@@ -112,10 +115,8 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
         # Evaluate the string to get the actual colormap function
         cmap_set = eval(cmap_set)
 
-    # Create a figure and axis
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height))  # width, height
-
-    # Set the background color
+    # Create a figure and axis with adjusted font family and size
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
     fig.set_facecolor(face_color)
 
     if plane == 'xy':
@@ -149,8 +150,9 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
 
     # Set labels and title
     if plane == 'xy':
-        ax.set_xlabel('X-axis', color=text_color)
-        ax.set_ylabel('Y-axis', color=text_color)
+        # Set labels and title with adjusted font size and family
+        ax.set_xlabel('X-axis', color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
+        ax.set_ylabel('Y-axis', color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
 
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
@@ -185,8 +187,8 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
         cbar.ax.yaxis.set_ticks_position('left')
         cbar.ax.yaxis.set_label_position('left')
     elif plane == 'yz':
-        ax.set_xlabel('Y-axis', color=text_color)
-        ax.set_ylabel('Z-axis', color=text_color)
+        ax.set_xlabel('Y-axis', color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
+        ax.set_ylabel('Z-axis', color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
 
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
@@ -220,8 +222,8 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
         cbar.ax.yaxis.set_ticks_position('left')
         cbar.ax.yaxis.set_label_position('left')
     elif plane == 'xz':
-        ax.set_xlabel('X-axis', color=text_color)
-        ax.set_ylabel('Z-axis', color=text_color)
+        ax.set_xlabel('X-axis', color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
+        ax.set_ylabel('Z-axis', color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
 
         ax.yaxis.tick_left()
         ax.yaxis.set_label_position("left")
@@ -254,9 +256,9 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
         cbar.ax.yaxis.set_label_position('right')
 
     if title is None:
-        title = ax.set_title(im_title, color=text_color)
+        title = ax.set_title(im_title, color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
     else:
-        title = ax.set_title(title, color=text_color)
+        title = ax.set_title(title, color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
     title.set_position((0.5, 1.0))  # Set the position in axes coordinates
 
     # Set the text color of the colormap
@@ -349,30 +351,26 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
     return fig, ax
 
 
-def plot_histogram(data, dtype='uint16', cmap_set=None, title=None, dark_mode=True):
-    if dtype == 'uint8':
-        gray_max = 255
-    elif dtype == 'uint16':
-        gray_max = 65535
+def plot_histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None, title=None, log_scale='both', dark_mode=True):
+    # Set dtype based on the parameters file if not provided
+    if dtype is None:
+        dtype = read_parameters_file(paramsfile=paramsfile, paramsvars='dtype')
 
+    # Determine gray_max based on dtype
+    gray_max = 255 if dtype == 'uint8' else 65535
+
+    # Set default colormap if not specified
     if cmap_set is None:
-        # Get the default colormap
         cmap_set = default_figure_settings.get('colormap')
-        # Evaluate the string to get the actual colormap function
         cmap_set = eval(cmap_set)
 
+    # Set color scheme based on dark_mode
     if dark_mode:
-        text_color = 'white'
-        face_color = 'black'
+        text_color, face_color, edge_color = 'white', 'black', 'white'
     else:
-        text_color = 'black'
-        face_color = 'white'
+        text_color, face_color, edge_color = 'black', 'white', 'black'
 
-
-
-    # params.default_figure()
-
-    # Calculate the number of bins using the Freedman-Diaconis rule
+    # Calculate histogram bins using Freedman-Diaconis rule
     iqr = np.percentile(data, 75) - np.percentile(data, 25)
     bins_width = 2 * iqr / (len(data) ** (1 / 3))
     bins = np.arange(0, gray_max + bins_width, bins_width)
@@ -382,27 +380,39 @@ def plot_histogram(data, dtype='uint16', cmap_set=None, title=None, dark_mode=Tr
 
     # Create a color map for the histogram bars
     cmap = plt.cm.get_cmap(cmap_set)
-    colors = cmap(np.linspace(0, 1, len(bins) - 1))  # Adjust here
+    colors = cmap(np.linspace(0, 1, len(bins) - 1))
 
     # Plot histogram using colored bars
-    fig, ax = plt.subplots(figsize=params.figsize)
-    ax.bar(bins[:-1], hist, width=bins_width, color=colors, linewidth=0.5)  # Adjust here
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
+    ax.bar(bins[:-1], hist, width=bins_width, color=colors, linewidth=0.5, edgecolor=edge_color)
 
-    # Set log scale on both axes
-    # ax.set_xscale('log')
-    ax.set_yscale('log')
+    # Apply log scale based on the log_scale parameter
+    if log_scale == 'both':
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+    elif log_scale == 'x':
+        ax.set_xscale('log')
+    elif log_scale == 'y':
+        ax.set_yscale('log')
 
-    # Set labels and title
-    ax.set_xlabel('Gray-scale intensity')
-    ax.set_ylabel('Frequency')
+    # Set labels and title with adjusted font size
+    font_size = plt.rcParams['font.size']
+    ax.set_xlabel('Gray-scale intensity', color=text_color, fontsize=font_size)
+    ax.set_ylabel('Frequency', color=text_color, fontsize=font_size)
 
-    if title is None:
-        title = ax.set_title(im_title, color=text_color)
-    else:
-        title = ax.set_title(title, color=text_color)
+    # Set title with adjusted font size
+    title_text = 'Histogram' if title is None else title
+    ax.set_title(title_text, color=text_color, fontsize=font_size)
 
-    # Set tick parameters
-    ax.tick_params(axis='both', which='both', direction='in', labelsize=8)
+    # Set tick parameters with adjusted font size
+    ax.tick_params(axis='both', which='both', direction='in', labelsize=font_size, colors=text_color)
+
+    # Set spines edge color for the entire subplot
+    for spine in ax.spines.values():
+        spine.set_edgecolor(edge_color)
+
+    # Set background color
+    ax.set_facecolor(face_color)
 
     return fig, ax
 
