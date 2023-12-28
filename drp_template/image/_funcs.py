@@ -416,7 +416,7 @@ def plot_histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None
 
     # Set color scheme based on dark_mode
     if dark_mode:
-        text_color, face_color, edge_color = 'white', 'black', 'white'
+        text_color, face_color, edge_color = 'white', 'black', 'white' 
     else:
         text_color, face_color, edge_color = 'black', 'white', 'black'
 
@@ -434,7 +434,7 @@ def plot_histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None
 
     # Plot histogram using colored bars
     fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
-    ax.bar(bins[:-1], hist, width=bins_width, color=colors, linewidth=0.5, edgecolor=edge_color)
+    ax.bar(bins[:-1], hist, width=bins_width, color=colors, linewidth=0.5, edgecolor=None) # no edgecolor for the bars
 
     # Apply log scale based on the log_scale parameter
     if log_scale == 'both':
