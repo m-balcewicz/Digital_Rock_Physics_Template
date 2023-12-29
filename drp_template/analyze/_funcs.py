@@ -2,13 +2,16 @@ import numpy as np
 import pandas as pd
 import glob
 import os
+import matplotlib.pyplot as plt
 
 from skimage.measure import label
 from drp_template.default_params import read_parameters_file, check_output_folder
+from drp_template.image import plot_slice
 
 __all__ = [
-    "get_connected_porosity",
-    "get_phase_fractions"
+    'get_connected_porosity',
+    'get_phase_fractions',
+    'label_binary'
 ]
 
 
@@ -139,3 +142,55 @@ def get_phase_fractions(data, labels=None, filename=None, log=True):
         print(table)
 
     return table
+
+
+def label_binary(data, paramsfile='parameters.json'):
+    """
+    Label binary phases in a 3D volume based on user input.
+
+    Parameters:
+    -----------
+    data : numpy.ndarray
+        3D binary volume to be labeled.
+
+    Returns:
+    --------
+    labels : dict
+        Dictionary mapping phase values to user-defined labels.
+    """
+    from IPython.display import display
+
+    # Ensure the input is a binary array (contains only integers)
+    if not np.issubdtype(data.dtype, np.integer):
+        raise ValueError("Input data must be a binary array containing only integers (0 or 1).")
+
+    # Get the unique values and their counts
+    unique, counts = np.unique(data, return_counts=True)
+
+    # Create an empty labels dictionary
+    labels = {}
+
+    for m, value in enumerate(unique):
+        # Create a copy of the input array and set all values to 0
+        data_temp = np.zeros_like(data)
+
+        # Set the values that match the current unique value to 1
+        data_temp[data == value] = 1
+
+        # Set the values that match the current unique value to 1
+        data_temp[data == unique[m]] = 1
+        fig, ax = plot_slice(data=data_temp, plane='xy', paramsfile=paramsfile, title=f"Phase: {m}")
+        
+        # Display the figure in the Jupyter Notebook
+        display(fig)
+
+        # Prompt the user to name the presented phase and store the input in labels
+        phase_name = input(f'Name the presented phase {value} with index {m}: ')
+        labels[value] = phase_name
+        
+        # Close the figure to avoid displaying it again
+        plt.close(fig)
+        
+    print(labels)
+
+    return labels
