@@ -1,7 +1,7 @@
 import glob
 import os
 import numpy as np
-import drp_template.default_parameters as params
+import drp_template.bin.default_parameters as params
 from drp_template.default_params import read_parameters_file, check_output_folder
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FixedFormatter
