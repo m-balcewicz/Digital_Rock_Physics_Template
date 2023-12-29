@@ -15,18 +15,15 @@ drp_template/tools/__pycache__
 .vscode
 .DS_Store
 examples/data/tiff_sequences
-examples/export
 examples/.ipynb_checkpoints
 examples/output
 projects
 debugging
 
-
 # files to ignore
 DRP.log
-examples/*.py
-examples/*.raw
-examples/*.tif
+examples/data/*.raw
+examples/data/*.tif
 Dockerfile
 
 # packaging tools
