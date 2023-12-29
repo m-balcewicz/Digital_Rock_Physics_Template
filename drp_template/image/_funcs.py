@@ -4,13 +4,15 @@ import numpy as np
 import drp_template.bin.default_parameters as params
 from drp_template.default_params import read_parameters_file, check_output_folder
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 from matplotlib.ticker import FixedLocator, FixedFormatter
 from cmcrameri import cm
 
 __all__ = [
-    "plot_slice",
-    "save_figure2",
-    "plot_histogram"
+    'plot_slice',
+    'save_figure2',
+    'plot_histogram',
+    'plot_effective_modulus'
 ]
 
 # S E T T I N G S
@@ -36,6 +38,7 @@ cax_space_right = default_figure_settings.get('cax_space_right')
 im_title = default_figure_settings.get('im_title')
 plt.rcParams['font.size'] = default_figure_settings.get('font_size')
 plt.rcParams['font.family'] = default_figure_settings.get('font_family')
+
 
 
 def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None,
@@ -591,6 +594,75 @@ def plot_histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None
 #         raise ValueError("Mask must be a list of two integers with the first value smaller than the second value.")
 #
 #     return fig
+
+
+def plot_effective_modulus(phi, modulus, data, types='avg', dark_mode=False, fig_width=8, fig_height=6):
+    """
+    Plot effective modulus against porosity.
+
+    Parameters:
+    - phi (numpy.ndarray): Array of porosity values.
+    - modulus (str): Modulus type, e.g., 'bulk' or 'shear'.
+    - data (dict): Dictionary containing modulus data.
+                   Example: {'voigt': voigt_data, 'reuss': reuss_data, 'hs_upper': hs_upper_data, 'hs_lower': hs_lower_data, 'avg': avg_data}
+                   where voigt_data, reuss_data, hs_upper_data, hs_lower_data, and avg_data are arrays of modulus values.
+    - types (str or list): Type or list of types of modulus to plot. Options: 'voigt', 'reuss', 'hs_upper', 'hs_lower', 'avg'.
+                          You can also pass a list of types to plot multiple types.
+                          If 'all' is passed, it will plot all available types.
+    - dark_mode (bool): Use dark color scheme if True, else use light color scheme.
+    - fig_width (float): Width of the figure.
+    - fig_height (float): Height of the figure.
+    
+    Returns:
+    - fig (matplotlib.figure.Figure): The matplotlib figure.
+    - ax (matplotlib.axes._subplots.AxesSubplot): The matplotlib axes.
+    """   
+    if dark_mode:
+        text_color, face_color, edge_color = 'white', 'black', 'white'
+    else:
+        text_color, face_color, edge_color = 'black', 'white', 'black'
+    
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
+    
+    color1 = face_color
+    color2 = 'tomato' if dark_mode else 'darkred'
+    
+    title = f"Effective {modulus.capitalize()} Modulus ($GPa$)"
+    ax.set_title(title, color=text_color)
+    
+    if types == 'all':
+        types = ['voigt', 'reuss', 'hs_upper', 'hs_lower', 'avg']
+    elif isinstance(types, str):
+        types = [types]
+
+    for mod_type in types:
+        modulus_values = np.array(data[mod_type])
+        labels = {
+            'voigt': 'Voigt Upper Bound',
+            'reuss': 'Reuss Lower Bound',
+            'hs_upper': 'Hashin–Shtrikman Upper Bound',
+            'hs_lower': 'Hashin–Shtrikman Lower Bound',
+            'avg': 'Voigt-Reuss-Hill Average',
+        }
+        
+        marker_style = {'voigt': '-', 'reuss': '-', 'hs_upper': 'dashed', 'hs_lower': '-.', 'avg': '-'}
+        
+        ax.plot(phi, modulus_values, label=labels[mod_type], linestyle=marker_style[mod_type], marker='o', markersize=4, markerfacecolor=face_color, markeredgecolor=edge_color)
+
+    ax.set_xlabel("Porosity", color=text_color)
+    ax.set_ylabel(f"{modulus.capitalize()} Modulus", color=text_color)
+    ax.legend()
+    ax.tick_params(axis='y', colors=text_color)
+    ax.xaxis.set_major_formatter(plt.PercentFormatter(1.00))  # convert x-axis into percent
+    plt.xlim([0, 1])
+    
+    return fig, ax
+
+
+
+
+
+    
 
 def save_figure2(figure, filename=None, format="png", dpi=300, log=True):
     """
