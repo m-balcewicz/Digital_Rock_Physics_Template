@@ -1,1 +1,1 @@
-from ._funcs import *
+from ._funcs import plot_slice, plot_histogram, save_figure2

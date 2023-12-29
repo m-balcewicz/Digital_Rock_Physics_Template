@@ -2,7 +2,6 @@ import numpy as np
 
 __all__ = [
     'check_binary',
-    'list_dir_info',
     'list_dir_info'
 ]
 
@@ -32,22 +31,6 @@ def check_binary(model, filename):
         model = model - 1
 
     return model
-
-def get_dir_info(directory):
-    file_info_list = []
-    for filename in os.listdir(directory):
-        file_path = os.path.join(directory, filename)
-        if os.path.isfile(file_path):
-            file_info = {}
-            file_info['filename'] = filename
-            file_info['filetype'] = os.path.splitext(filename)[1]
-            file_info['filesize_bytes'] = os.path.getsize(file_path)
-            file_info['filesize_megabytes'] = file_info['filesize_bytes'] / 1000000.0
-            file_info['full_path'] = os.path.abspath(file_path)
-            file_info_list.append(file_info)
-
-    file_info_list = pd.DataFrame(file_info_list)
-    return file_info_list
 
 
 def list_dir_info(directory, extension=None):
