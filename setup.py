@@ -6,7 +6,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'numpy~=1.24.4',
-        'matplotlib~=3.7.2',
+        'matplotlib>=3.7.2, <3.8.2',
         'cmcrameri~=1.7',
         'pandas~=2.0.3',
         'scikit-image~=0.20.0',
