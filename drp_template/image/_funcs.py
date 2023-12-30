@@ -4,7 +4,7 @@ import numpy as np
 import drp_template.bin.default_parameters as params
 from drp_template.default_params import read_parameters_file, check_output_folder
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
+import matplotlib.ticker as mtick
 from matplotlib.ticker import FixedLocator, FixedFormatter
 from cmcrameri import cm
 
@@ -596,7 +596,7 @@ def plot_histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None
 #     return fig
 
 
-def plot_effective_modulus(phi, modulus, data, types='avg', dark_mode=False, fig_width=8, fig_height=6):
+def plot_effective_modulus(phi, modulus, data, types='avg', dark_mode=False):
     """
     Plot effective modulus against porosity.
 
@@ -623,11 +623,12 @@ def plot_effective_modulus(phi, modulus, data, types='avg', dark_mode=False, fig
         text_color, face_color, edge_color = 'black', 'white', 'black'
     
     fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
+    fig.set_facecolor(face_color)  # Set the face color of the entire figure   
     
     color1 = face_color
     color2 = 'tomato' if dark_mode else 'darkred'
     
-    title = f"Effective {modulus.capitalize()} Modulus ($GPa$)"
+    title = f"Effective {modulus.capitalize()} Modulus"
     ax.set_title(title, color=text_color)
     
     if types == 'all':
@@ -650,10 +651,21 @@ def plot_effective_modulus(phi, modulus, data, types='avg', dark_mode=False, fig
         ax.plot(phi, modulus_values, label=labels[mod_type], linestyle=marker_style[mod_type], marker='o', markersize=4, markerfacecolor=face_color, markeredgecolor=edge_color)
 
     ax.set_xlabel("Porosity", color=text_color)
-    ax.set_ylabel(f"{modulus.capitalize()} Modulus", color=text_color)
-    ax.legend()
-    ax.tick_params(axis='y', colors=text_color)
-    ax.xaxis.set_major_formatter(plt.PercentFormatter(1.00))  # convert x-axis into percent
+    ax.set_ylabel(f"{modulus.capitalize()} Modulus ($GPa$)", color=text_color)
+    
+    # Set the face and edge color of the axes (background within the plot)
+    ax.set_facecolor(face_color)
+    for spine in ax.spines.values():
+        spine.set_edgecolor(edge_color)
+    
+    legend = ax.legend(facecolor=face_color, edgecolor=edge_color)
+    
+    for text in legend.get_texts():
+        text.set_color(text_color)
+        
+    ax.tick_params(axis='y', colors=text_color, which='both')
+    ax.tick_params(axis='x', colors=text_color, which='both')
+    ax.xaxis.set_major_formatter(mtick.PercentFormatter(1.00))  # convert x-axis into percent
     plt.xlim([0, 1])
     
     return fig, ax
