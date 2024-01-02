@@ -79,6 +79,10 @@ def get_normalized_f_solid(porosity, f_solid_components, type='solid'):
 
     Returns:
     - normalized_solid_fractions (numpy.ndarray): Normalized solid fractions.
+    
+    Note:
+    - For 'solid' type, the sum of initial fractions should be approximately equal to 1 for each column.
+    - For 'solid-porosity' type, the sum of initial fractions plus porosity should be approximately equal to 1 for each column.
     """
 
     if type == 'solid':
