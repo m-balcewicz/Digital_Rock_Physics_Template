@@ -5,10 +5,10 @@ setup(
     version='0.1.0',
     packages=find_packages(),
     install_requires=[
-        'numpy~=1.24.4',
+        'numpy>=1.24.0',
         'matplotlib>=3.7.2, <3.8.2',
         'cmcrameri~=1.7',
-        'pandas~=2.0.3',
+        'pandas>=2.0.0',
         'scikit-image~=0.20.0',
         'vtk~=9.2.6',
         'tifffile~=2023.4.12',
