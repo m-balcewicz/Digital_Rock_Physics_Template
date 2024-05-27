@@ -1,13 +1,13 @@
 import os
 import numpy as np
-from tifffile import tifffile
+# from tifffile import tifffile
 
 from drp_template.default_params import update_parameters_file, check_output_folder
 from drp_template.tools import check_binary, mk_paramsfile, get_model_dimensions, reshape_model
-from drp_template.tools.dirify import mk_dir
-from drp_template.tools.logify import mk_log
-import skimage
-from PIL import Image
+# from drp_template.tools.dirify import mk_dir
+# from drp_template.tools.logify import mk_log
+# import skimage
+# from PIL import Image
 
 __all__ = [
     'import_model',
@@ -15,7 +15,6 @@ __all__ = [
     'import_tif_model',
     'export_model',
     'export_header'
-    # 'export_tif_model'
 ]
 
 
@@ -178,26 +177,6 @@ def import_tif_model(filename):
     model = skimage.io.imread(filename)
 
     return model
-
-
-# def export_tif_model(model, directory, filename):
-#     # Create the directory if it doesn't exist
-#     directory = mk_dir(directory)
-#
-#     # Combine the directory and file name variables using os.path.join
-#     filepath = os.path.join(directory, filename + '.tif')  # add '.tif' to the file name
-#
-#     # Check if the model is a memmap
-#     if isinstance(model, np.memmap):
-#         # If it is a memmap, convert it to a regular NumPy array
-#         model = np.array(model)
-#
-#     # Create a TiffWriter instance
-#     with tifffile.TiffWriter(filepath, bigtiff=True) as tif:
-#         # Iterate over each slice and write it to the TIFF file
-#         for slice_idx in range(model.shape[0]):
-#             tif.save(model[slice_idx], compress=6)  # Adjust compress level as needed
-
 
 def export_model(filename, data, dtype='>f4', order='F'):
     """
