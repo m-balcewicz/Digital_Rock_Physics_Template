@@ -240,3 +240,36 @@ def reorder_labels(data, labels, paramsfile = 'parameters.json') :
     update_parameters_file(paramsfile, labels=new_labels)
     
     return data, new_labels
+
+
+def find_slice_with_all_values(data):
+    # Get all unique values in the 3D array
+    unique_values = np.unique(data)
+
+    # Helper function to check if a 2D slice contains all unique values
+    def check_slice(slice):
+        slice_unique_values = np.unique(slice)
+        return np.all(np.isin(unique_values, slice_unique_values))
+
+    # Initialize the result dictionary
+    slice_with_all_values = {"xy": None, "yz": None, "xz": None}
+
+    # Check the xy slices
+    for i in range(data.shape[2]):
+        if check_slice(data[:, :, i]):
+            slice_with_all_values["xy"] = i
+            break
+
+    # Check the yz slices
+    for i in range(data.shape[0]):
+        if check_slice(data[i, :, :]):
+            slice_with_all_values["yz"] = i
+            break
+
+    # Check the xz slices
+    for i in range(data.shape[1]):
+        if check_slice(data[:, i, :]):
+            slice_with_all_values["xz"] = i
+            break
+
+    return slice_with_all_values
