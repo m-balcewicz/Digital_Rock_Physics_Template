@@ -214,10 +214,17 @@ def export_model(filename, data, dtype='>f4', order='F'):
     file_path = os.path.join(output_path, filename)
     
     # Ensure that the array is dtype='>f4' or the specified dtype
-    nx, ny, nz, dim = np.shape(data)
-    data_tmp = np.zeros((nz, nx, ny, dim), dtype=dtype)
-    # convert the date into data_tmp
-    data_tmp[:, :, :, :] = data[:, :, :, :]
+    # Check the shape of the data
+    if len(data.shape) == 4:
+        nx, ny, nz, dim = np.shape(data)
+        data_tmp = np.zeros((nz, nx, ny, dim), dtype=dtype)
+        data_tmp[:, :, :, :] = data[:, :, :, :]
+    elif len(data.shape) == 3:
+        nx, ny, nz = np.shape(data)
+        data_tmp = np.zeros((nz, nx, ny), dtype=dtype)
+        data_tmp[:, :, :] = data[:, :, :]
+    else:
+        raise ValueError("Data should be a 3D or 4D array")
     
     data = data_tmp
     model_reshaped = data.reshape(data.size, order=order)
