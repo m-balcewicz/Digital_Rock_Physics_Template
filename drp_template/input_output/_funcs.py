@@ -245,7 +245,7 @@ def export_header(filename, data):
     # Add the conditional statement
     if n3 == '000001':
         n3 = n4
-        n4 = '1'
+    n4 = '1'
 
     # Define the dimensions
     dim = [n1, n2, n3, n4]
