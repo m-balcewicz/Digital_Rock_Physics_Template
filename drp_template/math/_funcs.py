@@ -186,13 +186,12 @@ def label_binary(data, paramsfile='parameters.json'):
 
         # Prompt the user to name the presented phase and store the input in labels
         phase_name = input(f'Name the presented phase {value} with index {m}: ')
-        labels[value] = phase_name
+        labels[str(value)] = phase_name  # Convert the key to a string
         
         # Close the figure to avoid displaying it again
         plt.close(fig)
-        
-    print(labels)
-    # update the parameters file with the new labels
+           
+    # update the parameters file with the new labels dictionary
     update_parameters_file(paramsfile, labels=labels)
 
     return labels
