@@ -198,7 +198,7 @@ def label_binary(data, paramsfile='parameters.json'):
     return labels
 
 
-def reorder_labels(data,labels, set_order=[1,0,2], paramsfile='parameters.json'):
+def reorder_labels(data, labels, paramsfile = 'parameters.json') :
     """This is a function to reorder the labels of a segmented image. The standard order for segmented images is:
     0: Pore
     1: Matrix-1 (e.g., Quartz)
@@ -206,35 +206,38 @@ def reorder_labels(data,labels, set_order=[1,0,2], paramsfile='parameters.json')
     3: Matrix-3 (e.g., Mica)
 
     Args:
-        data (_type_): _description_
-        paramsfile (str, optional): _description_. Defaults to 'parameters.json'.
+        data (np.ndarray): The segmented image data.
+        labels (Dict[int, str]): The labels of the segmented image.
+        set_order (List[int], optional): The desired order of the labels. Defaults to [1,0,2].
+        paramsfile (str, optional): The parameters file to update with the new labels. Defaults to 'parameters.json'.
     """
+    # Get the current order of the labels dictionary
+    old_labels = list(labels.values())
+    print(f"old labels: {old_labels}")
     
-    # Get the uniques values and order of the labels
-    unique_labels = np.unique(labels)
+    # Get the current order of the labels integers
+    old_order = list(labels.keys())
+    print(f"old order: {old_order}")
     
-    # Get the order of the set_order labels
-    set_order = np.array(set_order)
+    # Get the set_order from the users labels input
+    set_order = list(set(labels.keys()))
+    print(f"set order: {set_order}")
     
-    # Compare if the order of unique labels is the same as the set_order
-    if np.array_equal(unique_labels, set_order):
-        return data, labels
-    else:
-        # Create a new array to store the new labels
-        new_labels = np.zeros_like(labels)
-        
-        # Loop over the unique labels
-        for i, label in enumerate(unique_labels):
-            # Get the index of the label in the set_order
-            new_label = np.where(set_order == label)[0][0]
-            
-            # Replace the old label with the new label
-            new_labels[labels == label] = new_label
-        
-        # Update the labels
-        labels = new_labels
-        
-        # Update the data
-        data = np.where(data == 1, labels, data)
+   # Create a mapping from old_order to set_order
+    label_mapping = {old: new for new, old in zip(set_order, old_order)}
+    print(f"label mapping: {label_mapping}")
     
-    return data, labels
+    # Create a new labels dictionary with the new order
+    new_labels = {new: labels[old] for old, new in label_mapping.items()}
+    print(f"new labels: {new_labels}")
+    
+    # Create a function that maps old labels to new labels
+    map_labels = np.vectorize(label_mapping.get)
+    
+    # Apply the function to the data array
+    data = map_labels(data)
+    
+    # update the parameters file with the new labels
+    update_parameters_file(paramsfile, labels=new_labels)
+    
+    return data, new_labels
