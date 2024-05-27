@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 
 from skimage.measure import label
-from drp_template.default_params import read_parameters_file, check_output_folder
+from drp_template.default_params import read_parameters_file, check_output_folder, update_parameters_file
 from drp_template.image import plot_slice
 
 __all__ = [
@@ -192,5 +192,49 @@ def label_binary(data, paramsfile='parameters.json'):
         plt.close(fig)
         
     print(labels)
+    # update the parameters file with the new labels
+    update_parameters_file(paramsfile, labels=labels)
 
     return labels
+
+
+def reorder_labels(data,labels, set_order=[1,0,2], paramsfile='parameters.json'):
+    """This is a function to reorder the labels of a segmented image. The standard order for segmented images is:
+    0: Pore
+    1: Matrix-1 (e.g., Quartz)
+    2: Matrix-2 (e.g., Feldspar)
+    3: Matrix-3 (e.g., Mica)
+
+    Args:
+        data (_type_): _description_
+        paramsfile (str, optional): _description_. Defaults to 'parameters.json'.
+    """
+    
+    # Get the uniques values and order of the labels
+    unique_labels = np.unique(labels)
+    
+    # Get the order of the set_order labels
+    set_order = np.array(set_order)
+    
+    # Compare if the order of unique labels is the same as the set_order
+    if np.array_equal(unique_labels, set_order):
+        return data, labels
+    else:
+        # Create a new array to store the new labels
+        new_labels = np.zeros_like(labels)
+        
+        # Loop over the unique labels
+        for i, label in enumerate(unique_labels):
+            # Get the index of the label in the set_order
+            new_label = np.where(set_order == label)[0][0]
+            
+            # Replace the old label with the new label
+            new_labels[labels == label] = new_label
+        
+        # Update the labels
+        labels = new_labels
+        
+        # Update the data
+        data = np.where(data == 1, labels, data)
+    
+    return data, labels
