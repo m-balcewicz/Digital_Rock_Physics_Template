@@ -169,6 +169,10 @@ def label_binary(data, paramsfile='parameters.json'):
 
     # Create an empty labels dictionary
     labels = {}
+    
+    # Get the slice in the xy plane that contains all unique values corresponding to 0
+    slice = find_slice_with_all_values(data)
+    slice_index = slice['xy']
 
     for m, value in enumerate(unique):
         # Create a copy of the input array and set all values to 0
@@ -179,7 +183,7 @@ def label_binary(data, paramsfile='parameters.json'):
 
         # Set the values that match the current unique value to 1
         data_temp[data == unique[m]] = 1
-        fig, ax = plot_slice(data=data_temp, plane='xy', paramsfile=paramsfile, title=f"Phase: {m}")
+        fig, ax = plot_slice(data=data_temp, plane='xy', paramsfile=paramsfile, title=f"Phase: {m}", slice=slice_index)
         
         # Display the figure in the Jupyter Notebook
         display(fig)
