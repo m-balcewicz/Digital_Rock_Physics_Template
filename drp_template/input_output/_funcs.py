@@ -13,6 +13,8 @@ __all__ = [
     'import_model',
     'import_tiff_sequence',
     'import_tif_model',
+    'export_model',
+    'export_header'
     # 'export_tif_model'
 ]
 
