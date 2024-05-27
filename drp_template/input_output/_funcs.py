@@ -235,7 +235,12 @@ def export_model(filename, data, dtype='>f4', order='F'):
     
 def export_header(filename, data):
     # Extract the dimensions from the shape of the input data
-    n1, n2, n3, n4 = [format(dim, '06') for dim in data.shape]
+    if len(data.shape) == 4:
+        n1, n2, n3, n4 = [format(dim, '06') for dim in data.shape]
+    elif len(data.shape) == 3:
+            n1, n2, n3 = [format(dim, '06') for dim in data.shape]
+    else:
+        raise ValueError("Data should be a 3D or 4D array")
     
     # Add the conditional statement
     if n3 == '000001':
