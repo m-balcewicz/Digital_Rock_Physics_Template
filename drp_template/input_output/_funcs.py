@@ -100,6 +100,7 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
             raise ValueError("Unsupported shape. Unable to determine correct axis order.")
 
     # Update the parameters.json file
+    update_parameters_file(paramsfile=params_filename, file_path=file_path)
     update_parameters_file(paramsfile=params_filename,dim=model.ndim)
     print(f"Dimensions: {model.ndim}")
     update_parameters_file(paramsfile=params_filename, nx=model.shape[0], ny=model.shape[1], nz=model.shape[2])
@@ -108,7 +109,7 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
     print(f"nz: {model.shape[2]}")
     update_parameters_file(paramsfile=params_filename, voxel_size=voxel_size)
     update_parameters_file(paramsfile=params_filename, dtype=dtype)
-    update_parameters_file(paramsfile=params_filename, file_path=file_path)
+    
 
 
     # Check wrong label numbering
@@ -232,7 +233,6 @@ def export_model(filename, data, dtype='>f4', order='F', filetype='.raw'):
     model_reshaped.T.tofile(file_path)
     
     print(f"data saved: {file_path}")
-    export_header(file_path, data)
     
 def export_header(filename, data):
     # Extract the dimensions from the shape of the input data
