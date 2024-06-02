@@ -178,7 +178,7 @@ def import_tif_model(filename):
 
     return model
 
-def export_model(filename, data, dtype='>f4', order='F'):
+def export_model(filename, data, dtype='>f4', order='F', filetype='.raw'):
     """
     Writes moduli data to a binary file in big-endian or little-endian format with Fortran or C ordering.
 
@@ -211,7 +211,7 @@ def export_model(filename, data, dtype='>f4', order='F'):
     
     output_path = check_output_folder()
     
-    file_path = os.path.join(output_path, filename)
+    file_path = os.path.join(output_path, filename + filetype)
     
     # Ensure that the array is dtype='>f4' or the specified dtype
     # Check the shape of the data
