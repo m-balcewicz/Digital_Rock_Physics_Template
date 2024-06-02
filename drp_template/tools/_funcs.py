@@ -1,8 +1,10 @@
 import numpy as np
+import os
 
 __all__ = [
     'check_binary',
-    'list_dir_info'
+    'list_dir_info',
+    'mk_paramsfile'
 ]
 
 from drp_template.default_params import print_style
@@ -58,3 +60,75 @@ def list_dir_info(directory, extension=None):
                              if any(file.endswith(extension) for file in os.listdir(os.path.join(directory, file)))]
 
     return directory_listing
+
+
+def mk_paramsfile(file_path):
+    filename, extension = os.path.splitext(os.path.basename(file_path))
+    params_filename = filename+'.json'
+    print(f"Parameters filename: {params_filename}")
+    
+    return params_filename
+
+
+def get_model_dimensions(dimensions_dict):
+    """_summary_
+
+    Args:
+        dimensions_dict (_type_): _description_
+
+    Raises:
+        ValueError: _description_
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+        
+    Example:
+        dimensions_dict = {'nz': 100, 'ny': 200, 'nx': 300}
+    """
+    # Ensure dimensions is a dictionary
+    if dimensions_dict is None:
+        raise ValueError("At least two dimensions (nx, ny, nz) must be provided.")
+
+    # Unpack dimensions in the determined order
+    nx = dimensions_dict.get('nx', None)
+    ny = dimensions_dict.get('ny', None)
+    nz = dimensions_dict.get('nz', None)
+
+    # Check if at least two dimensions are provided
+    if sum(dim is not None for dim in [nx, ny, nz]) < 2:
+        raise ValueError("At least two dimensions (nx, ny, nz) must be provided.")
+
+    # Create separate iterators for n1, n2, and n3
+    iterator = iter(dimensions_dict.items())
+    n1 = next(iterator)
+    n2 = next(iterator)
+    n3 = next(iterator)
+    
+    return n1, n2, n3
+
+def reshape_model(model, n1, n2, n3):
+    # Check if the dimensions order is not in the desired order (nx, ny, nz)
+    if (n1[0], n2[0], n3[0]) != ('nx', 'ny', 'nz'):
+        print("Reshaping data to the desired order (nx, ny, nz)...")
+
+        # Check the specific reshaping conditions
+        if (n1[0], n2[0], n3[0]) == ('nx', 'nz', 'ny'):
+            model_reshaped = np.moveaxis(model, (0, 1, 2), (0, 2, 1))
+        elif (n1[0], n2[0], n3[0]) == ('nz', 'ny', 'nx'):
+            model_reshaped = np.moveaxis(model, (0, 1, 2), (2, 1, 0))
+        elif (n1[0], n2[0], n3[0]) == ('nz', 'nx', 'ny'):
+            model_reshaped = np.moveaxis(model, (0, 1, 2), (2, 0, 1))
+        elif (n1[0], n2[0], n3[0]) == ('ny', 'nx', 'nz'):
+            model_reshaped = np.moveaxis(model, (0, 1, 2), (1, 0, 2))
+        elif (n1[0], n2[0], n3[0]) == ('ny', 'nz', 'nx'):
+            model_reshaped = np.moveaxis(model, (0, 1, 2), (1, 2, 0))
+    elif (n1[0], n2[0], n3[0]) == ('nx', 'ny', 'nz'):
+        # No need to move axes, dimensions are already correct
+        print("Model dimensions are already in the desired order (nx, ny, nz).")
+        model_reshaped = model
+        pass
+    else:
+        raise ValueError("Unsupported shape. Unable to determine correct axis order.")
+    
+    return model_reshaped
