@@ -108,38 +108,9 @@ def get_phase_fractions(data, labels=None, paramsfile='parameters.json', log=Fal
 
     # Convert the DataFrame to a string format
     table = df_table.to_string(index=False)
-
-    # Check output folder
-    # output_path = check_output_folder()
-
-    # if filename is not None:
-    #     # Use the index in the filename
-    #     filename = f"{filename}.txt"
-
-    #     # Save the table to a text file with the filename
-    #     with open(os.path.join(output_path, filename), "w") as file:
-    #         file.write(table)
-    # else:
-    #     # Find the highest existing index
-    #     existing_files = glob.glob(os.path.join(output_path, "fraction_*.txt"))
-    #     existing_indices = [int(os.path.basename(filename).split("_")[1].split(".")[0]) for filename in existing_files]
-    #     highest_index = max(existing_indices) if existing_indices else 0
-
-    #     # Increment the index for the new file
-    #     new_index = highest_index + 1
-
-    #     # Format the index with leading zeros using %
-    #     index_formatted = f"{new_index:03d}"
-
-    #     # Use the index in the filename
-    #     filename = os.path.join(output_path, f"fraction_{index_formatted}.txt")
-
-    #     # Save the table to a text file with the filename
-    #     with open(filename, "w") as file:
-    #         file.write(table)
     
     # Update the parameters file with the fractions
-    fractions = {str(phase): fraction for phase, fraction in zip(unique_values, percentages)}
+    fractions = {labels[int(phase)]: fraction for phase, fraction in zip(unique_values, percentages)}
     update_parameters_file(paramsfile, fractions=fractions)
 
     if log:
