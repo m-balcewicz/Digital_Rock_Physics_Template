@@ -12,7 +12,8 @@ __all__ = [
     'plot_slice',
     'save_figure2',
     'plot_histogram',
-    'plot_effective_modulus'
+    'plot_effective_modulus',
+    'plot_effective_modulus2'
 ]
 
 # S E T T I N G S
@@ -596,7 +597,7 @@ def plot_histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None
 #     return fig
 
 
-def plot_effective_modulus(phi, modulus, data, types='avg', dark_mode=False):
+def plot_effective_modulus(phi, data, modulus='bulk', types='avg', dark_mode=False):
     """
     Plot effective modulus against porosity.
 
@@ -648,7 +649,122 @@ def plot_effective_modulus(phi, modulus, data, types='avg', dark_mode=False):
         
         marker_style = {'voigt': '-', 'reuss': '-', 'hs_upper': 'dashed', 'hs_lower': '-.', 'avg': '-'}
         
-        ax.plot(phi, modulus_values, label=labels[mod_type], linestyle=marker_style[mod_type], marker='o', markersize=4, markerfacecolor=face_color, markeredgecolor=edge_color)
+        ax.plot(phi, modulus_values, label=labels[mod_type], linestyle=marker_style[mod_type], marker='o', markersize=6)
+
+    ax.set_xlabel("Porosity", color=text_color)
+    ax.set_ylabel(f"{modulus.capitalize()} Modulus ($GPa$)", color=text_color)
+    
+    # Set the face and edge color of the axes (background within the plot)
+    ax.set_facecolor(face_color)
+    for spine in ax.spines.values():
+        spine.set_edgecolor(edge_color)
+    
+    legend = ax.legend(facecolor=face_color, edgecolor=edge_color)
+    
+    for text in legend.get_texts():
+        text.set_color(text_color)
+        
+    # Add grid
+    plt.grid(True, linestyle='--', alpha=0.7)
+
+    ax.tick_params(axis='y', colors=text_color, which='both')
+    ax.tick_params(axis='x', colors=text_color, which='both')
+    ax.xaxis.set_major_formatter(mtick.PercentFormatter(1.00))  # convert x-axis into percent
+    plt.xlim([0, 1])
+    
+    return fig, ax
+
+
+def plot_effective_modulus2(phi, modulus, data, k, u, types='avg', dark_mode=False, fig_width=8, fig_height=6):
+    """
+    Plot effective modulus against porosity.
+
+    Parameters:
+    - phi (float): Input porosity value.
+    - modulus (str): Modulus type, e.g., 'bulk' or 'shear'.
+    - data (dict): Dictionary containing modulus data.
+                   Example: {'bulk': {'voigt': voigt_data, 'reuss': reuss_data, 'hs_upper': hs_upper_data, 'hs_lower': hs_lower_data, 'avg': avg_data},
+                            'shear': {'voigt': u_voigt, 'reuss': u_reuss, 'hs_upper': u_hs_upper, 'hs_lower': u_hs_lower, 'avg': u_avg}}
+                   where voigt_data, reuss_data, hs_upper_data, hs_lower_data, and avg_data are arrays of modulus values.
+    - types (str or list): Type or list of types of modulus to plot. Options: 'voigt', 'reuss', 'hs_upper', 'hs_lower', 'avg'.
+                          You can also pass a list of types to plot multiple types.
+                          If 'all' is passed, it will plot all available types.
+    - dark_mode (bool): Use dark color scheme if True, else use light color scheme.
+    - fig_width (float): Width of the figure.
+    - fig_height (float): Height of the figure.
+    
+    Returns:
+    - fig (matplotlib.figure.Figure): The matplotlib figure.
+    - ax (matplotlib.axes._subplots.AxesSubplot): The matplotlib axes.
+    """   
+    from drp_template.math import bound2
+    
+    if dark_mode:
+        text_color, face_color, edge_color = 'white', 'black', 'white'
+    else:
+        text_color, face_color, edge_color = 'black', 'white', 'black'
+    
+    # Define the range of porosity values to calculate
+    phi_all = np.linspace(0, 1, 100)
+    
+    # Call the bound function to calculate bounds
+    bounds_data = bound2(type='voigt-reuss', fractions=phi_all, k=k, u=u)
+    
+    k_voigt, k_reuss, u_voigt, u_reuss, k_avg, u_avg = bounds_data
+
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
+    fig.set_facecolor(face_color)  # Set the face color of the entire figure   
+    
+    color1 = face_color
+    color2 = 'tomato' if dark_mode else 'darkred'
+    
+    title = f"Effective {modulus.capitalize()} Modulus"
+    ax.set_title(title, color=text_color)
+    
+    if types == 'all':
+        types = ['voigt', 'reuss', 'hs_upper', 'hs_lower', 'avg']
+    elif isinstance(types, str):
+        types = [types]
+
+    # Plot for each specified type
+    for mod_type in types:
+        labels = {
+            'voigt': 'Voigt Upper Bound',
+            'reuss': 'Reuss Lower Bound',
+            'hs_upper': 'Hashin–Shtrikman Upper Bound',
+            'hs_lower': 'Hashin–Shtrikman Lower Bound',
+            'avg': 'Voigt-Reuss-Hill Average',
+        }
+        
+        marker_style = {'voigt': '-', 'reuss': '-', 'hs_upper': 'dashed', 'hs_lower': '-.', 'avg': '-'}
+
+        # Plot the line for the entire porosity range
+        for i, modulus_value in enumerate(data[modulus][mod_type]):
+            ax.plot(phi_all, np.interp(phi_all, phi, modulus_value), label=f"{labels[mod_type]} (Line) {i+1}", linestyle=marker_style[mod_type], color='lightgrey')
+
+            # Plot a marker for the input porosity
+            ax.plot(phi, np.interp(phi, phi_all, np.interp(phi, phi_all, modulus_value)), marker='o', markersize=8, label=f"{labels[mod_type]} (Marker) {i+1}", linestyle='None', color=color1)
+
+    # Plot bounds if necessary
+    if 'voigt' in types:
+        ax.plot(phi_all, np.interp(phi_all, phi, k_voigt), label="Voigt Bound (Line)", linestyle='-', color='orange')
+        ax.plot(phi, np.interp(phi, phi_all, k_voigt), marker='o', markersize=8, label="Voigt Bound (Marker)", linestyle='None', color='orange')
+
+    if 'reuss' in types:
+        ax.plot(phi_all, np.interp(phi_all, phi, k_reuss), label="Reuss Bound (Line)", linestyle='-', color='purple')
+        ax.plot(phi, np.interp(phi, phi_all, k_reuss), marker='o', markersize=8, label="Reuss Bound (Marker)", linestyle='None', color='purple')
+
+    if 'hs_upper' in types:
+        ax.plot(phi_all, np.interp(phi_all, phi, k_hs_upper), label="HS Upper Bound (Line)", linestyle='--', color='brown')
+        ax.plot(phi, np.interp(phi, phi_all, k_hs_upper), marker='o', markersize=8, label="HS Upper Bound (Marker)", linestyle='None', color='brown')
+
+    if 'hs_lower' in types:
+        ax.plot(phi_all, np.interp(phi_all, phi, k_hs_lower), label="HS Lower Bound (Line)", linestyle='-.', color='green')
+        ax.plot(phi, np.interp(phi, phi_all, k_hs_lower), marker='o', markersize=8, label="HS Lower Bound (Marker)", linestyle='None', color='green')
+
+    if 'avg' in types:
+        ax.plot(phi_all, np.interp(phi_all, phi, k_avg), label="Average (Line)", linestyle='-', color='red')
+        ax.plot(phi, np.interp(phi, phi_all, k_avg), marker='o', markersize=8, label="Average (Marker)", linestyle='None', color='red')
 
     ax.set_xlabel("Porosity", color=text_color)
     ax.set_ylabel(f"{modulus.capitalize()} Modulus ($GPa$)", color=text_color)
