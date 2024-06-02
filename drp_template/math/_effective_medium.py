@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 __all__ = [
     'density_solid_mix',
@@ -68,63 +69,88 @@ def Brie_law(s_water, s_oil, s_gas, k_water,k_oil, k_gas, e=3):
     return k_Brie
     
     
-def get_normalized_f_solid(porosity, f_solid_components, type='solid'):
+def get_normalized_f_solid(porosity, f_solid_components, components=None):
     """
-    Calculate normalized solid fractions based on the given porosity.
+    Calculate normalized solid fractions based on the given porosity. The function utilizes NumPy and pandas for efficient array operations and data manipulation.
 
     Parameters:
     - porosity (float or numpy.ndarray): The porosity of the rock (0 <= porosity <= 1).
     - f_solid_components (numpy.ndarray): Initial fractions of solid phases.
-    - type (str): Type of check to perform. Use 'solid' for sum check, 'solid-porosity' for sum + porosity check.
+    - phases (list of str): List of phase names corresponding to the solid components.
 
     Returns:
-    - normalized_solid_fractions (numpy.ndarray): Normalized solid fractions.
-    
-    Note:
-    - For 'solid' type, the sum of initial fractions should be approximately equal to 1 for each column.
-    - For 'solid-porosity' type, the sum of initial fractions plus porosity should be approximately equal to 1 for each column.
+    - result_df (pandas.DataFrame): A DataFrame containing the normalized solid fractions, corresponding phase names, and the "Porosity" column.
+
+    Raises:
+    - ValueError: If the input values do not meet the specified conditions.
+
+    Example:
+    ```python
+    porosity = 0.2
+    f_solid_components = np.array([0.3, 0.4, 0.3])
+    phases = ['Quartz', 'Feldspar', 'Dolomite']
+
+    result_df = get_normalized_f_solid(porosity, f_solid_components, phases=phases)
+
+    ```
     """
+    
+    # Check if f_solid_components is a 1D array
+    if f_solid_components.ndim == 1:
+        if components is None or len(components) != f_solid_components.shape[0]:
+            raise ValueError('Invalid number of phases. Provide a list of phase names with the correct length.')
+        # Check if the sum of each column + porosity is approximately equal to 1
+        print(f"porosity: {porosity}")
+        print(f"components:\n{f_solid_components}")
+        column_sums = np.sum(f_solid_components, axis=0) + porosity
+        print(f"column_sums: {column_sums}")
+        if not np.allclose(column_sums, 1):
+            raise ValueError(f'The sum of each column + porosity must be approximately equal to 1. Problematic columns.')
+        
+        # Calculate the normalized solid fractions
+        normalized_solid_fractions = f_solid_components.T / (1 - porosity)
+        
+        print(f"normalized_solid_fractions:\n{normalized_solid_fractions}")
+        
+        # Check if the sum of the normalzed solid fractions is equal to 1
+        column_sums = np.sum(normalized_solid_fractions, axis=0)
+        if not np.allclose(column_sums, 1):
+            raise ValueError('The sum of the normalized solid fractions is not equal to 1')
 
-    if type == 'solid':
-        # Check if f_solid_components is a 1D array
-        if f_solid_components.ndim == 1:
-            # Check if the sum of initial fractions is approximately equal to 1
-            if not np.allclose(np.sum(f_solid_components), 1):
-                raise ValueError('The sum of initial fractions must be approximately equal to 1.')
-        elif f_solid_components.ndim == 2:
-            # Check if the sum of each column is approximately equal to 1
-            column_sums = np.sum(f_solid_components, axis=0)
-            if not np.allclose(column_sums, 1):
-                problematic_columns = np.where(~np.isclose(column_sums, 1))[0]
-                raise ValueError(f'The sum of each column must be approximately equal to 1. Problematic columns: {problematic_columns}.')
-        else:
-            raise ValueError('Invalid shape for f_solid_components. It should be a 1D or 2D array.')
-
-    elif type == 'solid-porosity':
-        # Check if f_solid_components is a 1D array
-        if f_solid_components.ndim == 1:
-            # Check if the sum of initial fractions + porosity is approximately equal to 1
-            if not np.allclose(np.sum(f_solid_components) + porosity, 1):
-                raise ValueError('The sum of initial fractions + porosity must be approximately equal to 1.')
-        elif f_solid_components.ndim == 2:
-            # Check if the sum of each column + porosity is approximately equal to 1
-            if len(porosity) != f_solid_components.shape[1]:
-                raise ValueError('Length of porosity must match the number of columns in f_solid_components.')
-            
-            column_sums = np.sum(f_solid_components, axis=0) + porosity
-            if not np.allclose(column_sums, 1):
-                problematic_columns = np.where(~np.isclose(column_sums, 1))[0]
-                raise ValueError(f'The sum of each column + porosity must be approximately equal to 1. Problematic columns: {problematic_columns}.')
-        else:
-            raise ValueError('Invalid shape for f_solid_components. It should be a 1D or 2D array.')
+        
+    elif f_solid_components.ndim == 2:
+        if components is None or len(components) != f_solid_components.shape[1]:
+            raise ValueError('Invalid number of phases. Provide a list of phase names with the correct length.')
+        # Check if the length of porosity array is equal to f_solid_components
+        if len(porosity) != f_solid_components.shape[0]:
+            raise ValueError('Length of porosity must match the number of columns in f_solid_components.')
+        # Check if the sum of each column + porosity is approximately equal to 1
+        column_sums = np.sum(f_solid_components, axis=1) + porosity
+        if not np.allclose(column_sums, 1):
+            problematic_columns = np.where(~np.isclose(column_sums, 1))[0]
+            raise ValueError(f'The sum of each column + porosity must be approximately equal to 1. Problematic columns: {problematic_columns}.')
+        
+        # Calculate the normalized solid fractions
+        normalized_solid_fractions = f_solid_components.T / (1 - porosity)
+        
+        # Check if the sum of the normalized solid fractions is equal to 1
+        column_sums = np.sum(normalized_solid_fractions, axis=0)
+        if not np.allclose(column_sums, 1):
+            raise ValueError('The sum of the normalized solid fractions is not equal to 1')
 
     else:
-        raise ValueError('Invalid value for check_type. Use "solid" or "solid-porosity".')
+        raise ValueError('Invalid shape for f_solid_components. It should be a 1D or 2D array.')
+    
 
-    # Calculate the normalized solid fractions
-    normalized_solid_fractions = (1 - porosity) * f_solid_components / np.sum(f_solid_components, axis=0)
+    # transpose the shape of the array
+    normalized_solid_fractions = normalized_solid_fractions.T 
+    # Create column names based on the length and strings of components
+    column_names = [component for component in components]
+    df_normalized_solid_fractions = pd.DataFrame(normalized_solid_fractions, columns=column_names)
+    # Add "Porosity" column
+    df_normalized_solid_fractions['Porosity'] = porosity
 
-    return normalized_solid_fractions
+    return df_normalized_solid_fractions
 
 
 
@@ -201,6 +227,13 @@ def bound(f_volume, k_component, u_component, type='voigt-reuss'):
     
     elif type == 'fluid': # Bulk modulus bounds after Voigt, Reuss, and Brie
 
+        print("""
+              In fluids, such as liquids and gases, 
+              the molecular structure lacks the ability to sustain shear stress 
+              in a manner that would allow the definition of a shear modulus.
+              Therefore, there is no shear modulus in fluids.
+            """)
+        
         k_voigt = np.sum(f_volume * k_component)  # Voigt (upper) bound
         k_reuss = 1 / np.sum(f_volume / k_component)  # Reuss (lower) bound
 
