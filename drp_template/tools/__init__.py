@@ -1,1 +1,1 @@
-from ._funcs import check_binary, list_dir_info, mk_paramsfile, get_model_dimensions, reshape_model
+from ._funcs import check_binary, list_dir_info, mk_paramsfile, get_model_dimensions, reshape_model, create_subvolume

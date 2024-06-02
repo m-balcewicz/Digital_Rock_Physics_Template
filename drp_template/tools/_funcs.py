@@ -1,14 +1,18 @@
 import numpy as np
 import os
 
+import drp_template.input_output as io
+from drp_template.default_params import print_style
+import drp_template.default_params as dp
+
 __all__ = [
     'check_binary',
     'list_dir_info',
-    'mk_paramsfile'
+    'mk_paramsfile',
+    'get_model_dimensions',
+    'reshape_model',
+    'create_subvolume'
 ]
-
-from drp_template.default_params import print_style
-
 
 def check_binary(model, filename):
     unique_phases = np.unique(model)
@@ -132,3 +136,28 @@ def reshape_model(model, n1, n2, n3):
         raise ValueError("Unsupported shape. Unable to determine correct axis order.")
     
     return model_reshaped
+
+
+def create_subvolume(data, set_subvolume, name_subvolume, directory=None, dtype='<f4', order='C'):
+    x, y, z = data.shape
+
+    # define cutting
+    cut_x = (x - set_subvolume) // 2
+    cut_y = (y - set_subvolume) // 2
+    cut_z = (z - set_subvolume) // 2
+
+    # create subvolume
+    data_subvolume = data[cut_x:x - cut_x, cut_y:y - cut_y, cut_z:z - cut_z]
+
+    varname = f"{name_subvolume}_{set_subvolume}cube"
+
+    # set the directory to 'output' if not provided
+    if directory is None:
+        directory = dp.check_output_folder()
+        
+    file_path = os.path.join(directory, varname)
+
+    # Save new data_subvolume as a 'uint8' raw file
+    io.export_model(filename=file_path, data=data_subvolume, dtype=dtype, order=order)
+
+    return data_subvolume
