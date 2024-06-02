@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-def import_model(file_path, dtype, dimensions=None, mode='r', order='C'):
+def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', order='C'):
     """
     Import multidimensional model file using np.memmap.
 
@@ -106,6 +106,7 @@ def import_model(file_path, dtype, dimensions=None, mode='r', order='C'):
     print(f"nx: {model.shape[0]}")
     print(f"ny: {model.shape[1]}")
     print(f"nz: {model.shape[2]}")
+    update_parameters_file(paramsfile=params_filename, voxel_size=voxel_size)
     update_parameters_file(paramsfile=params_filename, dtype=dtype)
     update_parameters_file(paramsfile=params_filename, file_path=file_path)
 
