@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from skimage.measure import label
 from drp_template.default_params import read_parameters_file, check_output_folder, update_parameters_file
 from drp_template.image import plot_slice
+from drp_template.tools import find_slice_with_all_values
 
 __all__ = [
     'get_connected_porosity',
