@@ -65,6 +65,9 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
     # params_filename = filename+'.json'
     # print(f"Parameters filename: {params_filename}")
     params_filename = mk_paramsfile(file_path)
+    
+    # Get the file format from the file extension of the input file: file_path
+    file_format = file_path.split('.')[-1]   
 
     # Ensure dimensions is a dictionary
     if dimensions is None:
@@ -118,9 +121,8 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
     print(f"nz: {model.shape[2]}")
     update_parameters_file(paramsfile=params_filename, voxel_size=voxel_size)
     update_parameters_file(paramsfile=params_filename, dtype=dtype)
+    update_parameters_file(paramsfile=params_filename, file_format=file_format)
     
-
-
     # Check wrong label numbering
     model = check_binary(model=model, filename=file_path)
 
@@ -178,8 +180,8 @@ def loadmat(file_path, var_key=None, voxel_size=None):
     nx = model.shape[0]
     ny = model.shape[1]
     nz = model.shape[2]
-    file_format = 'mat'
-    
+    # Get the file format from the file extension of the input file: file_path
+    file_format = file_path.split('.')[-1]   
    
     # Update the parameters.json file
     update_parameters_file(paramsfile=params_filename, file_path=file_path)
@@ -191,6 +193,9 @@ def loadmat(file_path, var_key=None, voxel_size=None):
     print(f"nz: {model.shape[2]}")
     update_parameters_file(paramsfile=params_filename, voxel_size=voxel_size)
     update_parameters_file(paramsfile=params_filename, file_format=file_format)
+    
+    # Check wrong label numbering
+    model = check_binary(model=model, filename=file_path)
     
     return model
 
