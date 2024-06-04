@@ -143,6 +143,7 @@ def loadmat(file_path, var_key=None, voxel_size=None):
     Load a .mat file and return the data as a numpy array.
 
     This function is used to load a .mat file (MATLAB file format) and return the data as a numpy array. It provides options to specify the key of the variable in the .mat file to load and the size of the voxel.
+    The MATLAB file must be saved as -v7.3 compatible for h5py.
 
     Parameters:
     -----------
