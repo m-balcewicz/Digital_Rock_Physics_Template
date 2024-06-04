@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import h5py
 # from tifffile import tifffile
 
 from drp_template.default_params import update_parameters_file, check_output_folder
@@ -11,6 +12,7 @@ from drp_template.tools import check_binary, mk_paramsfile, get_model_dimensions
 
 __all__ = [
     'import_model',
+    'loadmat',
     'import_tiff_sequence',
     'import_tif_model',
     'export_model',
@@ -22,9 +24,11 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
     """
     Import multidimensional model file using np.memmap.
 
+    This function is used to import a raw file into a numpy memmap array. It provides options to specify the data type and dimensions of the data, as well as the mode and order in which the file is read.
+
     Parameters:
     -----------
-    file_path  : str
+    file_path : str
         Path to the raw file.
     dtype : str
         Data type for the raw file (e.g., 'uint8', 'uint16', 'float32', etc.).
@@ -41,6 +45,11 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
         Numpy memmap array representing the raw file data.
     used_variables : dict
         Dictionary containing the used variables.
+
+    Raises:
+    -------
+    IOError:
+        If the file cannot be read.
 
     Examples:
     ---------
@@ -117,6 +126,73 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
 
     return model
 
+
+def loadmat(file_path, var_key=None, voxel_size=None):
+    """
+    Load a .mat file and return the data as a numpy array.
+
+    This function is used to load a .mat file (MATLAB file format) and return the data as a numpy array. It provides options to specify the key of the variable in the .mat file to load and the size of the voxel.
+
+    Parameters:
+    -----------
+    file_path : str
+        Path to the .mat file.
+    var_key : str, optional
+        The key of the variable in the .mat file to load. If not provided, all data from the file is loaded.
+    voxel_size : int, optional
+        The size of the voxel. If not provided, the default voxel size is used.
+
+    Returns:
+    --------
+    model : np.array or dict of np.array
+        If var_key is provided, a numpy array of the corresponding data from the file. If var_key is not provided, a dictionary of numpy arrays of all the data from the file.
+
+    Raises:
+    -------
+    IOError:
+        If the file cannot be read.
+
+    Examples:
+    ---------
+    ```python
+    file_path = 'path/to/your/file.mat'
+    var_key = 'your_variable_key'
+    voxel_size = 10
+    data = loadmat(file_path, var_key=var_key, voxel_size=voxel_size)
+    """
+    
+    # Create a new parameters file
+    params_filename = mk_paramsfile(file_path)
+      
+    with h5py.File(file_path, 'r') as file:
+        if var_key is not None:
+            model = np.array(file[var_key], dtype='uint8', order='C')
+        else:
+            keys = list(file.keys())
+            model = {key: np.array(file[key], dtype='uint8', order='C') for key in keys}
+    
+    # Transpose the dimensions of the model
+    model = np.transpose(model, (2, 1, 0))
+    
+    # Get the dimensions of the model
+    nx = model.shape[0]
+    ny = model.shape[1]
+    nz = model.shape[2]
+    file_format = 'mat'
+    
+   
+    # Update the parameters.json file
+    update_parameters_file(paramsfile=params_filename, file_path=file_path)
+    update_parameters_file(paramsfile=params_filename,dim=model.ndim)
+    print(f"Dimensions: {model.ndim}")
+    update_parameters_file(paramsfile=params_filename, nx=model.shape[0], ny=model.shape[1], nz=model.shape[2])
+    print(f"nx: {model.shape[0]}")
+    print(f"ny: {model.shape[1]}")
+    print(f"nz: {model.shape[2]}")
+    update_parameters_file(paramsfile=params_filename, voxel_size=voxel_size)
+    update_parameters_file(paramsfile=params_filename, file_format=file_format)
+    
+    return model
 
 def import_tiff_sequence(directory, filename, dtype, dimensions=None):
     """
