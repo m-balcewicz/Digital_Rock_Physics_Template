@@ -159,7 +159,10 @@ def label_binary(data, paramsfile='parameters.json'):
 
         # Set the values that match the current unique value to 1
         data_temp[data == unique[m]] = 1
-        fig, ax = plot_slice(data=data_temp, plane='xy', paramsfile=paramsfile, title=f"Phase: {m}", slice=slice_index)
+
+        # Make the colormap red for the phase of interest
+        cmap_reds = plt.cm.Reds
+        fig, ax = plot_slice(data=data_temp, plane='xy', cmap_set=cmap_reds, paramsfile=paramsfile, title=f"Phase: {m}", slice=slice_index)
         
         # Display the figure in the Jupyter Notebook
         display(fig)
