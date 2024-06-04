@@ -139,7 +139,37 @@ def reshape_model(model, n1, n2, n3):
     return model_reshaped
 
 
-def create_subvolume(data, set_subvolume, name_subvolume, directory=None, dtype='<f4', order='C'):
+def create_subvolume(data, set_subvolume, name_subvolume, directory=None, dtype='uint8', order='C'):
+    """
+    Creates a subvolume from the given data and saves it as a binary file.
+
+    Args:
+    data (numpy.ndarray): The original data from which the subvolume will be created.
+    set_subvolume (int): The desired size of the subvolume.
+    name_subvolume (str): The name of the subvolume.
+    directory (str, optional): The directory where the subvolume will be saved. If not provided, the 'output' directory is used.
+    dtype (str, optional): The data type of the elements in the array. Defaults to 'uint8'.
+    order (str, optional): The memory layout of the data.
+        - 'F' for Fortran ordering (column-major),
+        - 'C' for C ordering (row-major).
+        Defaults to 'C'.
+
+    Returns:
+    numpy.ndarray: The created subvolume.
+
+    Notes:
+    - The 'dtype' parameter specifies the data type of the elements in the array.
+    - The 'order' parameter determines the memory layout of the data, with 'F' for Fortran ordering and 'C' for C ordering.
+    - The subvolume is created by cutting the original data from the center. The size of the cut is determined by the 'set_subvolume' parameter. 
+      For example, if the original data has a shape of (100, 100, 100) and 'set_subvolume' is 50, the subvolume will have a shape of (50, 50, 50) 
+      and will be centered in the original data.
+
+    Examples:
+    To create a subvolume of size 50 with C ordering:
+    ```python
+    subvolume = create_subvolume(my_data, 50, 'my_subvolume', dtype='uint8', order='C')
+    `
+    """
     x, y, z = data.shape
 
     # define cutting
