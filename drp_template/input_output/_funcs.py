@@ -265,24 +265,20 @@ def import_tiff_sequence(directory, filename, dtype, dimensions=None):
 
     return model
 
-
 def import_tif_model(filename):
     # Load the 3D TIFF file
     model = skimage.io.imread(filename)
 
     return model
 
-def export_model(filename, data, dtype='>f4', order='F', filetype='.raw'):
+def export_model(filename, data, dtype='uint8', order='F', filetype='.raw'):
     """
     Writes moduli data to a binary file in big-endian or little-endian format with Fortran or C ordering.
 
     Args:
         filename (str): The path to the directory where the binary file will be created.
         data (numpy.ndarray): The moduli data to be written.
-        dtype (str, optional): The data type of the elements in the array. Defaults to '>f4'.
-        mode (str, optional): The file mode used for opening the binary file.
-            - 'w+': Open for reading and writing, create the file if it does not exist.
-            - 'wb+': Open for reading and writing in binary mode, create the file if it does not exist.
+        dtype (str, optional): The data type of the elements in the array. Defaults to 'uint8'.
         order (str, optional): The memory layout of the data.
             - 'F' for Fortran ordering (column-major),
             - 'C' for C ordering (row-major).
@@ -292,14 +288,13 @@ def export_model(filename, data, dtype='>f4', order='F', filetype='.raw'):
         None
 
     Notes:
-        - The 'dtype' parameter specifies the byte order of the data. '>f4' stands for big-endian, and '<f4' stands for little-endian.
-        - The 'mode' parameter determines the file opening mode. The 'b' flag in 'wb+' ensures binary mode.
+        - The 'dtype' parameter specifies the data type of the elements in the array.
         - The 'order' parameter determines the memory layout of the data, with 'F' for Fortran ordering and 'C' for C ordering.
 
     Examples:
-        To write data in little-endian format with C ordering:
+        To write data in uint8 format with C ordering:
         ```python
-        export_endian('output.bin', my_data, dtype='<f4', mode='wb+', order='C')
+        export_model('output.bin', my_data, dtype='uint8', order='C')
         ```
     """
     
@@ -307,7 +302,6 @@ def export_model(filename, data, dtype='>f4', order='F', filetype='.raw'):
     
     file_path = os.path.join(output_path, filename + filetype)
     
-    # Ensure that the array is dtype='>f4' or the specified dtype
     # Check the shape of the data
     if len(data.shape) == 4:
         nx, ny, nz, dim = np.shape(data)
