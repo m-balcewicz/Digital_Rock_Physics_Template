@@ -68,6 +68,14 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
     
     # Get the file format from the file extension of the input file: file_path
     file_format = file_path.split('.')[-1]   
+    
+    # Get the endianess of the data based on order
+    if order == 'C':
+        endianess = 'small'
+    elif order == 'F':
+        endianess = 'big'
+    else:
+        raise ValueError("Unsupported order. Please use 'C' for row-major or 'F' for column-major order.")
 
     # Ensure dimensions is a dictionary
     if dimensions is None:
@@ -120,6 +128,7 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
     print(f"ny: {model.shape[1]}")
     print(f"nz: {model.shape[2]}")
     update_parameters_file(paramsfile=params_filename, voxel_size=voxel_size)
+    update_parameters_file(paramsfile=params_filename, endian=endianess)
     update_parameters_file(paramsfile=params_filename, dtype=dtype)
     update_parameters_file(paramsfile=params_filename, file_format=file_format)
     
@@ -192,6 +201,8 @@ def loadmat(file_path, var_key=None, voxel_size=None):
     print(f"ny: {model.shape[1]}")
     print(f"nz: {model.shape[2]}")
     update_parameters_file(paramsfile=params_filename, voxel_size=voxel_size)
+    update_parameters_file(paramsfile=params_filename, endian='Matlab files are big-endian')
+    update_parameters_file(paramsfile=params_filename, dtype='Matlab files are uint8')
     update_parameters_file(paramsfile=params_filename, file_format=file_format)
     
     # Check wrong label numbering
