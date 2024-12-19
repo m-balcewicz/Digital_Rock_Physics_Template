@@ -12,7 +12,7 @@ drp_template/tools/__pycache__
 
 # folders to ignore
 .idea
-.vscode
+vscode
 .DS_Store
 examples/data/tiff_sequences
 examples/.ipynb_checkpoints
