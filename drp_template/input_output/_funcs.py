@@ -310,8 +310,12 @@ def export_model(filename, data, dtype='uint8', order='F', filetype='.raw'):
         data_tmp[:, :, :, :] = data[:, :, :, :]
     elif len(data.shape) == 3:
         nx, ny, nz = np.shape(data)
-        data_tmp = np.zeros((nz, nx, ny), dtype=dtype)
-        data_tmp[:, :, :] = data[:, :, :]
+        # Only reshape if the current shape is not (nz, nx, ny)
+        if data.shape != (nz, nx, ny):
+            data_tmp = np.zeros((nz, nx, ny), dtype=dtype)
+            data_tmp[:, :, :] = np.moveaxis(data, (0, 1, 2), (1, 2, 0))
+        else:
+            data_tmp = data.astype(dtype)
     else:
         raise ValueError("Data should be a 3D or 4D array")
     
