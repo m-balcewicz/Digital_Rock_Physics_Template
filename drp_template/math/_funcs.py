@@ -111,7 +111,8 @@ def get_phase_fractions(data, labels=None, paramsfile='parameters.json', log=Fal
     table = df_table.to_string(index=False)
     
     # Update the parameters file with the fractions
-    fractions = {labels[int(phase)]: fraction for phase, fraction in zip(unique_values, percentages)}
+    # fractions = {labels[int(phase)]: fraction for phase, fraction in zip(unique_values, percentages)}
+    fractions = {labels[str(int(phase))]: fraction for phase, fraction in zip(unique_values, percentages)}
     update_parameters_file(paramsfile, fractions=fractions)
 
     if log:
