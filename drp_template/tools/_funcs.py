@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-import drp_template.input_output as io
+import drp_template.input_output as in_out
 from drp_template.default_params import print_style
 import drp_template.default_params as dp
 
@@ -189,7 +189,7 @@ def create_subvolume(data, set_subvolume, name_subvolume, directory=None, dtype=
     file_path = os.path.join(directory, varname)
 
     # Save new data_subvolume as a 'uint8' raw file
-    io.export_model(filename=file_path, data=data_subvolume, dtype=dtype, order=order)
+    in_out.export_model(filename=file_path, data=data_subvolume, dtype=dtype, order=order)
 
     return data_subvolume
 
