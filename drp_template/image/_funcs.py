@@ -5,6 +5,7 @@ import drp_template.bin.default_parameters as params
 from drp_template.default_params import read_parameters_file, check_output_folder
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+from matplotlib.colors import ListedColormap
 from matplotlib.ticker import FixedLocator, FixedFormatter
 from cmcrameri import cm
 
@@ -43,7 +44,7 @@ plt.rcParams['font.family'] = default_figure_settings.get('font_family')
 
 
 def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None,
-               title=None, voxel_size=None, dark_mode=True):
+               title=None, voxel_size=None, dark_mode=True, cmap_intensity=1.0):
     """
     Visualize 2D slice of 3D volumetric data using Matplotlib.
 
@@ -99,6 +100,11 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
     - The `labels` parameter can be used to customize colorbar ticks.
 
     """
+    
+    # Get the default colormap intensity if not in function parameters
+    default_cmap_intensity = default_figure_settings.get('cmap_intensity', 1.0)
+    cmap_intensity = cmap_intensity or default_cmap_intensity
+    
     # Get basic info about data
     dimensions = data.shape
     center = np.array([dimensions[0] / 2, dimensions[0] / 2])
@@ -118,6 +124,25 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
         cmap_set = default_figure_settings.get('colormap')
         # Evaluate the string to get the actual colormap function
         cmap_set = eval(cmap_set)
+        
+
+    # Adjust colormap intensity if needed
+    if cmap_intensity != 1.0:
+        if isinstance(cmap_set, str):
+            base_cmap = plt.cm.get_cmap(cmap_set)
+        else:
+            base_cmap = cmap_set
+            
+        # Create a modified colormap with adjusted intensity
+        colors = base_cmap(np.linspace(0, 1, 256))
+        
+        # Adjust the RGB values (not alpha)
+        # Values > 1.0 increase brightness, < 1.0 decrease brightness
+        # Clamp values to valid range [0, 1]
+        colors[:, :3] = np.clip(colors[:, :3] * cmap_intensity, 0, 1)
+        
+        # Create new colormap
+        cmap_set = ListedColormap(colors)
 
     # Create a figure and axis with adjusted font family and size
     fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
@@ -328,10 +353,34 @@ def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, pl
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
 
+    # UPDATE: 25.04.2025
+    # Issue with labels which are not a dictionary
     if labels is not None:
-        cbar.set_ticks(np.arange(len(labels)))
-        # Use the label_dict to get the string corresponding to the numerical value
-        cbar.ax.set_yticklabels([labels[tick] for tick in np.arange(len(labels))])
+        # Convert the dictionary to sortable items
+        if isinstance(labels, dict):
+            # Convert string keys to integers for proper ordering
+            label_items = []
+            for k, v in labels.items():
+                try:
+                    # Try to convert key to integer for sorting
+                    label_items.append((int(k), v))
+                except ValueError:
+                    # If key can't be converted to int, use it as is
+                    label_items.append((k, v))
+            
+            # Sort by key
+            label_items.sort()
+            
+            # Set the ticks and labels
+            tick_positions = [k for k, v in label_items]
+            tick_labels = [v for k, v in label_items]
+            
+            cbar.set_ticks(tick_positions)
+            cbar.ax.set_yticklabels(tick_labels)
+        else:
+            # Handle case where labels is a list
+            cbar.set_ticks(np.arange(len(labels)))
+            cbar.ax.set_yticklabels(labels)
 
     # Add subvolume rectangle if given
     if subvolume is not None:
