@@ -89,9 +89,23 @@ def get_phase_fractions(data, labels=None, paramsfile='parameters.json', log=Fal
     # Create a DataFrame
     df = pd.DataFrame(table_values, columns=headers)
 
+    # UPDATE
+    # 25.04.2025
+    # Implementing the strings for the labels correctly
     # Add the "Name" column with labels
+    # if labels is not None:
+    #     df["Name"] = [labels.get(phase, "") for phase in df["Phase"]]
+        # Add the "Name" column with labels
     if labels is not None:
-        df["Name"] = [labels.get(phase, "") for phase in df["Phase"]]
+        # Try different key formats (int, str) to find matches in the labels dictionary
+        df["Name"] = ["" for _ in range(len(df))]
+        for i, phase in enumerate(df["Phase"]):
+            phase_val = phase
+            # Try different formats for the key lookup
+            for key_format in [phase_val, int(phase_val), str(phase_val), str(int(phase_val))]:
+                if key_format in labels:
+                    df.at[i, "Name"] = labels[key_format]
+                    break
 
     # Format the columns
     df["Phase"] = df["Phase"].astype(int).astype(str)
