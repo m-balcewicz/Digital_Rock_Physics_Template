@@ -14,7 +14,6 @@ drp_template/tools/__pycache__
 .idea
 vscode
 .vscode
-build
 .DS_Store
 examples/data/tiff_sequences
 examples/.ipynb_checkpoints
@@ -23,13 +22,12 @@ examples/data
 examples/output
 projects
 debugging
+output
 
 # files to ignore
 DRP.log
 examples/data/*.raw
 examples/data/*.tif
-Dockerfile
-make.bat
 
 # packaging tools
 drp_template.egg-info
@@ -38,3 +36,9 @@ PKG-INFO
 requires.txt
 SOURCES.txt
 top_level.txt
+
+# Sphinx
+build
+source
+make.bat
+Dockerfile
