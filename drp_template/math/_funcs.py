@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 # from skimage.measure import label
 from drp_template.default_params import read_parameters_file, check_output_folder, update_parameters_file
-from drp_template.image import plot_slice
+from drp_template.image import ortho_slice
 from drp_template.tools import find_slice_with_all_values
 
 __all__ = [
@@ -177,7 +177,7 @@ def label_binary(data, paramsfile='parameters.json'):
 
         # Make the colormap red for the phase of interest
         cmap_reds = plt.cm.Reds
-        fig, ax = plot_slice(data=data_temp, plane='xy', cmap_set=cmap_reds, paramsfile=paramsfile, title=f"Phase: {m}", slice=slice_index)
+        fig, ax = ortho_slice(data=data_temp, plane='xy', cmap_set=cmap_reds, paramsfile=paramsfile, title=f"Phase: {m}", slice=slice_index)
         
         # Display the figure in the Jupyter Notebook
         display(fig)

@@ -10,7 +10,7 @@ from matplotlib.ticker import FixedLocator, FixedFormatter
 from cmcrameri import cm
 
 __all__ = [
-    'plot_slice',
+    'ortho_slice',
     'save_figure2',
     'plot_histogram',
     'plot_effective_modulus',
@@ -43,7 +43,7 @@ plt.rcParams['font.family'] = default_figure_settings.get('font_family')
 
 
 
-def plot_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None,
+def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None,
                title=None, voxel_size=None, dark_mode=True, cmap_intensity=1.0):
     """
     Visualize 2D slice of 3D volumetric data using Matplotlib.

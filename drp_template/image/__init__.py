@@ -1,1 +1,1 @@
-from ._funcs import plot_slice, plot_histogram, plot_effective_modulus, plot_effective_modulus2, save_figure2
+from ._funcs import ortho_slice, plot_histogram, plot_effective_modulus, plot_effective_modulus2, save_figure2
