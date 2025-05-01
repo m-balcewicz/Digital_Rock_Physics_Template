@@ -44,7 +44,7 @@ plt.rcParams['font.family'] = default_figure_settings.get('font_family')
 
 
 def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None,
-               title=None, voxel_size=None, dark_mode=True, cmap_intensity=1.0):
+               title=None, voxel_size=None, dark_mode=True, cmap_intensity=1.0, ax=None):
     """
     Visualize 2D slice of 3D volumetric data using Matplotlib.
 
@@ -145,8 +145,11 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
         cmap_set = ListedColormap(colors)
 
     # Create a figure and axis with adjusted font family and size
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
-    fig.set_facecolor(face_color)
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
+        fig.set_facecolor(face_color)
+    else:
+        fig = ax.figure  # Use the figure from the provided axis
 
     if plane == 'xy':
         if slice is None:
