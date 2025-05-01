@@ -29,6 +29,7 @@ DRP.log
 examples/data/*.raw
 examples/data/*.tif
 Dockerfile
+make.bat
 
 # packaging tools
 drp_template.egg-info
