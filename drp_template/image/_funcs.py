@@ -12,7 +12,7 @@ from cmcrameri import cm
 __all__ = [
     'ortho_slice',
     'save_figure2',
-    'plot_histogram',
+    'histogram',
     'plot_effective_modulus',
     'plot_effective_modulus2'
 ]
@@ -404,7 +404,7 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
     return fig, ax
 
 
-def plot_histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None, title=None, log_scale='both', dark_mode=True):
+def histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None, title=None, log_scale='both', dark_mode=True):
     """
     Plot a histogram of gray-scale intensities.
 
