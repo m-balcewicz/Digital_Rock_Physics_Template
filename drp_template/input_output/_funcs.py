@@ -148,6 +148,7 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
         endian=endianess, file_format=file_format
     )
 
+    # Always run check_binary as standard import step
     model = check_binary(model=model, filename=file_path)
     return model
 
@@ -250,6 +251,8 @@ def import_tiff_sequence(directory, dtype, dimensions=None, voxel_size=None):
     volume = reorient_volume(volume, dim_order)
 
     update_params_after_import(params_filename, first_tiff_path, volume, voxel_size, dtype)
+    # Always run check_binary as standard import step
+    volume = check_binary(model=volume, filename=first_tiff_path)
     print("[DEBUG] Finished loading TIFF sequence and updated parameter file.")
     return volume
 
