@@ -26,6 +26,12 @@ relative_path = os.path.join('..', 'default_params', 'default_figure_settings.js
 json_file_path = os.path.join(package_directory, relative_path)
 default_figure_settings = read_parameters_file(paramsfile=json_file_path, paramsvars=None)
 
+# Access global settings from the nested structure, fall back to top level if not nested
+global_settings = default_figure_settings.get('global_settings', default_figure_settings)
+
+plt.rcParams['font.size'] = global_settings.get('font_size')
+plt.rcParams['font.family'] = global_settings.get('font_family')
+
 im_left = default_figure_settings.get('im_left')
 im_left_xz = default_figure_settings.get('im_left_xz')
 im_right = default_figure_settings.get('im_right')
@@ -38,8 +44,6 @@ fig_height = default_figure_settings.get('fig_height')
 cax_space_left = default_figure_settings.get('cax_space_left')
 cax_space_right = default_figure_settings.get('cax_space_right')
 im_title = default_figure_settings.get('im_title')
-plt.rcParams['font.size'] = default_figure_settings.get('font_size')
-plt.rcParams['font.family'] = default_figure_settings.get('font_family')
 
 
 
