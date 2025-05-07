@@ -23,6 +23,7 @@ examples/output
 projects
 debugging
 output
+dev
 
 # files to ignore
 DRP.log

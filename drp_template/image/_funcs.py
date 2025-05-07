@@ -11,6 +11,8 @@ from cmcrameri import cm
 
 __all__ = [
     'ortho_slice',
+    'ortho_views',
+    'add_slice_reference_lines',
     'save_figure2',
     'histogram',
     'plot_effective_modulus',
@@ -21,30 +23,33 @@ __all__ = [
 # Get the directory of the currently executing script (your module or package)
 package_directory = os.path.dirname(os.path.abspath(__file__))
 # Construct the relative path to the JSON file
-relative_path = os.path.join('..', 'default_params', 'default_figure_settings.json')
+relative_path = os.path.join('..','default_params','default_figure_settings.json')
 # Combine the package directory and the relative path to get the absolute path
 json_file_path = os.path.join(package_directory, relative_path)
 default_figure_settings = read_parameters_file(paramsfile=json_file_path, paramsvars=None)
 
-im_left = default_figure_settings.get('im_left')
-im_left_xz = default_figure_settings.get('im_left_xz')
-im_right = default_figure_settings.get('im_right')
-im_bottom = default_figure_settings.get('im_bottom')
-im_width = default_figure_settings.get('im_width')
-im_height = default_figure_settings.get('im_height')
-cax_width = default_figure_settings.get('cax_width')
-fig_width = default_figure_settings.get('fig_width')
-fig_height = default_figure_settings.get('fig_height')
-cax_space_left = default_figure_settings.get('cax_space_left')
-cax_space_right = default_figure_settings.get('cax_space_right')
-im_title = default_figure_settings.get('im_title')
-plt.rcParams['font.size'] = default_figure_settings.get('font_size')
-plt.rcParams['font.family'] = default_figure_settings.get('font_family')
+# Access global settings from the nested structure
+global_settings = default_figure_settings.get('global_settings', default_figure_settings)
+
+im_left = global_settings.get('im_left')
+im_left_xz = global_settings.get('im_left_xz')
+im_right = global_settings.get('im_right')
+im_bottom = global_settings.get('im_bottom')
+im_width = global_settings.get('im_width')
+im_height = global_settings.get('im_height')
+cax_width = global_settings.get('cax_width')
+fig_width = global_settings.get('fig_width')
+fig_height = global_settings.get('fig_height')
+cax_space_left = global_settings.get('cax_space_left')
+cax_space_right = global_settings.get('cax_space_right')
+im_title = global_settings.get('im_title')
+plt.rcParams['font.size'] = global_settings.get('font_size')
+plt.rcParams['font.family'] = global_settings.get('font_family')
 
 
 
 def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None,
-               title=None, voxel_size=None, dark_mode=True, cmap_intensity=1.0, ax=None):
+               title=None, voxel_size=None, dark_mode=True, cmap_intensity=1.0, ax=None, show_colorbar=True):
     """
     Visualize 2D slice of 3D volumetric data using Matplotlib.
 
@@ -70,6 +75,8 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
         The size of the voxels along each dimension.
     dark_mode : bool, optional (default=True)
         If True, set a dark background; otherwise, set a light background.
+    show_colorbar : bool, optional (default=True)
+        If True, display the colorbar; otherwise, suppress it.
 
     Returns:
     --------
@@ -77,6 +84,8 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
         The Matplotlib figure object.
     ax : Matplotlib Axes
         The Matplotlib axes object.
+    pcm : Matplotlib QuadMesh
+        The QuadMesh object for the plot.
 
     Examples:
     ---------
@@ -88,7 +97,7 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
     data = np.random.rand(50, 100, 200)
 
     # Plot XY plane slice
-    fig, ax = plot_slice(data, cmap_set='viridis', slice=10, plane='xy', title='XY Plane slice')
+    fig, ax, pcm = plot_slice(data, cmap_set='viridis', slice=10, plane='xy', title='XY Plane slice')
     plt.show()
     ```
 
@@ -102,7 +111,7 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
     """
     
     # Get the default colormap intensity if not in function parameters
-    default_cmap_intensity = default_figure_settings.get('cmap_intensity', 1.0)
+    default_cmap_intensity = global_settings.get('cmap_intensity', 1.0)
     cmap_intensity = cmap_intensity or default_cmap_intensity
     
     # Get basic info about data
@@ -121,7 +130,7 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
 
     if cmap_set is None:
         # Get the default colormap
-        cmap_set = default_figure_settings.get('colormap')
+        cmap_set = global_settings.get('colormap')
         # Evaluate the string to get the actual colormap function
         cmap_set = eval(cmap_set)
         
@@ -212,12 +221,14 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
         cax_height = subplot_height
         cax_bottom = subplot_bottom
         cax_left = subplot_left - (subplot_left * cax_space_left)
-        cax = fig.add_axes([cax_left, cax_bottom, cax_width, cax_height])  # left, bottom, width, height
-        cbar = fig.colorbar(pcm, cax=cax, orientation='vertical')
+        cbar = None
+        if show_colorbar:
+            cax = fig.add_axes([cax_left, cax_bottom, cax_width, cax_height])  # left, bottom, width, height
+            cbar = fig.colorbar(pcm, cax=cax, orientation='vertical')
 
-        # Move the colorbar spines to the left
-        cbar.ax.yaxis.set_ticks_position('left')
-        cbar.ax.yaxis.set_label_position('left')
+            # Move the colorbar spines to the left
+            cbar.ax.yaxis.set_ticks_position('left')
+            cbar.ax.yaxis.set_label_position('left')
     elif plane == 'yz':
         ax.set_xlabel('Y-axis', color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
         ax.set_ylabel('Z-axis', color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
@@ -247,12 +258,14 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
         cax_height = subplot_height
         cax_bottom = subplot_bottom
         cax_left = subplot_left - (subplot_left * cax_space_left)
-        cax = fig.add_axes([cax_left, cax_bottom, cax_width, cax_height])  # left, bottom, width, height
-        cbar = fig.colorbar(pcm, cax=cax, orientation='vertical')
+        cbar = None
+        if show_colorbar:
+            cax = fig.add_axes([cax_left, cax_bottom, cax_width, cax_height])  # left, bottom, width, height
+            cbar = fig.colorbar(pcm, cax=cax, orientation='vertical')
 
-        # Move the colorbar spines to the left
-        cbar.ax.yaxis.set_ticks_position('left')
-        cbar.ax.yaxis.set_label_position('left')
+            # Move the colorbar spines to the left
+            cbar.ax.yaxis.set_ticks_position('left')
+            cbar.ax.yaxis.set_label_position('left')
     elif plane == 'xz':
         ax.set_xlabel('X-axis', color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
         ax.set_ylabel('Z-axis', color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
@@ -280,12 +293,14 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
         cax_height = subplot_height
         cax_bottom = subplot_bottom
         cax_right = subplot_right + (subplot_right * cax_space_right)
-        cax = fig.add_axes([cax_right, cax_bottom, cax_width, cax_height])  # left, bottom, width, height
-        cbar = fig.colorbar(pcm, cax=cax, orientation='vertical')
+        cbar = None
+        if show_colorbar:
+            cax = fig.add_axes([cax_right, cax_bottom, cax_width, cax_height])  # left, bottom, width, height
+            cbar = fig.colorbar(pcm, cax=cax, orientation='vertical')
 
-        # Move the colorbar spines to the right
-        cbar.ax.yaxis.set_ticks_position('right')
-        cbar.ax.yaxis.set_label_position('right')
+            # Move the colorbar spines to the right
+            cbar.ax.yaxis.set_ticks_position('right')
+            cbar.ax.yaxis.set_label_position('right')
 
     if title is None:
         title = ax.set_title(im_title, color=text_color, fontsize=plt.rcParams['font.size'], fontfamily=plt.rcParams['font.family'])
@@ -294,11 +309,10 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
     title.set_position((0.5, 1.0))  # Set the position in axes coordinates
 
     # Set the text color of the colormap
-    for label in cbar.ax.get_yticklabels():
-        label.set_color(text_color)
-
-    # Set the color of the colorbar ticks to white
-    cbar.ax.tick_params(axis='y', colors=text_color)
+    if cbar is not None:
+        for label in cbar.ax.get_yticklabels():
+            label.set_color(text_color)
+        cbar.ax.tick_params(axis='y', colors=text_color)
 
     if voxel_size is not None:
         # Get the current tick locations
@@ -348,7 +362,7 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
         xlabel = ax.get_xlabel()
         ylabel = ax.get_ylabel()
 
-        # Append the suffix "(µm)" to the labels
+        # Append the suffix "(voxel)" to the labels
         xlabel += ' (voxel)'
         ylabel += ' (voxel)'
 
@@ -358,7 +372,7 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
 
     # UPDATE: 25.04.2025
     # Issue with labels which are not a dictionary
-    if labels is not None:
+    if labels is not None and cbar is not None:
         # Convert the dictionary to sortable items
         if isinstance(labels, dict):
             # Convert string keys to integers for proper ordering
@@ -404,8 +418,201 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
         bbox=dict(facecolor='gray', alpha=0.5, pad=5)
     )
 
-    return fig, ax
+    return fig, ax, pcm
 
+
+def ortho_views(data, paramsfile='parameters.json', cmap_set=None, slice_indices=None, subvolume=None, 
+                labels=None, title=None, voxel_size=None, dark_mode=False, cmap_intensity=1.0, layout_type=None, add_slice_ref=True):
+    """
+    Visualize orthogonal views of 3D volumetric data.
+    
+    Parameters:
+    -----------
+    ...existing parameters...
+    layout_type : str, optional (default=None)
+        The layout configuration to use. Options are:
+        - None: Use arbitrary layout (default)
+        - 'rectangular': Layout optimized for rectangular data
+        - 'arbitrary': Custom layout with manually specified positions (default)
+    """
+    import matplotlib.pyplot as plt
+
+    nz, ny, nx = data.shape
+    
+    # Get layout settings from default_figure_settings.json
+    layout_settings = default_figure_settings.get('ortho_views_layouts', {})
+    
+    # By default, use arbitrary layout
+    if layout_type is None or layout_type not in ['rectangular']:
+        layout_type = 'arbitrary'
+        
+    # Get layout config
+    layout_config = layout_settings.get(layout_type)
+    
+    # If specified layout doesn't exist, fall back to arbitrary
+    if not layout_config:
+        layout_type = 'arbitrary'
+        layout_config = layout_settings.get('arbitrary', {})
+
+    def safe_index(idx, size):
+        return min(max(idx, 0), size - 1)
+
+    if slice_indices is None:
+        slice_xy = safe_index(nz // 2, nz)
+        slice_yz = safe_index(nx // 2, nx)
+        slice_xz = safe_index(ny // 2, ny)
+    else:
+        if isinstance(slice_indices, dict):
+            slice_xy = safe_index(slice_indices.get('slice_xy', nz // 2), nz)
+            slice_yz = safe_index(slice_indices.get('slice_yz', nx // 2), nx)
+            slice_xz = safe_index(slice_indices.get('slice_xz', ny // 2), ny)
+        else:
+            slice_xy = safe_index(slice_indices[0], nz)
+            slice_yz = safe_index(slice_indices[1], nx)
+            slice_xz = safe_index(slice_indices[2], ny)
+
+    # Create figure based on layout settings from config
+    fig_width = layout_config.get('fig_width')
+    fig_height = layout_config.get('fig_height')
+    fig = plt.figure(figsize=(fig_width, fig_height))
+    fig.set_facecolor('black' if dark_mode else 'white')
+    
+    # Get spacing parameters from layout
+    wspace = layout_config.get('wspace')
+    title_pad = layout_config.get('title_pad')
+    
+    # Get positions from config - both layout types should have positions now
+    positions = layout_config.get('positions')
+    
+    # Apply wspace adjustment if needed
+    if wspace is not None and len(positions) == 3:
+        # Calculate adjustment based on wspace
+        spacing = wspace / 100.0  # Convert percentage to decimal
+        
+        # Apply spacing between subplots 
+        new_positions = [
+            positions[0],  # Keep first position as is
+            [positions[0][0] + positions[0][2] + spacing, positions[1][1], positions[1][2], positions[1][3]],
+            [positions[0][0] + positions[0][2] + positions[1][2] + 2*spacing, positions[2][1], positions[2][2], positions[2][3]]
+        ]
+        positions = new_positions
+    
+    # Create subplots using explicit positions
+    axes = [fig.add_axes(pos) for pos in positions]
+    
+    # Calculate colorbar position
+    cbar_left = positions[2][0] + positions[2][2] + 0.01
+    cbar_width = layout_config.get('cbar_width')
+    bottom = positions[0][1]
+    height = positions[0][3]
+
+    # Add the colorbar axes
+    cbar_ax = fig.add_axes([cbar_left, bottom, cbar_width, height])
+    # Set the text color of the colorbar depending on dark mode
+    cbar_ax.tick_params(axis='both', colors='white' if dark_mode else 'black')
+
+    planes = ['xy', 'yz', 'xz']
+    slices = [slice_xy, slice_yz, slice_xz]
+    titles = ['XY', 'YZ', 'XZ']
+
+    pcms = []
+    for i, (plane, slc, dir_title) in enumerate(zip(planes, slices, titles)):
+        _, _, pcm = ortho_slice(
+            data,
+            paramsfile=paramsfile,
+            cmap_set=cmap_set,
+            slice=slc,
+            plane=plane,
+            subvolume=subvolume,
+            labels=labels,
+            title=None,  # Set title ourselves
+            voxel_size=voxel_size,
+            dark_mode=dark_mode,
+            cmap_intensity=cmap_intensity,
+            ax=axes[i],
+            show_colorbar=False
+        )
+        pcms.append(pcm)
+        axes[i].set_aspect('equal')
+        axes[i].set_title(dir_title, fontsize=plt.rcParams['font.size'], 
+                         color='white' if dark_mode else 'black', pad=title_pad)
+        
+        # Don't allow dev_ortho_slice to reposition our axes
+        axes[i].set_position(positions[i])
+
+    # Add the colorbar separately
+    fig.colorbar(pcms[0], cax=cbar_ax, orientation='vertical')
+    
+    # Add reference lines to show slice positions across views
+    if add_slice_ref is True:
+        add_slice_reference_lines(axes, data.shape, [slice_xy, slice_yz, slice_xz], dark_mode, show_text=False)
+    
+
+    return fig, axes
+
+
+def add_slice_reference_lines(axes, data_shape, slice_indices, dark_mode=False, show_text=True):
+    """
+    Add reference lines to orthogonal views to show the position of other slices.
+    
+    Parameters:
+    -----------
+    axes : list of matplotlib.axes.Axes
+        List of the three axes objects (xy, yz, xz)
+    data_shape : tuple
+        Shape of the 3D data (nz, ny, nx)
+    slice_indices : list
+        List of slice indices [slice_xy, slice_yz, slice_xz]
+    dark_mode : bool
+        Whether dark mode is enabled
+    """
+    nz, ny, nx = data_shape
+    slice_xy, slice_yz, slice_xz = slice_indices
+    
+    # Define line colors and styles
+    line_color = 'red' if dark_mode else 'red'
+    text_color = 'white' if dark_mode else 'black'
+    line_style = '--'
+    line_width = 1.5
+    alpha = 0.8
+    
+    # XY view (axes[0]) - Show yz and xz slice positions
+    # Vertical line for yz slice (x position)
+    axes[0].axvline(x=slice_yz, color=line_color, linestyle=line_style, linewidth=line_width, alpha=alpha)
+    if show_text:
+        axes[0].text(slice_yz, ny*0.05, f"YZ (x={slice_yz})", color=text_color, 
+                 rotation=90, va='bottom', ha='right', backgroundcolor='black' if dark_mode else 'white', alpha=0.7)
+    
+    axes[0].axhline(y=slice_xz, color=line_color, linestyle=line_style, linewidth=line_width, alpha=alpha)
+    if show_text:
+        axes[0].text(nx*0.05, slice_xz, f"XZ (y={slice_xz})", color=text_color, 
+                 rotation=0, va='bottom', ha='right', backgroundcolor='black' if dark_mode else 'white', alpha=0.7)
+    
+    # YZ view (axes[1]) - Show xy and xz slice positions  
+    # Horizontal line for xy slice (z position)
+    axes[1].axhline(y=slice_xy, color=line_color, linestyle=line_style, linewidth=line_width, alpha=alpha)
+    if show_text:
+        axes[1].text(nx*0.05, slice_xy, f"XY (z={slice_xy})", color=text_color, 
+                 rotation=0, va='bottom', ha='right', backgroundcolor='black' if dark_mode else 'white', alpha=0.7)
+    
+    # Vertical line for xz slice (y position)
+    axes[1].axvline(x=slice_xz, color=line_color, linestyle=line_style, linewidth=line_width, alpha=alpha)
+    if show_text:
+        axes[1].text(slice_xz, ny*0.05, f"XZ (y={slice_xz})", color=text_color, 
+                 rotation=90, va='bottom', ha='right', backgroundcolor='black' if dark_mode else 'white', alpha=0.7)
+    
+    # XZ view (axes[2]) - Show xy and yz slice positions
+    # Horizontal line for xy slice (z position)
+    axes[2].axhline(y=slice_xy, color=line_color, linestyle=line_style, linewidth=line_width, alpha=alpha)
+    if show_text:
+        axes[2].text(nx*0.05, slice_xy, f"XY (z={slice_xy})", color=text_color, 
+                 rotation=0, va='bottom', ha='right', backgroundcolor='black' if dark_mode else 'white', alpha=0.7)
+    
+    # Vertical line for yz slice (x position)
+    axes[2].axvline(x=slice_yz, color=line_color, linestyle=line_style, linewidth=line_width, alpha=alpha)
+    if show_text:
+        axes[2].text(slice_yz, ny*0.05, f"YZ (x={slice_yz})", color=text_color, 
+                 rotation=90, va='bottom', ha='right', backgroundcolor='black' if dark_mode else 'white', alpha=0.7)
 
 def histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None, title=None, log_scale='both', dark_mode=True):
     """
