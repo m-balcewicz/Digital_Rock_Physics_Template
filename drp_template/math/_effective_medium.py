@@ -6,9 +6,7 @@ __all__ = [
     'density_fluid_mix',
     'Brie_law',
     'get_normalized_f_solid',
-    'bound',
-    'bound2',
-
+    'elastic_bounds',
     
 ]
 
@@ -153,118 +151,32 @@ def get_normalized_f_solid(porosity, f_solid_components, components=None):
     return df_normalized_solid_fractions
 
 
-
-def bound(f_volume, k_component, u_component, type='voigt-reuss'):
+def elastic_bounds(fractions, k_values, u_values, bound_type='voigt-reuss'):
     """
     Calculate elastic bounds (upper and lower) of an aggregate.
 
     Parameters:
-    - type (str): Type of bound. Use 'voigt-reuss' for Voigt-Reuss bounds or 'hashin-shtrikman' for Hashin-Shtrikman bounds.
-    - f_solid (numpy.ndarray): Volume fractions (<=1) of the components.
-    - k_solid (numpy.ndarray): Bulk moduli of the solid components.
-    - u_solid (numpy.ndarray): Shear moduli of the solid components.
+    - fractions (numpy.ndarray): Volume fractions of components. Can be 1D array for a single dataset
+      or 2D array for multiple datasets. Each row/array must sum to 1.
+    - k_values (numpy.ndarray): Bulk moduli of the components.
+    - u_values (numpy.ndarray): Shear moduli of the components (not used for 'fluid' bound_type).
+    - bound_type (str): Type of bound calculation:
+        - 'voigt-reuss': Simplest bounds
+        - 'hashin-shtrikman': Narrowest possible bounds
+        - 'fluid': Bulk modulus bounds for fluids only (no shear modulus)
 
     Returns:
-    - k_voigt (float): Voigt bound for bulk modulus.
-    - k_reuss (float): Reuss bound for bulk modulus.
-    - u_voigt (float): Voigt bound for shear modulus.
-    - u_reuss (float): Reuss bound for shear modulus.
-    - k_avg (float): Arithmetic average of upper and lower bounds for bulk modulus.
-    - u_avg (float): Arithmetic average of upper and lower bounds for shear modulus.
-        (equals the Hill average for Hashin-Shtrikman bounds)
+    - For 'voigt-reuss' and 'hashin-shtrikman':
+        If fractions is 1D: Tuple of (k_upper, k_lower, u_upper, u_lower, k_avg, u_avg)
+        If fractions is 2D: Tuple of arrays (k_upper_array, k_lower_array, u_upper_array, u_lower_array, k_avg_array, u_avg_array)
+    
+    - For 'fluid':
+        If fractions is 1D: Tuple of (k_voigt, k_reuss)
+        If fractions is 2D: Tuple of arrays (k_voigt_array, k_reuss_array)
 
     Raises:
-    - ValueError: If the lengths of fractions, k, and u are not the same, or if the sum of fractions is not approximately 1.
-
-    Note:
-    1. Voigt-Reuss bounds are the simplest.
-    2. Hashin-Shtrikman bounds are the narrowest possible.
-    3. Assumption: Rock is isotropic.
-
-    Source:
-    - Berryman, J.G., 1993, Mixture theories for rock properties.
-    - Mavko, G., 1993, Rock physics formulas.
-    - https://github.com/StanfordRockPhysics/The-Rock-Physics-Handbook-3rd-Edition
-    """   
-    # mode=strict
-    if len(f_volume) != len(k_component) != len(u_component):
-        raise ValueError('Input fractions, k, and u must have the same length')
-    
-    if not np.isclose(np.sum(f_volume), 1):
-        raise ValueError('Fractions must sum up to 1')
-    
-    c = 4 / 3
-    
-    if type == 'voigt-reuss':  # Voigt-Reuss bounds
-        k_voigt = np.sum(f_volume * k_component)  # Voigt (upper) bound
-        k_reuss = 1 / np.sum(f_volume / k_component)  # Reuss (lower) bound
-
-        u_voigt = np.sum(f_volume * u_component)  # Voigt (upper) bound
-        u_reuss = 1 / np.sum(f_volume / u_component)  # Reuss (lower) bound
-
-        k_hill = (k_voigt + k_reuss) / 2  # Hill average
-        u_hill = (u_voigt + u_reuss) / 2
-        
-        return k_voigt, k_reuss, u_voigt, u_reuss, k_hill, u_hill
-
-    elif type == 'hashin-shtrikman':  # Hashin-Shtrikman bounds
-        kmx, kmn = np.max(k_component), np.min(k_component)
-        umx, umn = np.max(u_component), np.min(u_component)
-
-        k_hs_upper = 1 / np.sum(f_volume / (k_component + c * umx)) - c * umx  # HS upper bound
-        k_hs_lower = 1 / np.sum(f_volume / (k_component + c * umn)) - c * umn  # HS lower bound
-
-        etamx = umx * (9 * kmx + 8 * umx) / (kmx + 2 * umx) / 6
-        etamn = umn * (9 * kmn + 8 * umn) / (kmn + 2 * umn) / 6
-
-        u_hs_upper = 1 / np.sum(f_volume / (u_component + etamx)) - etamx  # HS upper bound
-        u_hs_lower = 1 / np.sum(f_volume / (u_component + etamn)) - etamn  # HS lower bound
-
-        k_avg = (k_hs_upper + k_hs_lower) / 2  # Simple arithmetic average
-        u_avg = (u_hs_upper + u_hs_lower) / 2
-        
-        return k_hs_upper, k_hs_lower, u_hs_upper, u_hs_lower, k_avg, u_avg
-    
-    elif type == 'fluid': # Bulk modulus bounds after Voigt, Reuss, and Brie
-
-        print("""
-              In fluids, such as liquids and gases, 
-              the molecular structure lacks the ability to sustain shear stress 
-              in a manner that would allow the definition of a shear modulus.
-              Therefore, there is no shear modulus in fluids.
-            """)
-        
-        k_voigt = np.sum(f_volume * k_component)  # Voigt (upper) bound
-        k_reuss = 1 / np.sum(f_volume / k_component)  # Reuss (lower) bound
-
-        return k_voigt, k_reuss
-
-    else:
-        raise ValueError('Invalid value for type. Use "voigt-reuss", "hashin-shtrikman", or "fluid".')
-
-    
-
-def bound2(type, f_solid, k_solid, u_solid):
-    """
-    Calculate elastic bounds (upper and lower) of an aggregate.
-
-    Parameters:
-    - type (str): Type of bound. Use 'voigt-reuss' for Voigt-Reuss bounds or 'hashin-shtrikman' for Hashin-Shtrikman bounds.
-    - f_solid (numpy.ndarray): Volume fractions (<=1) of the solid components.
-    - k_solid (numpy.ndarray): Bulk moduli of the solid components.
-    - u_solid (numpy.ndarray): Shear moduli of the solid components.
-
-    Returns:
-    - k_voigt (numpy.ndarray): Voigt bound for bulk modulus.
-    - k_reuss (numpy.ndarray): Reuss bound for bulk modulus.
-    - u_voigt (numpy.ndarray): Voigt bound for shear modulus.
-    - u_reuss (numpy.ndarray): Reuss bound for shear modulus.
-    - k_avg (numpy.ndarray): Arithmetic average of upper and lower bounds for bulk modulus.
-    - u_avg (numpy.ndarray): Arithmetic average of upper and lower bounds for shear modulus.
-        (equals the Hill average for Hashin-Shtrikman bounds)
-
-    Raises:
-    - ValueError: If the lengths of fractions, k, and u are not the same.
+    - ValueError: If inputs have invalid dimensions, if fractions don't sum to 1,
+      or if an invalid bound_type is specified.
 
     Note:
     1. Voigt-Reuss bounds are the simplest.
@@ -276,59 +188,108 @@ def bound2(type, f_solid, k_solid, u_solid):
     - Mavko, G., 1993, Rock physics formulas.
     - https://github.com/StanfordRockPhysics/The-Rock-Physics-Handbook-3rd-Edition
     """
-    # Ensure f_solid is a 2D array
-    if f_solid.ndim == 1:
-        f_solid = f_solid[:, np.newaxis]
-
-    if len(f_solid) != len(k_solid) != len(u_solid):
-        raise ValueError('Input fractions, k, and u must have the same length')
-
-    c = 4 / 3
-    
-    k_voigt_list, k_reuss_list, u_voigt_list, u_reuss_list, k_avg_list, u_avg_list = [], [], [], [], [], []
-
-    for i in range(len(f_solid)):
-        if type == 'voigt-reuss':  # Voigt-Reuss bounds
-            # Voigt (upper) bound for bulk modulus
-            k_voigt = np.sum(f_solid[i] * k_solid)
-            # Reuss (lower) bound for bulk modulus
-            k_reuss = 1 / np.sum(f_solid[i] / k_solid)
-    
-            # Voigt (upper) bound for shear modulus
-            u_voigt = np.sum(f_solid[i] * u_solid)
-            # Reuss (lower) bound for shear modulus
-            u_reuss = 1 / np.sum(f_solid[i] / u_solid)
-    
-            # Hill average for bulk and shear moduli
-            k_avg = (k_voigt + k_reuss) / 2
-            u_avg = (u_voigt + u_reuss) / 2
+    with np.errstate(divide='ignore', invalid='ignore'):
+        # Ensure fractions is a numpy array
+        fractions = np.asarray(fractions)
+        k_values = np.asarray(k_values)
+        u_values = np.asarray(u_values)
         
-        elif type == 'hashin-shtrikman':  # Hashin-Shtrikman bounds
-            kmx, kmn = np.max(k_solid[i]), np.min(k_solid[i])
-            umx, umn = np.max(u_solid[i]), np.min(u_solid[i])
-    
-            # HS upper bound for bulk modulus
-            k_hs_upper = 1 / np.sum(f_solid[i] / (k_solid[i] + c * umx)) - c * umx
-            # HS lower bound for bulk modulus
-            k_hs_lower = 1 / np.sum(f_solid[i] / (k_solid[i] + c * umn)) - c * umn
-    
-            etamx = umx * (9 * kmx + 8 * umx) / (kmx + 2 * umx) / 6
-            etamn = umn * (9 * kmn + 8 * umn) / (kmn + 2 * umn) / 6
-    
-            # HS upper bound for shear modulus
-            u_hs_upper = 1 / np.sum(f_solid[i] / (u_solid[i] + etamx)) - etamx
-            # HS lower bound for shear modulus
-            u_hs_lower = 1 / np.sum(f_solid[i] / (u_solid[i] + etamn)) - etamn
-    
-            # Simple arithmetic average for bulk and shear moduli
-            k_avg = (k_hs_upper + k_hs_lower) / 2
-            u_avg = (u_hs_upper + u_hs_lower) / 2
+        # Determine if input is 1D or 2D
+        multi_dataset = (fractions.ndim > 1)
         
-        k_voigt_list.append(k_voigt)
-        k_reuss_list.append(k_reuss)
-        u_voigt_list.append(u_voigt)
-        u_reuss_list.append(u_reuss)
-        k_avg_list.append(k_avg)
-        u_avg_list.append(u_avg)
-
-    return np.array(k_voigt_list), np.array(k_reuss_list), np.array(u_voigt_list), np.array(u_reuss_list), np.array(k_avg_list), np.array(u_avg_list)
+        # For a single dataset, reshape into 2D for consistent processing
+        if not multi_dataset:
+            fractions = fractions.reshape(1, -1)
+            if not (len(fractions[0]) == len(k_values) == len(u_values)):
+                raise ValueError('Input fractions, k_values, and u_values must have the same length')
+            
+            # Check if fractions sum to 1
+            if not np.allclose(np.sum(fractions, axis=1), 1):
+                raise ValueError('Fractions must sum up to 1')
+        else:
+            # For 2D fractions, ensure dimensions match components
+            if bound_type != 'fluid' and not (fractions.shape[1] == len(k_values) == len(u_values)):
+                raise ValueError('Number of components in fractions must match length of k_values and u_values')
+            
+            # Check if all rows of fractions sum to 1
+            if not np.allclose(np.sum(fractions, axis=1), 1):
+                raise ValueError('Each row in fractions must sum up to 1')
+        
+        c = 4 / 3  # Helper constant for Hashin-Shtrikman bounds
+        
+        # Initialize result arrays
+        num_datasets = fractions.shape[0]
+        k_upper = np.zeros(num_datasets)
+        k_lower = np.zeros(num_datasets)
+        
+        if bound_type != 'fluid':
+            u_upper = np.zeros(num_datasets)
+            u_lower = np.zeros(num_datasets)
+            u_avg = np.zeros(num_datasets)
+        
+        k_avg = np.zeros(num_datasets)
+        
+        # Process each dataset
+        for i in range(num_datasets):
+            if bound_type == 'voigt-reuss':
+                # Voigt (upper) bound for bulk modulus
+                k_upper[i] = np.sum(fractions[i] * k_values)
+                # Reuss (lower) bound for bulk modulus
+                k_lower[i] = 1 / np.sum(fractions[i] / k_values)
+                
+                # Voigt (upper) bound for shear modulus
+                u_upper[i] = np.sum(fractions[i] * u_values)
+                # Reuss (lower) bound for shear modulus
+                u_lower[i] = 1 / np.sum(fractions[i] / u_values)
+                
+                # Hill average for bulk and shear moduli
+                k_avg[i] = (k_upper[i] + k_lower[i]) / 2
+                u_avg[i] = (u_upper[i] + u_lower[i]) / 2
+                
+            elif bound_type == 'hashin-shtrikman':
+                kmx, kmn = np.max(k_values), np.min(k_values)
+                umx, umn = np.max(u_values), np.min(u_values)
+                
+                # HS upper bound for bulk modulus
+                k_upper[i] = 1 / np.sum(fractions[i] / (k_values + c * umx)) - c * umx
+                # HS lower bound for bulk modulus
+                k_lower[i] = 1 / np.sum(fractions[i] / (k_values + c * umn)) - c * umn
+                
+                etamx = umx * (9 * kmx + 8 * umx) / (kmx + 2 * umx) / 6
+                etamn = umn * (9 * kmn + 8 * umn) / (kmn + 2 * umn) / 6
+                
+                # HS upper bound for shear modulus
+                u_upper[i] = 1 / np.sum(fractions[i] / (u_values + etamx)) - etamx
+                # HS lower bound for shear modulus
+                u_lower[i] = 1 / np.sum(fractions[i] / (u_values + etamn)) - etamn
+                
+                # Simple arithmetic average for bulk and shear moduli
+                k_avg[i] = (k_upper[i] + k_lower[i]) / 2
+                u_avg[i] = (u_upper[i] + u_lower[i]) / 2
+                
+            elif bound_type == 'fluid':
+                # For fluids, there is no shear modulus
+                # Voigt (upper) bound for bulk modulus
+                k_upper[i] = np.sum(fractions[i] * k_values)
+                # Reuss (lower) bound for bulk modulus
+                k_lower[i] = 1 / np.sum(fractions[i] / k_values)
+                
+            else:
+                raise ValueError('Invalid bound_type. Use "voigt-reuss", "hashin-shtrikman", or "fluid".')
+        
+        # Convert back to single values if input was 1D
+        if not multi_dataset:
+            k_upper = k_upper[0]
+            k_lower = k_lower[0]
+            k_avg = k_avg[0]
+            
+            if bound_type != 'fluid':
+                u_upper = u_upper[0]
+                u_lower = u_lower[0]
+                u_avg = u_avg[0]
+        
+        # Return appropriate results based on the bound type
+        if bound_type == 'fluid':
+            return k_upper, k_lower
+        else:
+            return k_upper, k_lower, u_upper, u_lower, k_avg, u_avg
