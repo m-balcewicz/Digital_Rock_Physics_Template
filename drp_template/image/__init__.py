@@ -1,1 +1,6 @@
-from ._funcs import ortho_slice, ortho_views, add_slice_reference_lines, histogram, plot_effective_modulus, plot_effective_modulus2, save_figure2
+from ._funcs import ortho_slice
+from ._funcs import ortho_views
+from ._funcs import add_slice_reference_lines
+from ._funcs import histogram
+from ._funcs import plot_effective_modulus
+from ._funcs import save_figure2
