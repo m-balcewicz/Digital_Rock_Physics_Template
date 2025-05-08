@@ -856,9 +856,9 @@ def histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None, tit
 
 
 def plot_effective_modulus(
-    fraction, data, types='avg', marker='o', dark_mode=False, cmap_set=None, 
+    fraction, data, types='avg', marker='o', markersize=4, dark_mode=False, cmap_set=None, 
     xlabel_percent=False, grid=True, secondary_axis=True, secondary_label=None, linewidth=4, axes_colored=True,
-    ylabel=None, xlabel=None, title=None
+    ylabel=None, xlabel=None, loc_legend='upper right', ylim_off=0.05, xlim_off=None, title=None
 ):
     """
     Plot effective modulus against porosity.
@@ -873,6 +873,8 @@ def plot_effective_modulus(
         Type or list of types of modulus to plot. Valid options are 'voigt', 'reuss', 'hs_upper', 'hs_lower', 'avg', or 'all'.
     marker : str, optional (default='o')
         Marker style for the plot lines.
+    markersize : int, optional (default=4)
+        Size of the markers in the plot.
     dark_mode : bool, optional (default=False)
         If True, use a dark color scheme; otherwise, use a light color scheme.
     cmap_set : str or Colormap, optional (default=None)
@@ -893,6 +895,12 @@ def plot_effective_modulus(
         Tuple or list of two strings: (primary y-axis label, secondary y-axis label).
     xlabel : str, optional (default=None)
         Custom label for the x-axis. If None, defaults to "Porosity".
+    loc_legend : str, optional (default='upper right')
+        Location of the legend in the plot.
+    ylim_off : float, optional (default=0.05)
+        Offset for the y-axis limits. If None, no offset is applied.
+    xlim_off : float, optional (default=0.05)
+        Offset for the x-axis limits. If None, no offset is applied.
     title : str, optional (default=None)
         Title of the plot. If None, no title is set.
 
@@ -933,8 +941,8 @@ def plot_effective_modulus(
         text_color, face_color, edge_color = 'white', 'black', 'white'
     else:
         text_color, face_color, edge_color = 'black', 'white', 'black'
-    
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
+
+    fig, ax = plt.subplots(figsize=(12, 10), facecolor=face_color, edgecolor=edge_color)
     fig.set_facecolor(face_color)  # Set the face color of the entire figure   
     
     if axes_colored:
@@ -991,7 +999,7 @@ def plot_effective_modulus(
         _marker_style = {'voigt': '-', 'reuss': '--', 'hs_upper': 'dashed', 'hs_lower': '-.', 'avg': '-'}
         
         ax.plot(fraction, modulus_values, label=labels[mod_type], linestyle=_marker_style[mod_type], 
-                marker=marker, markersize=4, color=colors[i], linewidth=linewidth)
+                marker=marker, markersize=markersize, color=colors[i], linewidth=linewidth)
 
     # y-axis label handling
     if ylabel is not None and isinstance(ylabel, (tuple, list)) and len(ylabel) == 2:
@@ -1014,7 +1022,7 @@ def plot_effective_modulus(
     for spine in ax.spines.values():
         spine.set_edgecolor(edge_color)
     
-    legend = ax.legend(facecolor=face_color, edgecolor=edge_color)
+    legend = ax.legend(facecolor=face_color, edgecolor=edge_color, loc=loc_legend)
     
     for text in legend.get_texts():
         text.set_color(text_color)
@@ -1027,7 +1035,19 @@ def plot_effective_modulus(
     ax.tick_params(axis='x', colors=text_color, which='both')
     if xlabel_percent:
         ax.xaxis.set_major_formatter(mtick.PercentFormatter(1.00))  # convert x-axis into percent
-    plt.xlim([0, 1])
+    # Set the x-axis limits with a margin based on xlim_off
+    # Ensure fraction is iterable (e.g., numpy array or list)
+    if xlim_off is None:
+        plt.xlim([0, 1])
+    else:
+        if isinstance(fraction, (float, int)):
+            fraction = np.array([fraction])
+        else:
+            fraction = np.asarray(fraction).flatten()
+        x_min = np.min(fraction)
+        x_max = np.max(fraction)
+        x_margin = xlim_off * (x_max - x_min) if x_max != x_min else xlim_off * x_max
+        plt.xlim([x_min - x_margin, x_max + x_margin])
     
     # Find global min/max across all plotted data for consistent scaling
     all_values = []
@@ -1038,7 +1058,9 @@ def plot_effective_modulus(
     data_max = max(all_values) if all_values else 1
     
     # Set the primary y-axis limits
-    ax.set_ylim([data_min, data_max])
+    # Set the primary y-axis limits with a 5% margin
+    y_margin = ylim_off * (data_max - data_min) if data_max != data_min else ylim_off * data_max
+    ax.set_ylim([data_min - y_margin, data_max + y_margin])
     
     # Add secondary y-axis if requested
     if secondary_axis:
@@ -1058,7 +1080,9 @@ def plot_effective_modulus(
         # Set the secondary y-axis limits based on conversion factor
         secondary_min = data_min
         secondary_max = data_max
-        ax2.set_ylim([secondary_min, secondary_max])
+        # Set the secondary y-axis limits with a 5% margin
+        y_margin = ylim_off * (secondary_max - secondary_min) if secondary_max != secondary_min else ylim_off * secondary_max
+        ax2.set_ylim([secondary_min - y_margin, secondary_max + y_margin])
         
         # Set label for secondary axis
         if secondary_label:
