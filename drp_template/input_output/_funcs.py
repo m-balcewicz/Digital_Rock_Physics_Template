@@ -5,11 +5,6 @@ import tifffile
 import re
 
 from drp_template.default_params import update_parameters_file, check_output_folder
-from drp_template.tools import check_binary, mk_paramsfile, get_model_dimensions, reshape_model
-# from drp_template.tools.dirify import mk_dir
-# from drp_template.tools.logify import mk_log
-# import skimage
-# from PIL import Image
 
 __all__ = [
     'get_dim_order',
@@ -115,6 +110,8 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
     ValueError
         If dimensions are not provided or are incomplete.
     """
+    from drp_template.tools import check_binary, mk_paramsfile
+
     params_filename = mk_paramsfile(file_path)
     file_format = file_path.split('.')[-1]
 
@@ -170,6 +167,8 @@ def loadmat(file_path, var_key=None, voxel_size=None):
     model : np.ndarray
         Loaded data.
     """
+    from drp_template.tools import mk_paramsfile, check_binary
+
     params_filename = mk_paramsfile(file_path)
     with h5py.File(file_path, 'r') as file:
         if var_key is not None:
@@ -211,6 +210,8 @@ def import_tiff_sequence(directory, dtype, dimensions=None, voxel_size=None):
     volume : np.ndarray
         The loaded 3D volume.
     """
+    from drp_template.tools import mk_paramsfile, check_binary
+
     files = [f for f in os.listdir(directory) if f.lower().endswith(('.tif', '.tiff'))]
     if not files:
         raise FileNotFoundError(f"No TIFF files found in {directory}")
@@ -285,6 +286,8 @@ def export_model(filename, data, dtype='uint8', order='F', filetype='.raw'):
     -------
     None
     """
+    from drp_template.tools import check_output_folder
+
     output_path = check_output_folder()
     file_path = os.path.join(output_path, filename + filetype)
 

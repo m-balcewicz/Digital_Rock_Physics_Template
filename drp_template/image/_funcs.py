@@ -15,8 +15,7 @@ __all__ = [
     'add_slice_reference_lines',
     'save_figure2',
     'histogram',
-    'plot_effective_modulus',
-    'plot_effective_modulus2'
+    'plot_effective_modulus'
 ]
 
 # S E T T I N G S
@@ -856,192 +855,245 @@ def histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None, tit
 #     return fig
 
 
-def plot_effective_modulus(phi, data, modulus='bulk', types='avg', dark_mode=False):
+def plot_effective_modulus(
+    fraction, data, types='avg', marker='o', markersize=4, dark_mode=False, cmap_set=None, 
+    xlabel_percent=False, grid=True, secondary_axis=True, secondary_label=None, linewidth=4, axes_colored=True,
+    ylabel=None, xlabel=None, loc_legend='upper right', ylim_off=0.05, xlim_off=None, title=None
+):
     """
     Plot effective modulus against porosity.
 
     Parameters:
-    - phi (numpy.ndarray): Array of porosity values.
-    - modulus (str): Modulus type, e.g., 'bulk' or 'shear'.
-    - data (dict): Dictionary containing modulus data.
-                   Example: {'voigt': voigt_data, 'reuss': reuss_data, 'hs_upper': hs_upper_data, 'hs_lower': hs_lower_data, 'avg': avg_data}
-                   where voigt_data, reuss_data, hs_upper_data, hs_lower_data, and avg_data are arrays of modulus values.
-    - types (str or list): Type or list of types of modulus to plot. Options: 'voigt', 'reuss', 'hs_upper', 'hs_lower', 'avg'.
-                          You can also pass a list of types to plot multiple types.
-                          If 'all' is passed, it will plot all available types.
-    - dark_mode (bool): Use dark color scheme if True, else use light color scheme.
-    - fig_width (float): Width of the figure.
-    - fig_height (float): Height of the figure.
-    
+    -----------
+    fraction : numpy.ndarray
+        Array of porosity values (x-axis).
+    data : dict
+        Dictionary containing modulus data for each type (e.g., 'voigt', 'reuss', 'hs_upper', 'hs_lower', 'avg').
+    types : str or list, optional (default='avg')
+        Type or list of types of modulus to plot. Valid options are 'voigt', 'reuss', 'hs_upper', 'hs_lower', 'avg', or 'all'.
+    marker : str, optional (default='o')
+        Marker style for the plot lines.
+    markersize : int, optional (default=4)
+        Size of the markers in the plot.
+    dark_mode : bool, optional (default=False)
+        If True, use a dark color scheme; otherwise, use a light color scheme.
+    cmap_set : str or Colormap, optional (default=None)
+        Colormap to use for the plot. If None, uses the default from global_settings.
+    xlabel_percent : bool, optional (default=False)
+        If True, format the x-axis as percentages.
+    grid : bool, optional (default=True)
+        If True, display a grid on the plot.
+    secondary_axis : bool, optional (default=True)
+        If True, display a secondary y-axis.
+    secondary_label : str, optional (default=None)
+        Custom label for the secondary y-axis. If None, uses the second element of `ylabel` if provided.
+    linewidth : int, optional (default=4)
+        Width of the plot lines.
+    axes_colored : bool, optional (default=True)
+        If True, color the axes for better contrast.
+    ylabel : tuple or list, optional (default=None)
+        Tuple or list of two strings: (primary y-axis label, secondary y-axis label).
+    xlabel : str, optional (default=None)
+        Custom label for the x-axis. If None, defaults to "Porosity".
+    loc_legend : str, optional (default='upper right')
+        Location of the legend in the plot.
+    ylim_off : float, optional (default=0.05)
+        Offset for the y-axis limits. If None, no offset is applied.
+    xlim_off : float, optional (default=0.05)
+        Offset for the x-axis limits. If None, no offset is applied.
+    title : str, optional (default=None)
+        Title of the plot. If None, no title is set.
+
     Returns:
-    - fig (matplotlib.figure.Figure): The matplotlib figure.
-    - ax (matplotlib.axes._subplots.AxesSubplot): The matplotlib axes.
-    """   
+    --------
+    fig : matplotlib.figure.Figure
+        The Matplotlib figure object.
+    ax : matplotlib.axes.Axes
+        The Matplotlib axes object.
+
+    Examples:
+    ---------
+    ```python
+
+    # Example data
+    porosity = np.linspace(0, 1, 20)
+    data = {
+        'voigt': np.random.rand(20),
+        'reuss': np.random.rand(20),
+        'avg': np.random.rand(20),
+        'hs_upper': np.random.rand(20),
+        'hs_lower': np.random.rand(20),
+    }
+
+    fig, ax = plot_effective_modulus(porosity, data, types='all', dark_mode=True)
+    plt.show()
+    ```
+
+    Notes:
+    ------
+    - The function supports plotting multiple modulus types simultaneously.
+    - The `cmap_set` parameter can be a string (colormap name) or a Matplotlib/CMcrameri colormap object.
+    - The `ylabel` parameter can be used to set both primary and secondary y-axis labels.
+    - The secondary y-axis is enabled by default and can be customized with `secondary_label`.
+    - Adjust `dark_mode`, `axes_colored`, and `grid` for preferred plot appearance.
+    """
     if dark_mode:
         text_color, face_color, edge_color = 'white', 'black', 'white'
     else:
         text_color, face_color, edge_color = 'black', 'white', 'black'
-    
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
+
+    fig, ax = plt.subplots(figsize=(12, 10), facecolor=face_color, edgecolor=edge_color)
     fig.set_facecolor(face_color)  # Set the face color of the entire figure   
     
+    if axes_colored:
+        ax.set_facecolor(face_color)
+        for spine in ax.spines.values():
+            spine.set_edgecolor('peru')
+        y_color = 'peru'
+    else:
+        for spine in ax.spines.values():
+            spine.set_edgecolor(edge_color)
+        y_color = text_color
+
     color1 = face_color
     color2 = 'tomato' if dark_mode else 'darkred'
     
-    title = f"Effective {modulus.capitalize()} Modulus"
-    ax.set_title(title, color=text_color)
+    # Title handling
+    if title is not None:
+        ax.set_title(title, color=text_color)
     
     if types == 'all':
-        types = ['voigt', 'reuss', 'hs_upper', 'hs_lower', 'avg']
+        types = ['voigt', 'reuss', 'avg', 'hs_upper', 'hs_lower']
     elif isinstance(types, str):
         types = [types]
 
-    for mod_type in types:
+    # Handle colormap
+    if cmap_set is None:
+        # Get the default colormap from settings
+        cmap_set = global_settings.get('colormap')
+        # Evaluate the string to get the actual colormap function
+        cmap_set = eval(cmap_set)
+    elif isinstance(cmap_set, str):
+        # If a string is provided, try to get it from matplotlib's colormaps
+        try:
+            cmap_set = plt.colormaps[cmap_set]  # Use the non-deprecated method
+        except:
+            # Fallback to a default colormap if the requested one doesn't exist
+            print(f"Warning: Colormap '{cmap_set}' not found, using 'viridis' instead.")
+            cmap_set = plt.colormaps['viridis']  # Use the non-deprecated method
+    
+    # Generate colors based on number of types
+    n_types = len(types)
+    colors = [cmap_set(i/(n_types-1) if n_types > 1 else 0.5) for i in range(n_types)]
+    
+    for i, mod_type in enumerate(types):
         modulus_values = np.array(data[mod_type])
         labels = {
-            'voigt': 'Voigt Upper Bound',
-            'reuss': 'Reuss Lower Bound',
+            'voigt': 'Voigt Bound',
+            'reuss': 'Reuss Bound',
             'hs_upper': 'Hashin–Shtrikman Upper Bound',
             'hs_lower': 'Hashin–Shtrikman Lower Bound',
             'avg': 'Voigt-Reuss-Hill Average',
         }
         
-        marker_style = {'voigt': '-', 'reuss': '-', 'hs_upper': 'dashed', 'hs_lower': '-.', 'avg': '-'}
+        _marker_style = {'voigt': '-', 'reuss': '--', 'hs_upper': 'dashed', 'hs_lower': '-.', 'avg': '-'}
         
-        ax.plot(phi, modulus_values, label=labels[mod_type], linestyle=marker_style[mod_type], marker='o', markersize=6)
+        ax.plot(fraction, modulus_values, label=labels[mod_type], linestyle=_marker_style[mod_type], 
+                marker=marker, markersize=markersize, color=colors[i], linewidth=linewidth)
 
-    ax.set_xlabel("Porosity", color=text_color)
-    ax.set_ylabel(f"{modulus.capitalize()} Modulus ($GPa$)", color=text_color)
+    # y-axis label handling
+    if ylabel is not None and isinstance(ylabel, (tuple, list)) and len(ylabel) == 2:
+        y1_label, y2_label = ylabel
+    else:
+        y1_label = ""
+        y2_label = ""
+
+    # x-axis label handling
+    if xlabel is None:
+        x_label_str = "Porosity"
+    else:
+        x_label_str = xlabel
+
+    ax.set_xlabel(x_label_str, color=text_color)
+    ax.set_ylabel(y1_label, color=y_color)
     
     # Set the face and edge color of the axes (background within the plot)
     ax.set_facecolor(face_color)
     for spine in ax.spines.values():
         spine.set_edgecolor(edge_color)
     
-    legend = ax.legend(facecolor=face_color, edgecolor=edge_color)
+    legend = ax.legend(facecolor=face_color, edgecolor=edge_color, loc=loc_legend)
     
     for text in legend.get_texts():
         text.set_color(text_color)
         
     # Add grid
-    plt.grid(True, linestyle='--', alpha=0.7)
+    if grid:
+        plt.grid(True, linestyle='--', alpha=0.7)
 
-    ax.tick_params(axis='y', colors=text_color, which='both')
+    ax.tick_params(axis='y', colors=y_color, which='both')
     ax.tick_params(axis='x', colors=text_color, which='both')
-    ax.xaxis.set_major_formatter(mtick.PercentFormatter(1.00))  # convert x-axis into percent
-    plt.xlim([0, 1])
-    
-    return fig, ax
-
-
-def plot_effective_modulus2(phi, modulus, data, k, u, types='avg', dark_mode=False, fig_width=8, fig_height=6):
-    """
-    Plot effective modulus against porosity.
-
-    Parameters:
-    - phi (float): Input porosity value.
-    - modulus (str): Modulus type, e.g., 'bulk' or 'shear'.
-    - data (dict): Dictionary containing modulus data.
-                   Example: {'bulk': {'voigt': voigt_data, 'reuss': reuss_data, 'hs_upper': hs_upper_data, 'hs_lower': hs_lower_data, 'avg': avg_data},
-                            'shear': {'voigt': u_voigt, 'reuss': u_reuss, 'hs_upper': u_hs_upper, 'hs_lower': u_hs_lower, 'avg': u_avg}}
-                   where voigt_data, reuss_data, hs_upper_data, hs_lower_data, and avg_data are arrays of modulus values.
-    - types (str or list): Type or list of types of modulus to plot. Options: 'voigt', 'reuss', 'hs_upper', 'hs_lower', 'avg'.
-                          You can also pass a list of types to plot multiple types.
-                          If 'all' is passed, it will plot all available types.
-    - dark_mode (bool): Use dark color scheme if True, else use light color scheme.
-    - fig_width (float): Width of the figure.
-    - fig_height (float): Height of the figure.
-    
-    Returns:
-    - fig (matplotlib.figure.Figure): The matplotlib figure.
-    - ax (matplotlib.axes._subplots.AxesSubplot): The matplotlib axes.
-    """   
-    from drp_template.math import bound2
-    
-    if dark_mode:
-        text_color, face_color, edge_color = 'white', 'black', 'white'
+    if xlabel_percent:
+        ax.xaxis.set_major_formatter(mtick.PercentFormatter(1.00))  # convert x-axis into percent
+    # Set the x-axis limits with a margin based on xlim_off
+    # Ensure fraction is iterable (e.g., numpy array or list)
+    if xlim_off is None:
+        plt.xlim([0, 1])
     else:
-        text_color, face_color, edge_color = 'black', 'white', 'black'
+        if isinstance(fraction, (float, int)):
+            fraction = np.array([fraction])
+        else:
+            fraction = np.asarray(fraction).flatten()
+        x_min = np.min(fraction)
+        x_max = np.max(fraction)
+        x_margin = xlim_off * (x_max - x_min) if x_max != x_min else xlim_off * x_max
+        plt.xlim([x_min - x_margin, x_max + x_margin])
     
-    # Define the range of porosity values to calculate
-    phi_all = np.linspace(0, 1, 100)
-    
-    # Call the bound function to calculate bounds
-    bounds_data = bound2(type='voigt-reuss', fractions=phi_all, k=k, u=u)
-    
-    k_voigt, k_reuss, u_voigt, u_reuss, k_avg, u_avg = bounds_data
-
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
-    fig.set_facecolor(face_color)  # Set the face color of the entire figure   
-    
-    color1 = face_color
-    color2 = 'tomato' if dark_mode else 'darkred'
-    
-    title = f"Effective {modulus.capitalize()} Modulus"
-    ax.set_title(title, color=text_color)
-    
-    if types == 'all':
-        types = ['voigt', 'reuss', 'hs_upper', 'hs_lower', 'avg']
-    elif isinstance(types, str):
-        types = [types]
-
-    # Plot for each specified type
+    # Find global min/max across all plotted data for consistent scaling
+    all_values = []
     for mod_type in types:
-        labels = {
-            'voigt': 'Voigt Upper Bound',
-            'reuss': 'Reuss Lower Bound',
-            'hs_upper': 'Hashin–Shtrikman Upper Bound',
-            'hs_lower': 'Hashin–Shtrikman Lower Bound',
-            'avg': 'Voigt-Reuss-Hill Average',
-        }
+        all_values.extend(data[mod_type])
+    
+    data_min = min(all_values) if all_values else 0
+    data_max = max(all_values) if all_values else 1
+    
+    # Set the primary y-axis limits
+    # Set the primary y-axis limits with a 5% margin
+    y_margin = ylim_off * (data_max - data_min) if data_max != data_min else ylim_off * data_max
+    ax.set_ylim([data_min - y_margin, data_max + y_margin])
+    
+    # Add secondary y-axis if requested
+    if secondary_axis:
+        # Create a twin of the primary axis
+        ax2 = ax.twinx()
+        ax2.set_facecolor(face_color)
         
-        marker_style = {'voigt': '-', 'reuss': '-', 'hs_upper': 'dashed', 'hs_lower': '-.', 'avg': '-'}
-
-        # Plot the line for the entire porosity range
-        for i, modulus_value in enumerate(data[modulus][mod_type]):
-            ax.plot(phi_all, np.interp(phi_all, phi, modulus_value), label=f"{labels[mod_type]} (Line) {i+1}", linestyle=marker_style[mod_type], color='lightgrey')
-
-            # Plot a marker for the input porosity
-            ax.plot(phi, np.interp(phi, phi_all, np.interp(phi, phi_all, modulus_value)), marker='o', markersize=8, label=f"{labels[mod_type]} (Marker) {i+1}", linestyle='None', color=color1)
-
-    # Plot bounds if necessary
-    if 'voigt' in types:
-        ax.plot(phi_all, np.interp(phi_all, phi, k_voigt), label="Voigt Bound (Line)", linestyle='-', color='orange')
-        ax.plot(phi, np.interp(phi, phi_all, k_voigt), marker='o', markersize=8, label="Voigt Bound (Marker)", linestyle='None', color='orange')
-
-    if 'reuss' in types:
-        ax.plot(phi_all, np.interp(phi_all, phi, k_reuss), label="Reuss Bound (Line)", linestyle='-', color='purple')
-        ax.plot(phi, np.interp(phi, phi_all, k_reuss), marker='o', markersize=8, label="Reuss Bound (Marker)", linestyle='None', color='purple')
-
-    if 'hs_upper' in types:
-        ax.plot(phi_all, np.interp(phi_all, phi, k_hs_upper), label="HS Upper Bound (Line)", linestyle='--', color='brown')
-        ax.plot(phi, np.interp(phi, phi_all, k_hs_upper), marker='o', markersize=8, label="HS Upper Bound (Marker)", linestyle='None', color='brown')
-
-    if 'hs_lower' in types:
-        ax.plot(phi_all, np.interp(phi_all, phi, k_hs_lower), label="HS Lower Bound (Line)", linestyle='-.', color='green')
-        ax.plot(phi, np.interp(phi, phi_all, k_hs_lower), marker='o', markersize=8, label="HS Lower Bound (Marker)", linestyle='None', color='green')
-
-    if 'avg' in types:
-        ax.plot(phi_all, np.interp(phi_all, phi, k_avg), label="Average (Line)", linestyle='-', color='red')
-        ax.plot(phi, np.interp(phi, phi_all, k_avg), marker='o', markersize=8, label="Average (Marker)", linestyle='None', color='red')
-
-    ax.set_xlabel("Porosity", color=text_color)
-    ax.set_ylabel(f"{modulus.capitalize()} Modulus ($GPa$)", color=text_color)
-    
-    # Set the face and edge color of the axes (background within the plot)
-    ax.set_facecolor(face_color)
-    for spine in ax.spines.values():
-        spine.set_edgecolor(edge_color)
-    
-    legend = ax.legend(facecolor=face_color, edgecolor=edge_color)
-    
-    for text in legend.get_texts():
-        text.set_color(text_color)
+        if axes_colored:
+            for spine in ax2.spines.values():
+                spine.set_edgecolor('tomato')
+            y2_color = 'tomato'
+        else:
+            for spine in ax2.spines.values():
+                spine.set_edgecolor(edge_color)
+            y2_color = text_color
         
-    ax.tick_params(axis='y', colors=text_color, which='both')
-    ax.tick_params(axis='x', colors=text_color, which='both')
-    ax.xaxis.set_major_formatter(mtick.PercentFormatter(1.00))  # convert x-axis into percent
-    plt.xlim([0, 1])
+        # Set the secondary y-axis limits based on conversion factor
+        secondary_min = data_min
+        secondary_max = data_max
+        # Set the secondary y-axis limits with a 5% margin
+        y_margin = ylim_off * (secondary_max - secondary_min) if secondary_max != secondary_min else ylim_off * secondary_max
+        ax2.set_ylim([secondary_min - y_margin, secondary_max + y_margin])
+        
+        # Set label for secondary axis
+        if secondary_label:
+            ax2.set_ylabel(secondary_label, color=y2_color)
+        else:
+            ax2.set_ylabel(y2_label, color=y2_color)
+        
+        # Style the secondary axis
+        ax2.tick_params(axis='y', colors=y2_color)
+        for spine in ax2.spines.values():
+            spine.set_edgecolor(edge_color)
     
     return fig, ax
 
