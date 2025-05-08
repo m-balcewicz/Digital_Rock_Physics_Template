@@ -1,1 +1,6 @@
-from ._funcs import import_model, import_tif_model, import_tiff_sequence, export_model, export_header, loadmat
+from ._funcs import import_model
+from ._funcs import import_tif_model
+from ._funcs import import_tiff_sequence 
+from ._funcs import export_model
+from ._funcs import export_header, loadmat
+from ._funcs import loadmat
