@@ -177,7 +177,7 @@ def label_binary(data, paramsfile='parameters.json'):
 
         # Make the colormap red for the phase of interest
         cmap_reds = plt.cm.Reds
-        fig, ax = ortho_slice(data=data_temp, plane='xy', cmap_set=cmap_reds, paramsfile=paramsfile, title=f"Phase: {m}", slice=slice_index)
+        fig, ax, pcm = ortho_slice(data=data_temp, plane='xy', cmap_set=cmap_reds, paramsfile=paramsfile, title=f"Phase: {m}", slice=slice_index)
         
         # Display the figure in the Jupyter Notebook
         display(fig)
