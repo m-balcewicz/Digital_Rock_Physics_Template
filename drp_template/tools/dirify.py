@@ -22,3 +22,14 @@ def mk_dir(path):
     except Exception as e:
         print(f"Error creating directory: {e}")
         return ''
+
+def check_output_folder(output_folder='output'):
+    """
+    Ensure the output folder exists and return its absolute path.
+    Default is a folder named 'output' in the current working directory.
+    """
+    abs_path = os.path.abspath(output_folder)
+    if not os.path.exists(abs_path):
+        os.makedirs(abs_path)
+        print(f"Created output folder: {abs_path}")
+    return abs_path
