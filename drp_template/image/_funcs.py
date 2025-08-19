@@ -613,57 +613,123 @@ def add_slice_reference_lines(axes, data_shape, slice_indices, dark_mode=False, 
         axes[2].text(slice_yz, ny*0.05, f"YZ (x={slice_yz})", color=text_color, 
                  rotation=90, va='bottom', ha='right', backgroundcolor='black' if dark_mode else 'white', alpha=0.7)
 
-def histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None, title=None, log_scale='both', dark_mode=True):
+
+def _resolve_colormap(cmap_input):
     """
-    Plot a histogram of gray-scale intensities.
+    Helper function to safely resolve colormap values to a Colormap object.
+    
+    Parameters:
+    -----------
+    cmap_input : str or Colormap
+        Colormap name or object to resolve
+        
+    Returns:
+    --------
+    matplotlib.colors.Colormap
+        Resolved colormap object
+    """
+    if cmap_input is None:
+        return plt.colormaps['viridis']
+    
+    # Already a Colormap-like object
+    if hasattr(cmap_input, 'N') or callable(cmap_input):
+        return cmap_input
+    
+    if isinstance(cmap_input, str):
+        # First try matplotlib colormaps (most common)
+        try:
+            return plt.colormaps.get_cmap(cmap_input)
+        except Exception:
+            # Then try cmcrameri (for specialized colormaps)
+            try:
+                return getattr(cm, cmap_input)
+            except Exception:
+                # Finally try cmcrameri with 'cm.' prefix
+                if cmap_input.startswith('cm.'):
+                    name = cmap_input.split('.', 1)[1]
+                    try:
+                        return getattr(cm, name)
+                    except Exception:
+                        try:
+                            return plt.colormaps.get_cmap(name)
+                        except Exception:
+                            return plt.colormaps['viridis']
+                else:
+                    return plt.colormaps['viridis']
+    
+    return plt.colormaps['viridis']
+
+
+def histogram(
+    data,
+    thresholds=None,
+    paramsfile='parameters.json',
+    dtype=None,
+    cmap_set=None,
+    title=None,
+    log_scale='both',
+    dark_mode=True,
+    num_bins=None
+):
+    """
+    Plot a histogram with optional threshold-based coloring.
 
     Parameters:
     -----------
-    data : numpy array
-        1D array containing gray-scale intensities.
-    dtype : str, optional (default=None)
-        Data type of the input array. If not provided, it is read from the parameters file.
-    cmap_set : Matplotlib colormap or str, optional (default=None)
-        The colormap to be used for the plot. If not specified, the default colormap is used.
-    title : str, optional (default=None)
-        The title of the plot.
-    log_scale : {'both', 'x', 'y'}, optional (default='both')
-        Specifies whether to apply log scale to both axes ('both'), only the x-axis ('x'), or only the y-axis ('y').
-    dark_mode : bool, optional (default=True)
-        If True, set a dark background; otherwise, set a light background.
+    data : numpy.ndarray
+        Input data array (will be flattened if multidimensional).
+    thresholds : list of dict, optional (default=None)
+        Threshold definitions for coloring histogram bars. Each threshold should be a dictionary with:
+          - 'label': str, human-readable label for the threshold range
+          - 'range': (min, max), numeric pair defining the inclusive range
+        Example: [{'label':'Pores', 'range':[0, 13800]}, {'label':'Solid', 'range':[13801, 65535]}]
+        Legacy dict format (label -> [min, max]) is also supported for backward compatibility.
+        If None, plots a standard histogram without threshold coloring.
     paramsfile : str, optional (default='parameters.json')
-        Name of the JSON file containing plotting parameters.
+        Path to JSON file containing plotting parameters.
+    dtype : str, optional (default=None)
+        Data type ('uint8' or 'uint16'). If None, read from paramsfile.
+    cmap_set : str or matplotlib.colors.Colormap, optional (default=None)
+        Colormap for histogram bars. Supports matplotlib colormap names ('viridis', 'berlin') 
+        and cmcrameri colormaps ('batlow', 'oslo'). If None, uses default from global settings.
+    title : str, optional (default=None)
+        Plot title. If None, uses 'Threshold Histogram'.
+    log_scale : str, optional (default='both')
+        Axis scaling: 'x', 'y', 'both', or None for linear scaling.
+    dark_mode : bool, optional (default=True)
+        Use dark color scheme if True, light scheme if False.
+    num_bins : int, optional (default=None)
+        Number of histogram bins. If None, uses Freedman-Diaconis rule with fallback to 256.
 
     Returns:
     --------
-    fig : Matplotlib Figure
-        The Matplotlib figure object.
-    ax : Matplotlib Axes
-        The Matplotlib axes object.
+    fig : matplotlib.figure.Figure
+        The matplotlib figure object.
+    ax : matplotlib.axes.Axes  
+        The matplotlib axes object.
 
     Examples:
     ---------
-    ```python
-    import numpy as np
-    from plot_histogram import plot_histogram
-
-    # Generate example data
-    data = np.random.randint(0, 255, 1000)
-
-    # Plot histogram with default settings
-    fig, ax = plot_histogram(data)
-    plt.show()
-    ```
+    Basic histogram:
+    >>> fig, ax = histogram(data, cmap_set='viridis')
+    
+    Threshold-based coloring:
+    >>> thresholds = [
+    ...     {'label': 'Pores', 'range': [0, 13800]},
+    ...     {'label': 'Solid', 'range': [13801, 65535]}
+    ... ]
+    >>> fig, ax = histogram(data, thresholds=thresholds, cmap_set='berlin')
 
     Notes:
     ------
-    - If `dtype` is not provided, it is read from the parameters file.
-    - The `cmap_set` parameter can be either a Matplotlib colormap or a string specifying the colormap name.
-    - The `log_scale` parameter controls whether to apply log scale to the x-axis, y-axis, both, or neither.
-    - The function reads default plotting parameters from a JSON file. Make sure to provide a valid path to the JSON file or use the default if not specified.
-    - Adjust the `paramsfile` parameter based on your specific file path.
-
+    - Function automatically handles zero counts in log-scale plots by replacing with small epsilon
+    - Colormap resolution supports both matplotlib and cmcrameri colormaps
+    - Threshold validation ensures proper format and data types
+    - Uses global figure settings from default_figure_settings.json when available
     """
+    # Flatten data if it's multidimensional
+    data = data.flatten()
+    
     # Set dtype based on the parameters file if not provided
     if dtype is None:
         dtype = read_parameters_file(paramsfile=paramsfile, paramsvars='dtype')
@@ -673,8 +739,13 @@ def histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None, tit
 
     # Set default colormap if not specified
     if cmap_set is None:
-        cmap_set = default_figure_settings.get('colormap')
-        cmap_set = eval(cmap_set)
+        # Get default colormap from global settings
+        cmap_val = global_settings.get('colormap', 'cm.batlow')
+        cmap_set = _resolve_colormap(cmap_val)
+    else:
+        # If user provided a string, resolve it to a Colormap object safely
+        if isinstance(cmap_set, str):
+            cmap_set = _resolve_colormap(cmap_set)
 
     # Set color scheme based on dark_mode
     if dark_mode:
@@ -682,23 +753,100 @@ def histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None, tit
     else:
         text_color, face_color, edge_color = 'black', 'white', 'black'
 
-    # Calculate histogram bins using Freedman-Diaconis rule
-    iqr = np.percentile(data, 75) - np.percentile(data, 25)
-    bins_width = 2 * iqr / (len(data) ** (1 / 3))
-    bins = np.arange(0, gray_max + bins_width, bins_width)
+    # Calculate histogram bins
+    if num_bins is not None:
+        bins = np.linspace(0, gray_max, num_bins + 1)
+    else:
+        # Calculate histogram bins using Freedman-Diaconis rule with guards
+        iqr = np.percentile(data, 75) - np.percentile(data, 25)
+        if iqr <= 0 or np.isnan(iqr):
+            # fallback to fixed bin count
+            bins = np.linspace(0, gray_max, 256 + 1)
+        else:
+            bins_width = 2 * iqr / (len(data) ** (1 / 3))
+            if not np.isfinite(bins_width) or bins_width <= 0:
+                bins = np.linspace(0, gray_max, 256 + 1)
+            else:
+                bins = np.arange(0, gray_max + bins_width, bins_width)
 
     # Compute histogram of gray-scale intensities
     hist, bins = np.histogram(data, bins=bins, range=(0, gray_max))
+    bin_centers = (bins[:-1] + bins[1:]) / 2
+    bin_widths = bins[1:] - bins[:-1]
 
-    # Create a color map for the histogram bars
-    cmap = plt.cm.get_cmap(cmap_set)
-    colors = cmap(np.linspace(0, 1, len(bins) - 1))
+    # protect log-scale plotting from zero counts
+    hist_plot = hist.copy()
+    if log_scale in ('both', 'y'):
+        eps = 1e-6
+        hist_plot = np.where(hist_plot <= 0, eps, hist_plot)
 
-    # Plot histogram using colored bars
+    # Create the figure and axis
     fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=face_color, edgecolor=edge_color)
-    ax.bar(bins[:-1], hist, width=bins_width, color=colors, linewidth=0.5, edgecolor=None) # no edgecolor for the bars
+    
+    # Normalize thresholds to canonical list-of-dicts format
+    if isinstance(thresholds, dict):
+        # Convert legacy dict format: {'label': [min, max]} -> [{'label': 'label', 'range': (min, max)}]
+        thresholds = [{'label': k, 'range': tuple(v)} for k, v in thresholds.items()]
 
-    # Apply log scale based on the log_scale parameter
+    # Validate canonical format
+    if thresholds is not None:
+        if not isinstance(thresholds, list):
+            raise TypeError("'thresholds' must be a list of dicts with keys 'label' and 'range' or None")
+        for t in thresholds:
+            if not isinstance(t, dict):
+                raise TypeError("Each threshold must be a dict with keys 'label' and 'range'")
+            if 'label' not in t or 'range' not in t:
+                raise KeyError("Each threshold dict must contain 'label' and 'range'")
+            if not isinstance(t['label'], str):
+                raise TypeError("threshold 'label' must be a string")
+            if not (isinstance(t['range'], (list, tuple)) and len(t['range']) == 2):
+                raise ValueError("threshold 'range' must be a sequence of two values (min,max)")
+    
+    # Plot histogram
+    if thresholds is None:
+        # Standard histogram with colormap gradient
+        cmap = cmap_set if hasattr(cmap_set, 'N') else plt.colormaps.get_cmap(cmap_set)
+        colors = cmap(np.linspace(0, 1, len(bins) - 1))
+        ax.bar(bins[:-1], hist_plot, width=bin_widths, color=colors, linewidth=0.5, edgecolor=None)
+    else:
+        # Threshold-based coloring
+        cmap = cmap_set if hasattr(cmap_set, 'N') else plt.colormaps.get_cmap(cmap_set)
+        
+        # Generate unique colors for each threshold
+        n_thresholds = len(thresholds)
+        threshold_colors = [cmap(i / (n_thresholds - 1)) if n_thresholds > 1 else cmap(0.5) 
+                           for i in range(n_thresholds)]
+
+        # Color bars based on threshold ranges
+        default_color = 'gray' if dark_mode else 'lightgray'
+        bar_colors = [default_color] * len(bin_centers)
+
+        for i, t in enumerate(thresholds):
+            min_val, max_val = t['range']
+            in_range = (bin_centers >= min_val) & (bin_centers <= max_val)
+            for idx, flag in enumerate(in_range):
+                if flag:
+                    bar_colors[idx] = threshold_colors[i]
+
+        # Plot bars with individual colors
+        for center, height, width, color in zip(bin_centers, hist_plot, bin_widths, bar_colors):
+            ax.bar(center, height, width=width, color=color, edgecolor=None)
+        
+        # Add legend
+        legend_elements = [plt.Rectangle((0, 0), 1, 1, color=threshold_colors[i], label=t['label'])
+                          for i, t in enumerate(thresholds)]
+        ax.legend(handles=legend_elements, loc='upper right', 
+                 facecolor=face_color, edgecolor=edge_color, framealpha=0.7)
+
+    # After plotting, set y-axis lower limit for log scale to avoid warnings
+    if log_scale in ('both', 'y'):
+        try:
+            min_positive = np.min(hist[hist > 0])
+            ax.set_ylim(bottom=max(eps, min_positive * 0.1))
+        except Exception:
+            ax.set_ylim(bottom=eps)
+
+    # Configure log scaling
     if log_scale == 'both':
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -706,24 +854,21 @@ def histogram(data, paramsfile='parameters.json', dtype=None, cmap_set=None, tit
         ax.set_xscale('log')
     elif log_scale == 'y':
         ax.set_yscale('log')
+        ax.set_ylim(bottom=0.1)
 
-    # Set labels and title with adjusted font size
+    # Set labels and styling
     font_size = plt.rcParams['font.size']
     ax.set_xlabel('Gray-scale intensity', color=text_color, fontsize=font_size)
     ax.set_ylabel('Frequency', color=text_color, fontsize=font_size)
-
-    # Set title with adjusted font size
-    title_text = 'Histogram' if title is None else title
+    
+    title_text = 'Threshold Histogram' if title is None else title
     ax.set_title(title_text, color=text_color, fontsize=font_size)
-
-    # Set tick parameters with adjusted font size
+    
     ax.tick_params(axis='both', which='both', direction='in', labelsize=font_size, colors=text_color)
-
-    # Set spines edge color for the entire subplot
+    
     for spine in ax.spines.values():
         spine.set_edgecolor(edge_color)
-
-    # Set background color
+    
     ax.set_facecolor(face_color)
 
     return fig, ax
