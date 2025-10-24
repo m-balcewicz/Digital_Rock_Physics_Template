@@ -18,7 +18,6 @@ vscode
 examples/data/tiff_sequences
 examples/.ipynb_checkpoints
 examples/lectures
-examples/data
 examples/output
 examples/visualization/output
 examples/import/output
@@ -30,8 +29,6 @@ tests
 
 # files to ignore
 DRP.log
-examples/data/*.raw
-examples/data/*.tif
 
 # packaging tools
 drp_template.egg-info
