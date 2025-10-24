@@ -14,7 +14,8 @@ __all__ = [
     'add_slice_reference_lines',
     'save_figure',
     'histogram',
-    'plot_effective_modulus'
+    'plot_effective_modulus',
+    'get_figure_colors'
 ]
 
 # S E T T I N G S
@@ -1241,6 +1242,249 @@ def plot_effective_modulus(
 
 
     
+
+def get_figure_colors(fig, num_colors=10, format='all', print_colors=True, data_only=True):
+    """
+    Extract colors used in a Matplotlib figure and convert them to RGB, CMYK, and HEX formats.
+    
+    Parameters:
+    -----------
+    fig : matplotlib.figure.Figure
+        The Matplotlib figure object to extract colors from.
+    num_colors : int, optional (default=10)
+        Number of colors to sample from the colormap if colormap is used.
+    format : str, optional (default='all')
+        Output format: 'rgb', 'cmyk', 'hex', or 'all' for all formats.
+    print_colors : bool, optional (default=True)
+        If True, print the color values to console.
+    data_only : bool, optional (default=True)
+        If True, extract only data visualization colors (colormap colors).
+        If False, include all figure colors (axes, text, background, etc.).
+    
+    Returns:
+    --------
+    dict
+        Dictionary containing color information in requested formats.
+        Keys: 'rgb', 'cmyk', 'hex' (depending on format parameter)
+        Each key maps to a sub-dictionary with:
+        - 'data_colors': Colors from data visualization (bars, lines, colormaps)
+        - 'decoration_colors': Colors from figure decorations (if data_only=False)
+    
+    Examples:
+    ---------
+    ```python
+    # Create a figure with histogram
+    fig, ax = histogram(data, cmap_set='batlow')
+    
+    # Get only colormap/data colors (default)
+    colors = get_figure_colors(fig, num_colors=5, data_only=True)
+    
+    # Get all colors including axes, text, etc.
+    all_colors = get_figure_colors(fig, num_colors=5, data_only=False)
+    
+    # Get only HEX codes of data colors
+    hex_colors = get_figure_colors(fig, format='hex', num_colors=8)
+    
+    # Access the colors
+    data_hex = colors['hex']['data_colors']
+    ```
+    
+    Notes:
+    ------
+    - RGB values are in range [0, 1]
+    - CMYK values are in range [0, 100] (percentage)
+    - HEX values are in format '#RRGGBB'
+    - data_only=True focuses on colormap/visualization colors
+    - data_only=False includes axis colors, text colors, backgrounds, etc.
+    """
+    
+    def rgb_to_cmyk(rgb):
+        """Convert RGB (0-1) to CMYK (0-100)"""
+        r, g, b = rgb[:3]  # Take only RGB, ignore alpha
+        
+        if (r, g, b) == (0, 0, 0):
+            return (0, 0, 0, 100)
+        
+        # RGB to CMY
+        c = 1 - r
+        m = 1 - g
+        y = 1 - b
+        
+        # CMY to CMYK
+        k = min(c, m, y)
+        if k == 1:
+            return (0, 0, 0, 100)
+        
+        c = ((c - k) / (1 - k)) * 100
+        m = ((m - k) / (1 - k)) * 100
+        y = ((y - k) / (1 - k)) * 100
+        k = k * 100
+        
+        return (c, m, y, k)
+    
+    def rgb_to_hex(rgb):
+        """Convert RGB (0-1) to HEX"""
+        r, g, b = rgb[:3]  # Take only RGB, ignore alpha
+        return '#{:02x}{:02x}{:02x}'.format(int(r*255), int(g*255), int(b*255))
+    
+    # Collect colors from the figure
+    data_colors_rgba = set()
+    decoration_colors_rgba = set()
+    
+    # Iterate through all axes in the figure
+    for ax in fig.get_axes():
+        # Extract DATA COLORS from plot elements (colormap/visualization)
+        
+        # From bar charts
+        for patch in ax.patches:
+            if hasattr(patch, 'get_facecolor'):
+                data_colors_rgba.add(tuple(patch.get_facecolor()))
+        
+        # From line plots
+        for line in ax.get_lines():
+            if hasattr(line, 'get_color'):
+                color = line.get_color()
+                if isinstance(color, str):
+                    # Convert named colors or hex to RGBA
+                    from matplotlib.colors import to_rgba
+                    data_colors_rgba.add(to_rgba(color))
+                else:
+                    data_colors_rgba.add(tuple(color))
+        
+        # From collections (pcolormesh, scatter, etc.)
+        for collection in ax.collections:
+            if hasattr(collection, 'get_facecolors'):
+                face_colors = collection.get_facecolors()
+                if len(face_colors) > 0:
+                    # If many colors (colormap), sample evenly
+                    if len(face_colors) > num_colors:
+                        indices = np.linspace(0, len(face_colors)-1, num_colors, dtype=int)
+                        for idx in indices:
+                            data_colors_rgba.add(tuple(face_colors[idx]))
+                    else:
+                        for color in face_colors:
+                            data_colors_rgba.add(tuple(color))
+        
+        if not data_only:
+            # Extract DECORATION COLORS (axes, text, spines, etc.)
+            from matplotlib.colors import to_rgba
+            
+            # Axis colors
+            if hasattr(ax, 'get_facecolor'):
+                decoration_colors_rgba.add(tuple(to_rgba(ax.get_facecolor())))
+            
+            # Spine colors
+            for spine in ax.spines.values():
+                if hasattr(spine, 'get_edgecolor'):
+                    decoration_colors_rgba.add(tuple(to_rgba(spine.get_edgecolor())))
+            
+            # Text colors (labels, titles, ticks)
+            if ax.xaxis.label:
+                decoration_colors_rgba.add(tuple(to_rgba(ax.xaxis.label.get_color())))
+            if ax.yaxis.label:
+                decoration_colors_rgba.add(tuple(to_rgba(ax.yaxis.label.get_color())))
+            if ax.title:
+                decoration_colors_rgba.add(tuple(to_rgba(ax.title.get_color())))
+            
+            # Tick colors
+            for tick in ax.xaxis.get_major_ticks():
+                if tick.label1:
+                    decoration_colors_rgba.add(tuple(to_rgba(tick.label1.get_color())))
+            for tick in ax.yaxis.get_major_ticks():
+                if tick.label1:
+                    decoration_colors_rgba.add(tuple(to_rgba(tick.label1.get_color())))
+    
+    # Figure background color (if not data_only)
+    if not data_only:
+        from matplotlib.colors import to_rgba
+        decoration_colors_rgba.add(tuple(to_rgba(fig.get_facecolor())))
+    
+    # Convert sets to sorted lists
+    data_colors_rgba = sorted(list(data_colors_rgba))
+    decoration_colors_rgba = sorted(list(decoration_colors_rgba))
+    
+    # If no data colors found, try to get from colormap
+    if len(data_colors_rgba) < num_colors:
+        # Try to extract colormap from first collection
+        for ax in fig.get_axes():
+            for collection in ax.collections:
+                if hasattr(collection, 'get_cmap'):
+                    cmap = collection.get_cmap()
+                    if cmap is not None:
+                        # Sample colors from colormap
+                        sample_colors = cmap(np.linspace(0, 1, num_colors))
+                        for color in sample_colors:
+                            data_colors_rgba.add(tuple(color))
+                        break
+        data_colors_rgba = sorted(list(data_colors_rgba))
+    
+    # Limit to num_colors if we have too many data colors
+    if len(data_colors_rgba) > num_colors:
+        indices = np.linspace(0, len(data_colors_rgba)-1, num_colors, dtype=int)
+        data_colors_rgba = [data_colors_rgba[i] for i in indices]
+    
+    # Convert to requested formats
+    result = {}
+    
+    if format in ['rgb', 'all']:
+        result['rgb'] = {
+            'data_colors': data_colors_rgba,
+            'decoration_colors': decoration_colors_rgba if not data_only else []
+        }
+    
+    if format in ['cmyk', 'all']:
+        result['cmyk'] = {
+            'data_colors': [rgb_to_cmyk(rgb) for rgb in data_colors_rgba],
+            'decoration_colors': [rgb_to_cmyk(rgb) for rgb in decoration_colors_rgba] if not data_only else []
+        }
+    
+    if format in ['hex', 'all']:
+        result['hex'] = {
+            'data_colors': [rgb_to_hex(rgb) for rgb in data_colors_rgba],
+            'decoration_colors': [rgb_to_hex(rgb) for rgb in decoration_colors_rgba] if not data_only else []
+        }
+    
+    # Print colors if requested
+    if print_colors:
+        print(f"\n{'='*80}")
+        print(f"DATA COLORS (Colormap/Visualization): {len(data_colors_rgba)} colors extracted")
+        print("=" * 80)
+        
+        for i, rgb in enumerate(data_colors_rgba, 1):
+            print(f"\nData Color {i}:")
+            
+            if 'rgb' in result:
+                print(f"  RGB:  ({rgb[0]:.3f}, {rgb[1]:.3f}, {rgb[2]:.3f})")
+            
+            if 'cmyk' in result:
+                c, m, y, k = result['cmyk']['data_colors'][i-1]
+                print(f"  CMYK: (C:{c:.1f}%, M:{m:.1f}%, Y:{y:.1f}%, K:{k:.1f}%)")
+            
+            if 'hex' in result:
+                print(f"  HEX:  {result['hex']['data_colors'][i-1]}")
+        
+        if not data_only and len(decoration_colors_rgba) > 0:
+            print(f"\n{'='*80}")
+            print(f"DECORATION COLORS (Axes/Text/Background): {len(decoration_colors_rgba)} colors extracted")
+            print("=" * 80)
+            
+            for i, rgb in enumerate(decoration_colors_rgba, 1):
+                print(f"\nDecoration Color {i}:")
+                
+                if 'rgb' in result:
+                    print(f"  RGB:  ({rgb[0]:.3f}, {rgb[1]:.3f}, {rgb[2]:.3f})")
+                
+                if 'cmyk' in result:
+                    c, m, y, k = result['cmyk']['decoration_colors'][i-1]
+                    print(f"  CMYK: (C:{c:.1f}%, M:{m:.1f}%, Y:{y:.1f}%, K:{k:.1f}%)")
+                
+                if 'hex' in result:
+                    print(f"  HEX:  {result['hex']['decoration_colors'][i-1]}")
+        
+        print("=" * 80)
+    
+    return result
+
 
 def save_figure(figure, filename=None, format="png", dpi=300, log=True):
     """

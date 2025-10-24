@@ -4,3 +4,4 @@ from ._funcs import add_slice_reference_lines
 from ._funcs import histogram
 from ._funcs import plot_effective_modulus
 from ._funcs import save_figure
+from ._funcs import get_figure_colors
