@@ -1,13 +1,18 @@
 import json
 import os
 from datetime import datetime
+import matplotlib.pyplot as plt
+from cmcrameri import cm
 
 
 __all__ = [
     'print_style',
     'check_output_folder',
     'update_parameters_file',
-    'read_parameters_file'
+    'read_parameters_file',
+    'read_package_config',
+    'default_figure',
+    'default_data_figure'
 ]
 
 
@@ -146,4 +151,86 @@ def read_parameters_file(paramsfile='parameters.json', paramsvars=None):
             raise ValueError("Invalid type for parameter_names. Use str, list, or None.")
     else:
         return data
+
+
+def read_package_config(config_filename):
+    """
+    Read a configuration file from the package directory (not from output folder).
+    
+    This is for reading package-internal configuration files like default_figure_settings.json,
+    not user data files.
+    
+    Parameters:
+    -----------
+    config_filename : str
+        Name of the configuration file to read from the package.
+        
+    Returns:
+    --------
+    dict
+        The configuration data as a dictionary.
+        
+    Example:
+    --------
+    >>> settings = read_package_config('default_figure_settings.json')
+    """
+    # Get the directory where this module is located
+    module_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Construct the full path to the config file
+    config_path = os.path.join(module_dir, config_filename)
+    
+    if not os.path.isfile(config_path):
+        raise FileNotFoundError(f"Package configuration file '{config_path}' does not exist.")
+    
+    # Read and return the configuration
+    with open(config_path, 'r') as f:
+        return json.load(f)
+
+
+# Matplotlib figure defaults
+# Colormap after: Crameri, Fabio: Scientific colour maps, https://zenodo.org/record/1243862, (2021)
+
+def default_figure():
+    """
+    Set default matplotlib figure parameters for standard plots.
+    
+    Sets figure size, background color, subplot positions, and font size.
+    """
+    # set the default figure size
+    plt.rcParams['figure.figsize'] = (10, 6)
+
+    # set the background color of the figure
+    plt.rcParams['figure.facecolor'] = 'white'
+
+    # set the default x-axes position
+    plt.rcParams['figure.subplot.left'] = 0.15          # left
+    plt.rcParams['figure.subplot.bottom'] = 0.11        # bottom
+    plt.rcParams['figure.subplot.right'] = 0.75         # width
+    plt.rcParams['figure.subplot.top'] = 0.8            # height
+
+    # set the font size
+    plt.rcParams['font.size'] = 20
+
+
+def default_data_figure():
+    """
+    Set default matplotlib figure parameters for data visualization plots.
+    
+    Sets figure size, background color, subplot positions, and font size.
+    Slightly larger than default_figure for data-heavy plots.
+    """
+    # set the default figure size
+    plt.rcParams['figure.figsize'] = (12, 7)
+
+    # set the background color of the figure
+    plt.rcParams['figure.facecolor'] = 'white'
+
+    # set the default x-axes position
+    plt.rcParams['figure.subplot.left'] = 0.15          # left
+    plt.rcParams['figure.subplot.bottom'] = 0.11        # bottom
+    plt.rcParams['figure.subplot.right'] = 0.75         # width
+
+    # set the font size
+    plt.rcParams['font.size'] = 20
 
