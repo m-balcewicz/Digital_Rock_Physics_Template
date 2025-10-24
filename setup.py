@@ -4,6 +4,11 @@ setup(
     name='drp_template',
     version='0.1.0',
     packages=find_packages(),
+    package_data={
+        'drp_template.default_params': ['*.json'],
+        'drp_template': ['**/*.json'],
+    },
+    include_package_data=True,
     install_requires=[
         'numpy>=1.24.0',
         'matplotlib>=3.7.2',
