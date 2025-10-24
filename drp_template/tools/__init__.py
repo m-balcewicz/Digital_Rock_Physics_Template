@@ -5,5 +5,6 @@ from ._funcs import get_model_dimensions
 from ._funcs import reshape_model
 from ._funcs import create_subvolume
 from ._funcs import find_slice_with_all_values
+from ._funcs import label_binary
 from .dirify import mk_dir
 from .dirify import check_output_folder

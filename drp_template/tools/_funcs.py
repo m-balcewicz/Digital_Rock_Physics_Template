@@ -1,8 +1,9 @@
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 
 import drp_template.input_output as in_out
-from drp_template.default_params import print_style
+from drp_template.default_params import print_style, update_parameters_file
 import drp_template.default_params as dp
 
 __all__ = [
@@ -12,7 +13,8 @@ __all__ = [
     'get_model_dimensions',
     'reshape_model',
     'create_subvolume',
-    'find_slice_with_all_values'
+    'find_slice_with_all_values',
+    'label_binary'
 ]
 
 def check_binary(model, filename):
@@ -224,3 +226,82 @@ def find_slice_with_all_values(data):
             break
 
     return slice_with_all_values
+
+
+def label_binary(data, paramsfile='parameters.json'):
+    """
+    Label binary phases in a 3D volume based on user input.
+
+    Parameters:
+    -----------
+    data : numpy.ndarray
+        3D binary volume to be labeled.
+    paramsfile : str, optional (default='parameters.json')
+        Name of the JSON file containing plotting parameters.
+
+    Returns:
+    --------
+    labels : dict
+        Dictionary mapping phase values to user-defined labels.
+        
+    Examples:
+    ---------
+    ```python
+    import drp_template.tools as tools
+    
+    # Label phases interactively
+    labels = tools.label_binary(data, paramsfile='my_data.json')
+    ```
+    
+    Notes:
+    ------
+    - This function displays each phase visually using orthogonal slices
+    - User is prompted to name each phase interactively
+    - Labels are saved to the parameter file for future reference
+    - Requires IPython/Jupyter environment for interactive display
+    """
+    from IPython.display import display
+    from drp_template.image import ortho_slice
+
+    # Ensure the input is a binary array (contains only integers)
+    if not np.issubdtype(data.dtype, np.integer):
+        raise ValueError("Input data must be a binary array containing only integers (0 or 1).")
+
+    # Get the unique values and their counts
+    unique, counts = np.unique(data, return_counts=True)
+
+    # Create an empty labels dictionary
+    labels = {}
+    
+    # Get the slice in the xy plane that contains all unique values corresponding to 0
+    slice = find_slice_with_all_values(data)
+    slice_index = slice['xy']
+
+    for m, value in enumerate(unique):
+        # Create a copy of the input array and set all values to 0
+        data_temp = np.zeros_like(data)
+
+        # Set the values that match the current unique value to 1
+        data_temp[data == value] = 1
+
+        # Set the values that match the current unique value to 1
+        data_temp[data == unique[m]] = 1
+
+        # Make the colormap red for the phase of interest
+        cmap_reds = plt.cm.Reds
+        fig, ax, pcm = ortho_slice(data=data_temp, plane='xy', cmap_set=cmap_reds, paramsfile=paramsfile, title=f"Phase: {m}", slice=slice_index)
+        
+        # Display the figure in the Jupyter Notebook
+        display(fig)
+
+        # Prompt the user to name the presented phase and store the input in labels
+        phase_name = input(f'Name the presented phase {value} with index {m}: ')
+        labels[str(value)] = phase_name  # Convert the key to a string
+        
+        # Close the figure to avoid displaying it again
+        plt.close(fig)
+           
+    # update the parameters file with the new labels dictionary
+    update_parameters_file(paramsfile, labels=labels)
+
+    return labels
