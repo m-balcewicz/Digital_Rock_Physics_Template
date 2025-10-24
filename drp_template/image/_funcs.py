@@ -1,8 +1,7 @@
 import glob
 import os
 import numpy as np
-import drp_template.bin.default_parameters as params
-from drp_template.default_params import read_parameters_file, check_output_folder
+from drp_template.default_params import read_parameters_file, read_package_config, check_output_folder
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from matplotlib.colors import ListedColormap
@@ -13,19 +12,14 @@ __all__ = [
     'ortho_slice',
     'ortho_views',
     'add_slice_reference_lines',
-    'save_figure2',
+    'save_figure',
     'histogram',
     'plot_effective_modulus'
 ]
 
 # S E T T I N G S
-# Get the directory of the currently executing script (your module or package)
-package_directory = os.path.dirname(os.path.abspath(__file__))
-# Construct the relative path to the JSON file
-relative_path = os.path.join('..','default_params','default_figure_settings.json')
-# Combine the package directory and the relative path to get the absolute path
-json_file_path = os.path.join(package_directory, relative_path)
-default_figure_settings = read_parameters_file(paramsfile=json_file_path, paramsvars=None)
+# Read the package configuration file (not from output folder, but from package directory)
+default_figure_settings = read_package_config('default_figure_settings.json')
 
 # Access global settings from the nested structure
 global_settings = default_figure_settings.get('global_settings', default_figure_settings)
@@ -1248,7 +1242,7 @@ def plot_effective_modulus(
 
     
 
-def save_figure2(figure, filename=None, format="png", dpi=300, log=True):
+def save_figure(figure, filename=None, format="png", dpi=300, log=True):
     """
     Save a Matplotlib figure.
 
