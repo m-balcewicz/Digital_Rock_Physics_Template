@@ -20,6 +20,8 @@ examples/.ipynb_checkpoints
 examples/lectures
 examples/data
 examples/output
+examples/visualization/output
+examples/import/output
 projects
 debugging
 output
