@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import drp_template.bin.default_parameters as params
+from drp_template.default_params import default_data_figure
 from cmcrameri import cm
 
 def velocity_vs_porosity(porosity, VP, VS, samples, legend_location='best', legend_bbox_to_anchor=(1, 1)):
@@ -11,7 +11,7 @@ def velocity_vs_porosity(porosity, VP, VS, samples, legend_location='best', lege
     VS = [...]  # list or array of VS values
 
     """
-    params.default_data_figure()
+    default_data_figure()
     fig = plt.figure()
     plt.xlabel('Porosity (%)')
     plt.ylabel('Effective velocity (m/s)')
