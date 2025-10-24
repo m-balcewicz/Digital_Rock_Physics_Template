@@ -24,6 +24,7 @@ projects
 debugging
 output
 dev
+tests
 
 # files to ignore
 DRP.log
