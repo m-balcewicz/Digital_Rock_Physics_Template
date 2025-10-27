@@ -42,31 +42,63 @@ def check_binary(model, filename):
     return model
 
 
-def list_dir_info(directory, extension=None):
+def list_dir_info(directory, extension=None, search_subdirs=False):
     """
-    List all files with a specific extension in a directory,
-    or list all subfolders if no extension is provided.
+    List files or subdirectories in a directory with flexible filtering.
 
     Args:
-        directory (str): The directory to search for files and subfolders.
-        extension (str, optional): The file extension to filter the files.
-                                   Default is None.
+        directory (str): The directory to search.
+        extension (str, optional): File extension to filter (e.g., '.raw', '.txt').
+                                   If None, lists subdirectories. Default is None.
+        search_subdirs (bool, optional): If True and extension is provided,
+                                         returns subdirectories containing files
+                                         with that extension. If False, returns
+                                         files directly in directory. Default is False.
 
     Returns:
-        list: A list of file names with the specified extension in the directory,
-              or a list of subfolder names in the directory.
+        list: Sorted list of file names, file paths, or subdirectory names.
 
+    Examples:
+        # List all subdirectories
+        folders = list_dir_info('/path/to/dir')
+        
+        # List .raw files directly in directory
+        files = list_dir_info('/path/to/dir', extension='.raw')
+        
+        # List subdirectories containing .raw files
+        folders = list_dir_info('/path/to/dir', extension='.raw', search_subdirs=True)
     """
-    directory_listing = []
-    for entry in os.scandir(directory):
-        if entry.is_dir():
-            directory_listing.append(entry.name)
-
-    if extension is not None:
-        directory_listing = [file for file in directory_listing
-                             if any(file.endswith(extension) for file in os.listdir(os.path.join(directory, file)))]
-
-    return directory_listing
+    import os
+    
+    if extension is None:
+        # List all subdirectories
+        directory_listing = []
+        for entry in os.scandir(directory):
+            if entry.is_dir():
+                directory_listing.append(entry.name)
+    
+    elif search_subdirs:
+        # List subdirectories that contain files with the extension
+        directory_listing = []
+        for entry in os.scandir(directory):
+            if entry.is_dir():
+                # Check if this subdirectory contains files with the extension
+                subdir_path = os.path.join(directory, entry.name)
+                has_extension = any(
+                    f.endswith(extension) for f in os.listdir(subdir_path)
+                    if os.path.isfile(os.path.join(subdir_path, f))
+                )
+                if has_extension:
+                    directory_listing.append(entry.name)
+    
+    else:
+        # List files with extension directly in directory
+        directory_listing = []
+        for entry in os.scandir(directory):
+            if entry.is_file() and entry.name.endswith(extension):
+                directory_listing.append(entry.name)
+    
+    return sorted(directory_listing)
 
 
 def mk_paramsfile(file_path):
