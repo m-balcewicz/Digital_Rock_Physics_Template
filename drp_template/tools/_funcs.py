@@ -47,7 +47,7 @@ def check_binary(model, filename):
     return model
 
 
-def list_dir_info(directory, extension=None, search_subdirs=False):
+def list_dir_info(directory, extension=None, search_subdirs=False, return_count=False):
     """
     List files or subdirectories in a directory with flexible filtering.
 
@@ -59,9 +59,13 @@ def list_dir_info(directory, extension=None, search_subdirs=False):
                                          returns subdirectories containing files
                                          with that extension. If False, returns
                                          files directly in directory. Default is False.
+        return_count (bool, optional): If True, returns a tuple of (list, count).
+                                       If False, returns only the list. Default is False.
 
     Returns:
-        list: Sorted list of file names, file paths, or subdirectory names.
+        list or tuple: 
+            - If return_count=False: Sorted list of file names, file paths, or subdirectory names.
+            - If return_count=True: Tuple of (sorted list, count).
 
     Examples:
         # List all subdirectories
@@ -69,6 +73,10 @@ def list_dir_info(directory, extension=None, search_subdirs=False):
         
         # List .raw files directly in directory
         files = list_dir_info('/path/to/dir', extension='.raw')
+        
+        # List .raw files and get count
+        files, count = list_dir_info('/path/to/dir', extension='.raw', return_count=True)
+        print(f"Found {count} raw files")
         
         # List subdirectories containing .raw files
         folders = list_dir_info('/path/to/dir', extension='.raw', search_subdirs=True)
@@ -103,7 +111,12 @@ def list_dir_info(directory, extension=None, search_subdirs=False):
             if entry.is_file() and entry.name.endswith(extension):
                 directory_listing.append(entry.name)
     
-    return sorted(directory_listing)
+    sorted_listing = sorted(directory_listing)
+    
+    if return_count:
+        return sorted_listing, len(sorted_listing)
+    else:
+        return sorted_listing
 
 
 def mk_paramsfile(file_path):
