@@ -6,5 +6,10 @@ from ._funcs import reshape_model
 from ._funcs import create_subvolume
 from ._funcs import find_slice_with_all_values
 from ._funcs import label_binary
+from ._funcs import infer_dimensions_from_filesize
+from ._funcs import infer_dtype_from_filesize
+from ._funcs import classify_data_type
+from ._funcs import get_value_statistics
+from ._funcs import get_model_properties
 from .dirify import mk_dir
 from .dirify import check_output_folder
