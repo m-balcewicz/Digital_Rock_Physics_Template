@@ -13,7 +13,8 @@ from drp_template.tools import find_slice_with_all_values
 __all__ = [
     'get_connected_porosity',
     'get_phase_fractions',
-    'label_binary'
+    'label_binary',
+    'reorder_labels'
 ]
 
 
@@ -183,7 +184,7 @@ def label_binary(data, paramsfile='parameters.json'):
     return _label_binary_new(data, paramsfile)
 
 
-def reorder_labels(data, labels, paramsfile = 'parameters.json') :
+def reorder_labels(data, labels, paramsfile = 'parameters.json'):
     """This is a function to reorder the labels of a segmented image. The standard order for segmented images is:
     0: Pore
     1: Matrix-1 (e.g., Quartz)

@@ -154,22 +154,54 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
     else:
         fig = ax.figure  # Use the figure from the provided axis
 
+    # Helper function to check if a slice contains all unique values from the full data
+    def slice_has_all_phases(data_slice, full_data_unique):
+        slice_unique = np.unique(data_slice)
+        return np.all(np.isin(full_data_unique, slice_unique))
+
     if plane == 'xy':
         if slice is None:
             nz = read_parameters_file(paramsfile=paramsfile, paramsvars='nz')
             slice = (nz // 2) - 1
+            
+            # Check if center slice has all phases
+            unique_values = np.unique(data)
+            if not slice_has_all_phases(data[:, :, slice], unique_values):
+                # Import the function from tools
+                from drp_template.tools import find_slice_with_all_values
+                slice_dict = find_slice_with_all_values(data)
+                if slice_dict['xy'] is not None:
+                    slice = slice_dict['xy']
 
         data = data[:, :, slice]
     elif plane == 'yz':
         if slice is None:
             nx = read_parameters_file(paramsfile=paramsfile, paramsvars='nx')
             slice = (nx // 2) - 1
+            
+            # Check if center slice has all phases
+            unique_values = np.unique(data)
+            if not slice_has_all_phases(data[slice, :, :], unique_values):
+                # Import the function from tools
+                from drp_template.tools import find_slice_with_all_values
+                slice_dict = find_slice_with_all_values(data)
+                if slice_dict['yz'] is not None:
+                    slice = slice_dict['yz']
 
         data = data[slice, :, :]
     elif plane == 'xz':
         if slice is None:
             ny = read_parameters_file(paramsfile=paramsfile, paramsvars='ny')
             slice = (ny // 2) - 1
+            
+            # Check if center slice has all phases
+            unique_values = np.unique(data)
+            if not slice_has_all_phases(data[:, slice, :], unique_values):
+                # Import the function from tools
+                from drp_template.tools import find_slice_with_all_values
+                slice_dict = find_slice_with_all_values(data)
+                if slice_dict['xz'] is not None:
+                    slice = slice_dict['xz']
 
         data = data[:, slice, :]
     else:
