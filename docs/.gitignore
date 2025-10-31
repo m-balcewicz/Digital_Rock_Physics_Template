@@ -1,0 +1,12 @@
+# Sphinx build outputs
+_build/
+_autosummary/
+
+# Sphinx cache
+.doctrees/
+
+# Copied examples (from ../examples/)
+examples/
+
+# macOS
+.DS_Store
