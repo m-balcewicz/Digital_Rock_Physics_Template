@@ -56,20 +56,80 @@ def get_connected_porosity(data, paramsfile='parameters.json'):
 
 def get_phase_fractions(data, labels=None, paramsfile='parameters.json', log=False):
     """
-    Calculate fractions and generate a table. Save the table to a text file with an incremental index.
+    Calculate detailed phase fractions and generate a formatted table.
+    
+    This is the PRIMARY FUNCTION for detailed phase analysis of segmented data.
+    It provides comprehensive statistics with DataFrame formatting, footer totals,
+    and automatic saving to the parameters file.
+    
+    For quick file overview without loading data, use drp_template.tools.get_model_properties().
 
-    Args:
-        data (array-like): The input data for which fractions need to be calculated.
-        labels (dict, optional): A dictionary containing labels for each unique value in the data.
-            The dictionary should have the form {key: label}, where key represents the unique value
-            and label represents the corresponding label. Defaults to None.
+    Parameters:
+    -----------
+    data : numpy.ndarray
+        The input data array (already loaded) for which fractions need to be calculated.
+    labels : dict, optional (default=None)
+        Dictionary mapping phase values to phase names. Keys can be strings or integers.
+        Example: {"0": "Pore", "1": "Quartz", "2": "Feldspar"}
+        The function handles flexible key formats (int, str) automatically.
+    paramsfile : str, optional (default='parameters.json')
+        Name of the JSON file where fractions will be saved.
+    log : bool, optional (default=False)
+        If True, print the formatted table to console.
 
     Returns:
-        str: A formatted table containing the unique values, counts, fractions, and labels (if provided).
+    --------
+    str
+        A formatted table string containing phases, counts, fractions, and labels.
+        Includes a footer row with totals.
 
     Raises:
-        ValueError: If labels is provided and is not a dictionary.
+    ------
+    ValueError
+        If labels is provided but is not a dictionary.
 
+    Examples:
+    ---------
+    ```python
+    import drp_template.input_output as io
+    import drp_template.math as drp_math
+    
+    # Load data
+    data = io.import_model('model.raw', dtype='uint8', 
+                          dimensions={'nx': 400, 'ny': 400, 'nz': 400})
+    
+    # Basic usage without labels
+    table = drp_math.get_phase_fractions(data, log=True)
+    
+    # With labels for better readability
+    labels = {"0": "Pore", "1": "Quartz", "2": "Feldspar"}
+    table = drp_math.get_phase_fractions(data, labels=labels, log=True)
+    
+    # Save to custom parameters file
+    table = drp_math.get_phase_fractions(data, labels=labels, 
+                                         paramsfile='my_model.json', log=True)
+    ```
+    
+    Output Format:
+    --------------
+    The returned table includes:
+    - Phase: Integer phase value
+    - Count: Number of voxels for each phase
+    - Fraction: Percentage of total voxels (4 decimal places)
+    - Name: Phase name (if labels provided)
+    - Footer: Total counts and percentages
+    
+    Notes:
+    ------
+    - This function automatically saves phase fractions to the parameters file
+    - Uses pandas DataFrame for professional table formatting
+    - Handles flexible label key formats (tries int, str conversions automatically)
+    - Includes a footer row showing totals for validation
+    - Fractions are saved using phase names as keys (if labels provided)
+    
+    See Also:
+    ---------
+    drp_template.tools.get_model_properties : Quick file overview without loading data
     """
     if labels is not None:
         if not isinstance(labels, dict):
