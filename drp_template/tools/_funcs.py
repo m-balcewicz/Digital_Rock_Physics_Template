@@ -423,12 +423,13 @@ def get_value_statistics(data):
     }
 
 
-def get_model_properties(filepath, dimensions=None, verbose=True):
+def get_model_properties(filepath, dimensions=None, labels=None, verbose=True):
     """
     Analyze a raw binary file to determine its properties and data characteristics.
     
-    This function orchestrates multiple smaller utility functions to provide
-    comprehensive information about a raw data file.
+    This function provides a quick overview of file-level properties and basic statistics.
+    For detailed phase analysis with DataFrame output and saving to parameters file,
+    use drp_template.math.get_phase_fractions() instead.
     
     Parameters:
     -----------
@@ -436,6 +437,11 @@ def get_model_properties(filepath, dimensions=None, verbose=True):
         Path to the raw binary file.
     dimensions : dict, optional (default=None)
         Dictionary with 'nx', 'ny', 'nz' keys. If None, will be inferred from file size.
+    labels : dict, optional (default=None)
+        Dictionary mapping phase values (as strings) to phase names.
+        Example: {"0": "Pore", "1": "Quartz", "2": "Feldspar"}
+        If provided, phase names will be shown inline in the quick overview.
+        For detailed labeled output, use drp_template.math.get_phase_fractions().
     verbose : bool, optional (default=True)
         Print detailed information about the model.
     
@@ -460,27 +466,42 @@ def get_model_properties(filepath, dimensions=None, verbose=True):
     ---------
     ```python
     import drp_template.tools as tools
+    import drp_template.math as drp_math
     
-    # With known dimensions
+    # Quick file overview
     props = tools.get_model_properties('model.raw', 
                                        dimensions={'nx': 400, 'ny': 400, 'nz': 400})
     
+    # Quick overview with labels shown inline
+    labels = {"0": "Pore", "1": "Quartz", "2": "Feldspar"}
+    props = tools.get_model_properties('model.raw', 
+                                       dimensions={'nx': 400, 'ny': 400, 'nz': 400},
+                                       labels=labels)
+    
+    # For detailed phase analysis (recommended for segmented data):
+    # Load the data first
+    data = io.import_model(file_path='model.raw', dtype='uint8', dimensions=dimensions)
+    # Then use get_phase_fractions for detailed analysis
+    table = drp_math.get_phase_fractions(data, labels=labels, log=True)
+    
     # Auto-detect dimensions (assumes cubic)
     props = tools.get_model_properties('model.raw')
-    
-    # Use the results
-    if props['data_type'] == 'segmented':
-        print(f"Found {props['phase_count']} phases")
-        for val, pct in props['value_percentages'].items():
-            print(f"  Phase {val}: {pct:.2f}%")
     ```
     
     Notes:
     ------
+    - This function provides a QUICK OVERVIEW of file properties
+    - For DETAILED PHASE ANALYSIS with formatted tables and parameter file saving,
+      use drp_template.math.get_phase_fractions() instead
     - If dimensions are not provided, assumes cubic geometry
     - Automatically determines data type (uint8, uint16, float32) from file size
     - Uses modular helper functions: infer_dimensions_from_filesize, 
       infer_dtype_from_filesize, classify_data_type, get_value_statistics
+    
+    See Also:
+    ---------
+    drp_template.math.get_phase_fractions : Detailed phase analysis with DataFrame,
+                                            formatted tables, and parameter file saving
     """
     # Get file size
     file_size_bytes = os.path.getsize(filepath)
@@ -531,11 +552,11 @@ def get_model_properties(filepath, dimensions=None, verbose=True):
         print(f"MODEL PROPERTIES: {filename}")
         print(f"{'='*60}")
         print(f"File size:        {file_size_mb:.2f} MB")
-        print(f"Dimensions:       {dimensions['nz']} × {dimensions['ny']} × {dimensions['nx']}")
+        print(f"Dimensions:       [{dimensions['nz']}, {dimensions['ny']}, {dimensions['nx']}]")
         if dimensions_inferred:
             print(f"                  (⚠ inferred - please verify!)")
         print(f"Total voxels:     {total_voxels:,}")
-        print(f"Data type:        {dtype}")
+        print(f"Data type:        {dtype.__name__}")
         print(f"\n{'-'*60}")
         print(f"DATA ANALYSIS")
         print(f"{'-'*60}")
@@ -546,14 +567,26 @@ def get_model_properties(filepath, dimensions=None, verbose=True):
         if data_type == 'segmented':
             print(f"Number of phases: {phase_count}")
             print(f"\n{'-'*60}")
-            print(f"PHASE DISTRIBUTION")
+            print(f"PHASE DISTRIBUTION (Quick Overview)")
             print(f"{'-'*60}")
             print(f"{'Phase':<8} {'Count':>12} {'Percentage':>12}")
             print(f"{'-'*60}")
+            
             for val in stats['unique_values']:
                 count = stats['value_counts'][val]
                 percentage = stats['value_percentages'][val]
-                print(f"{val:<8} {count:>12,} {percentage:>11.2f}%")
+                # Show label if available
+                if labels is not None:
+                    phase_name = labels.get(str(val), f"Phase {val}")
+                    label_str = f" ({phase_name})"
+                else:
+                    label_str = ""
+                print(f"{val:<8} {count:>12,} {percentage:>11.2f}%{label_str}")
+            
+            print(f"{'-'*60}")
+            print(f"💡 TIP: For detailed phase analysis with DataFrame output,")
+            print(f"   saving to parameters file, and formatted tables, use:")
+            print(f"   drp_template.math.get_phase_fractions(data, labels=labels)")
         else:
             print(f"\n{'-'*60}")
             print(f"VALUE DISTRIBUTION (showing first 10)")
