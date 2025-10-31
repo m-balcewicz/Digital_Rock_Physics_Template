@@ -72,6 +72,17 @@ def _update_params_common(params_filename, file_path, arr, voxel_size, dtype, en
     update_parameters_file(paramsfile=params_filename, dtype=dtype)
     update_parameters_file(paramsfile=params_filename, file_format=file_format)
 
+    # Add on-disk file size (single-file imports)
+    # For multi-file imports (e.g., TIFF sequences), this will be overridden later.
+    try:
+        if isinstance(file_path, str) and os.path.isfile(file_path):
+            size_bytes = os.path.getsize(file_path)
+            update_parameters_file(paramsfile=params_filename, file_size_bytes=int(size_bytes))
+            update_parameters_file(paramsfile=params_filename, file_size_mb=round(size_bytes / (1024 * 1024), 2))
+    except Exception:
+        # Non-fatal: skip file size if unavailable
+        pass
+
 def update_params_after_import(params_filename, file_path, volume, voxel_size, dtype):
     """
     Update the parameters JSON file for a TIFF sequence import.
@@ -227,6 +238,11 @@ def import_tiff_sequence(directory, dtype, dimensions=None, voxel_size=None):
         raise ValueError("TIFF files are not sequentially numbered.")
 
     first_tiff_path = os.path.join(directory, files_sorted[0])
+    # Compute total on-disk size for all TIFF slices
+    try:
+        total_size_bytes = sum(os.path.getsize(os.path.join(directory, f)) for f in files_sorted)
+    except Exception:
+        total_size_bytes = None
     params_filename = mk_paramsfile(first_tiff_path)
 
     first_img = tifffile.imread(first_tiff_path)
@@ -252,6 +268,10 @@ def import_tiff_sequence(directory, dtype, dimensions=None, voxel_size=None):
     volume = reorient_volume(volume, dim_order)
 
     update_params_after_import(params_filename, first_tiff_path, volume, voxel_size, dtype)
+    # Override file size with total sequence size (more representative than a single slice)
+    if total_size_bytes is not None:
+        update_parameters_file(paramsfile=params_filename, file_size_bytes=int(total_size_bytes))
+        update_parameters_file(paramsfile=params_filename, file_size_mb=round(total_size_bytes / (1024 * 1024), 2))
     # Always run check_binary as standard import step
     volume = check_binary(model=volume, filename=first_tiff_path)
     print("[DEBUG] Finished loading TIFF sequence and updated parameter file.")
