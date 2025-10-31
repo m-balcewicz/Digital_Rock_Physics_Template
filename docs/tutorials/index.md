@@ -26,10 +26,10 @@ caption: Tools Examples
 ```{toctree}
 ---
 maxdepth: 1
-caption: Visualization Examples
+caption: Image Examples
 ---
-../examples/visualization/get_grayscale_histogram.ipynb
-../examples/visualization/get_colored_histogram.ipynb
+../examples/image/get_grayscale_histogram.ipynb
+../examples/image/get_colored_histogram.ipynb
 ```
 
 ```{tip}
