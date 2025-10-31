@@ -584,7 +584,7 @@ def get_model_properties(filepath, dimensions=None, labels=None, verbose=True):
                 print(f"{val:<8} {count:>12,} {percentage:>11.2f}%{label_str}")
             
             print(f"{'-'*60}")
-            print(f"💡 TIP: For detailed phase analysis with DataFrame output,")
+            print(f"TIP: For detailed phase analysis with DataFrame output,")
             print(f"   saving to parameters file, and formatted tables, use:")
             print(f"   drp_template.math.get_phase_fractions(data, labels=labels)")
         else:
