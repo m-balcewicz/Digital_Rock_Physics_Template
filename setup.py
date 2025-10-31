@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='drp_template',
-    version='0.1.0',
+    version='0.1.0-alpha',
     packages=find_packages(),
     package_data={
         'drp_template.default_params': ['*.json'],
