@@ -135,6 +135,10 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
 
     if dimensions is None:
         raise ValueError("At least two dimensions (nx, ny, nz) must be provided.")
+    
+    # Validate that dimensions is a dictionary
+    if not isinstance(dimensions, dict):
+        raise TypeError(f"dimensions must be a dictionary, got {type(dimensions).__name__}: {dimensions}")
 
     nx = dimensions.get('nx', None)
     ny = dimensions.get('ny', None)
@@ -145,7 +149,13 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
     # Use the order of keys in dimensions for shape
     # Ensure all dimension values are integers (convert from string if needed)
     dim_keys = list(dimensions.keys())
-    dim_shape = tuple(int(dimensions[k]) for k in dim_keys)
+    try:
+        dim_shape = tuple(int(dimensions[k]) for k in dim_keys)
+    except (ValueError, TypeError) as e:
+        raise ValueError(
+            f"All dimension values must be numeric. Got dimensions={dimensions}. "
+            f"Error: {e}"
+        )
     model = np.memmap(file_path, dtype=dtype, mode=mode, shape=dim_shape, order=order)
 
     # Reorient if needed
