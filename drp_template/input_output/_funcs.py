@@ -143,8 +143,9 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
         raise ValueError("At least two dimensions (nx, ny, nz) must be provided.")
 
     # Use the order of keys in dimensions for shape
+    # Ensure all dimension values are integers (convert from string if needed)
     dim_keys = list(dimensions.keys())
-    dim_shape = tuple(dimensions[k] for k in dim_keys)
+    dim_shape = tuple(int(dimensions[k]) for k in dim_keys)
     model = np.memmap(file_path, dtype=dtype, mode=mode, shape=dim_shape, order=order)
 
     # Reorient if needed
