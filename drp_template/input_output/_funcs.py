@@ -296,7 +296,7 @@ def import_tif_model(filename):
     model = skimage.io.imread(filename)
     return model
 
-def export_model(filename, data, voxel_size, dtype='uint8', order='F', filetype='.raw'):
+def export_model(filename, data, voxel_size, dtype='uint8', order='F', filetype='.raw', labels=None):
     """
     Write model data to a binary file and create a corresponding parameters JSON file.
 
@@ -314,6 +314,9 @@ def export_model(filename, data, voxel_size, dtype='uint8', order='F', filetype=
         Memory layout: 'F' (Fortran) or 'C' (C).
     filetype : str, optional
         File extension.
+    labels : dict, optional
+        Dictionary mapping phase values to phase names, e.g., {0: 'Pore', 1: 'Solid'}.
+        If provided, will be saved to the parameters JSON file.
 
     Returns
     -------
@@ -331,6 +334,7 @@ def export_model(filename, data, voxel_size, dtype='uint8', order='F', filetype=
     - File path, format, dtype, endianness
     - Dimensions (nx, ny, nz for 3D or nx, ny, nz, dim for 4D)
     - Voxel size (required)
+    - Labels (optional, if provided)
     - File size in bytes and MB
     
     Input data should follow the package standard: (nx, ny, nz) for 3D arrays.
@@ -383,6 +387,10 @@ def export_model(filename, data, voxel_size, dtype='uint8', order='F', filetype=
     
     # Write voxel_size (required)
     update_parameters_file(paramsfile=params_filename, voxel_size=float(voxel_size))
+    
+    # Write labels if provided
+    if labels is not None:
+        update_parameters_file(paramsfile=params_filename, labels=labels)
     
     # Add file size metadata
     try:
