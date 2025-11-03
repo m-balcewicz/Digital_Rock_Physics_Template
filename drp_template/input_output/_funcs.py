@@ -287,14 +287,14 @@ def import_tif_model(filename):
 
 def export_model(filename, data, dtype='uint8', order='F', filetype='.raw'):
     """
-    Write model data to a binary file.
+    Write model data to a binary file and create a corresponding parameters JSON file.
 
     Parameters
     ----------
     filename : str
         Output file name (without extension).
     data : np.ndarray
-        Data to write.
+        Data to write. Expected shape is (nx, ny, nz) for 3D or (nx, ny, nz, dim) for 4D.
     dtype : str, optional
         Data type for output.
     order : str, optional
@@ -305,6 +305,17 @@ def export_model(filename, data, dtype='uint8', order='F', filetype='.raw'):
     Returns
     -------
     None
+    
+    Notes
+    -----
+    This function automatically creates a validated parameters JSON file with:
+    - Schema version and provenance (generator, created_at, modified_at)
+    - File path, format, dtype, endianness
+    - Dimensions (nx, ny, nz for 3D or nx, ny, nz, dim for 4D)
+    - File size in bytes and MB
+    
+    Input data should follow the package standard: (nx, ny, nz) for 3D arrays.
+    The raw file is written with the same axis order.
     """
     from drp_template.tools import check_output_folder
 
@@ -312,22 +323,50 @@ def export_model(filename, data, dtype='uint8', order='F', filetype='.raw'):
     file_path = os.path.join(output_path, filename + filetype)
 
     if data.ndim == 4:
-        nz, nx, ny, dim = data.shape
-        data_tmp = np.zeros((nz, nx, ny, dim), dtype=dtype)
-        data_tmp[:, :, :, :] = data[:, :, :, :]
+        # Expect (nx, ny, nz, dim) - package standard
+        nx, ny, nz, dim = data.shape
+        data_tmp = data.astype(dtype)
     elif data.ndim == 3:
-        nz, nx, ny = data.shape
-        if data.shape != (nz, nx, ny):
-            data_tmp = np.zeros((nz, nx, ny), dtype=dtype)
-            data_tmp[:, :, :] = np.moveaxis(data, (0, 1, 2), (1, 2, 0))
-        else:
-            data_tmp = data.astype(dtype)
+        # Expect (nx, ny, nz) - package standard
+        nx, ny, nz = data.shape
+        data_tmp = data.astype(dtype)
     else:
         raise ValueError("Data should be a 3D or 4D array")
 
     model_reshaped = data_tmp.reshape(data_tmp.size, order=order)
     model_reshaped.T.tofile(file_path)
     print(f"data saved: {file_path}")
+    
+    # Create corresponding parameters JSON file
+    params_filename = filename + '.json'
+    
+    # Determine endianness from order
+    endian = 'small' if order == 'C' else 'big'
+    
+    # Write essential metadata
+    update_parameters_file(paramsfile=params_filename, file_path=file_path)
+    update_parameters_file(paramsfile=params_filename, file_format=filetype.lstrip('.'))
+    update_parameters_file(paramsfile=params_filename, dtype=dtype)
+    update_parameters_file(paramsfile=params_filename, endian=endian)
+    
+    # Write dimensions (using package standard: nx, ny, nz)
+    if data.ndim == 4:
+        update_parameters_file(paramsfile=params_filename, dim=4)
+        update_parameters_file(paramsfile=params_filename, nx=nx, ny=ny, nz=nz)
+        # Store 4th dimension info if needed
+    elif data.ndim == 3:
+        update_parameters_file(paramsfile=params_filename, dim=3)
+        update_parameters_file(paramsfile=params_filename, nx=nx, ny=ny, nz=nz)
+    
+    # Add file size metadata
+    try:
+        size_bytes = os.path.getsize(file_path)
+        update_parameters_file(paramsfile=params_filename, file_size_bytes=int(size_bytes))
+        update_parameters_file(paramsfile=params_filename, file_size_mb=round(size_bytes / (1024 * 1024), 2))
+    except Exception:
+        pass
+    
+    print(f"parameters saved: {os.path.join(output_path, params_filename)}")
 
 def export_header(filename, data):
     """
