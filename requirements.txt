@@ -4,5 +4,6 @@ cmcrameri~=1.7
 pandas>=2.0.0
 scikit-image~=0.20.0
 tifffile~=2023.4.12
+imagecodecs>=2023.1.23
 h5py>=2.2.3
 jsonschema>=4.0.0
