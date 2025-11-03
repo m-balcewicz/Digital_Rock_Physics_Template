@@ -13,6 +13,7 @@ __all__ = [
     'get_model_dimensions',
     'reshape_model',
     'create_subvolume',
+    'create_homogeneous_model',
     'find_slice_with_all_values',
     'label_binary',
     'infer_dimensions_from_filesize',
@@ -191,7 +192,7 @@ def reshape_model(model, n1, n2, n3):
     return model_reshaped
 
 
-def create_subvolume(data, set_subvolume, name_subvolume, directory=None, dtype='uint8', order='C'):
+def create_subvolume(data, set_subvolume, name_subvolume, voxel_size, directory=None, dtype='uint8', order='C'):
     """
     Creates a subvolume from the given data and saves it as a binary file.
 
@@ -199,6 +200,7 @@ def create_subvolume(data, set_subvolume, name_subvolume, directory=None, dtype=
     data (numpy.ndarray): The original data from which the subvolume will be created.
     set_subvolume (int): The desired size of the subvolume.
     name_subvolume (str): The name of the subvolume.
+    voxel_size (float): The size of the voxel in micrometers. This is a required parameter.
     directory (str, optional): The directory where the subvolume will be saved. If not provided, the 'output' directory is used.
     dtype (str, optional): The data type of the elements in the array. Defaults to 'uint8'.
     order (str, optional): The memory layout of the data.
@@ -219,7 +221,7 @@ def create_subvolume(data, set_subvolume, name_subvolume, directory=None, dtype=
     Examples:
     To create a subvolume of size 50 with C ordering:
     ```python
-    subvolume = create_subvolume(my_data, 50, 'my_subvolume', dtype='uint8', order='C')
+    subvolume = create_subvolume(my_data, 50, 'my_subvolume', voxel_size=5.0, dtype='uint8', order='C')
     `
     """
     x, y, z = data.shape
@@ -241,9 +243,55 @@ def create_subvolume(data, set_subvolume, name_subvolume, directory=None, dtype=
     file_path = os.path.join(directory, varname)
 
     # Save new data_subvolume as a 'uint8' raw file
-    in_out.export_model(filename=file_path, data=data_subvolume, dtype=dtype, order=order)
+    in_out.export_model(filename=file_path, data=data_subvolume, voxel_size=voxel_size, dtype=dtype, order=order)
 
     return data_subvolume
+
+def create_homogeneous_model(nx: int,
+                             ny: int,
+                             nz: int,
+                             value: int = 1,
+                             dtype: str | np.dtype = 'uint8') -> np.ndarray:
+    """
+    Create a regular-grid 3D model with a single homogeneous value.
+
+    Parameters
+    ----------
+    nx, ny, nz : int
+        Grid dimensions along x, y, z.
+    value : int, optional (default=1)
+        Constant value to fill the volume with. Common choices:
+        - 0: Pore/void
+        - 1: Solid phase
+    dtype : str or numpy.dtype, optional (default='uint8')
+        Data type of the model. For example 'uint8', 'uint16', 'float32'.
+
+    Returns
+    -------
+    numpy.ndarray
+        The created 3D array with shape (nx, ny, nz).
+
+        Notes
+        -----
+        - The returned array uses the project standard shape (nx, ny, nz).
+        - Export is intentionally not handled here; use a separate step to write
+            the raw data and parameters JSON.
+
+    Examples
+    --------
+    >>> import drp_template.tools as tools
+    >>> data = tools.create_homogeneous_model(100, 100, 100, value=1, dtype='uint8')
+    >>> # Export separately (example):
+    >>> # from drp_template.input_output import export_model
+    >>> # export_model(filename='homogeneous_100cube', data=np.moveaxis(data, (0,1,2), (1,2,0)), dtype='uint8', order='C', filetype='.raw')
+    """
+    # Create numpy dtype and apply requested endianness if applicable
+    write_dtype = np.dtype(dtype)
+
+    # Build the volume using the project standard: (nx, ny, nz)
+    volume = np.full((nx, ny, nz), fill_value=value, dtype=write_dtype)
+
+    return volume
 
 def find_slice_with_all_values(data):
     # Get all unique values in the 3D array
