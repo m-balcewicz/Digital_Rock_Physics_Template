@@ -447,8 +447,18 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
     return fig, ax, pcm
 
 
-def ortho_views(data, paramsfile='parameters.json', cmap_set=None, slice_indices=None, subvolume=None, 
-                labels=None, title=None, voxel_size=None, dark_mode=False, cmap_intensity=1.0, layout_type=None, add_slice_ref=True):
+def ortho_views(data, 
+                paramsfile='parameters.json', 
+                cmap_set=None, 
+                slice_indices=None, 
+                subvolume=None, 
+                labels=None, 
+                title=None, 
+                voxel_size=None, 
+                dark_mode=False, 
+                cmap_intensity=1.0, 
+                layout_type=None, 
+                add_slice_ref=True):
     """
     Visualize orthogonal views of 3D volumetric data.
     
