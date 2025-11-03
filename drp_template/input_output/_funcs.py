@@ -285,7 +285,7 @@ def import_tif_model(filename):
     model = skimage.io.imread(filename)
     return model
 
-def export_model(filename, data, dtype='uint8', order='F', filetype='.raw'):
+def export_model(filename, data, voxel_size, dtype='uint8', order='F', filetype='.raw'):
     """
     Write model data to a binary file and create a corresponding parameters JSON file.
 
@@ -295,6 +295,8 @@ def export_model(filename, data, dtype='uint8', order='F', filetype='.raw'):
         Output file name (without extension).
     data : np.ndarray
         Data to write. Expected shape is (nx, ny, nz) for 3D or (nx, ny, nz, dim) for 4D.
+    voxel_size : float
+        The size of the voxel in micrometers. This is a required parameter.
     dtype : str, optional
         Data type for output.
     order : str, optional
@@ -306,18 +308,28 @@ def export_model(filename, data, dtype='uint8', order='F', filetype='.raw'):
     -------
     None
     
+    Raises
+    ------
+    ValueError
+        If voxel_size is None or not provided.
+    
     Notes
     -----
     This function automatically creates a validated parameters JSON file with:
     - Schema version and provenance (generator, created_at, modified_at)
     - File path, format, dtype, endianness
     - Dimensions (nx, ny, nz for 3D or nx, ny, nz, dim for 4D)
+    - Voxel size (required)
     - File size in bytes and MB
     
     Input data should follow the package standard: (nx, ny, nz) for 3D arrays.
     The raw file is written with the same axis order.
     """
     from drp_template.tools import check_output_folder
+    
+    # Validate required parameter
+    if voxel_size is None:
+        raise ValueError("voxel_size is required and cannot be None. Please provide the voxel size in micrometers.")
 
     output_path = check_output_folder()
     file_path = os.path.join(output_path, filename + filetype)
@@ -357,6 +369,9 @@ def export_model(filename, data, dtype='uint8', order='F', filetype='.raw'):
     elif data.ndim == 3:
         update_parameters_file(paramsfile=params_filename, dim=3)
         update_parameters_file(paramsfile=params_filename, nx=nx, ny=ny, nz=nz)
+    
+    # Write voxel_size (required)
+    update_parameters_file(paramsfile=params_filename, voxel_size=float(voxel_size))
     
     # Add file size metadata
     try:
