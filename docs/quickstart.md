@@ -96,7 +96,53 @@ table = drp_math.get_phase_fractions(
 )
 ```
 
-## 4. Parameter File Management
+## 4. Create Synthetic Models
+
+### 2D Binary Model
+
+```python
+from drp_template.tools import create_binary_model_2d
+
+# Create 2D model with periodic boundaries (perfect for RVE)
+data_2d = create_binary_model_2d(
+    nx=200, ny=200,
+    num_inclusions=15,
+    inclusion_radius=20,
+    inclusion_aspect_ratio=1.5,  # Ellipses
+    random_orientation=True,      # Random 2D rotation
+    periodic=True,                 # Seamless tiling
+    seed=42
+)
+# Output shape: (200, 200, 1)
+```
+
+### 3D Binary Model
+
+```python
+from drp_template.tools import create_binary_model_3d
+
+# Create 3D model with periodic boundaries
+data_3d = create_binary_model_3d(
+    nx=100, ny=100, nz=100,
+    num_inclusions=10,
+    inclusion_radius=15,
+    inclusion_aspect_ratio=1.2,   # Ellipsoids
+    random_orientation=True,       # Full 3D Euler rotation
+    periodic=True,                 # Seamless tiling for RVE
+    seed=123
+)
+# Output shape: (100, 100, 100)
+```
+
+### Why Periodic Boundaries?
+
+- **RVE creation**: Representative Volume Elements without edge effects
+- **Seamless tiling**: Perfect for computational homogenization
+- **No boundary artifacts**: Inclusions wrap to opposite sides
+
+See the [2D vs 3D Models Guide](guides/2d_vs_3d_models.md) for detailed comparison.
+
+## 5. Parameter File Management
 
 ### Read parameters
 

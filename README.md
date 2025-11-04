@@ -8,9 +8,15 @@ Digital rock physics involves the integration of computational techniques, image
 
 ## Features
 
-- **Digital Rock Data Handling:** Import and manipulate digital rock data.
-- **Visualization:** Generate visualizations, including slices and phase fraction tables.
-- **Parameter Management:** Easily update and manage model parameters.
+- **Digital Rock Data Handling**: Import and manipulate digital rock data
+- **Binary Model Creation**: 
+	- Dedicated 2D (`create_binary_model_2d`) and 3D (`create_binary_model_3d`) functions
+	- Periodic boundary conditions for RVE applications
+	- True 3D rotation with Euler angles
+	- Flexible positioning (random or explicit)
+	- Shape control (spheres, ellipsoids with aspect ratios)
+- **Visualization**: Generate visualizations, including slices and phase fraction tables
+- **Parameter Management**: Easily update and manage model parameters
 
 
 ## Installation
