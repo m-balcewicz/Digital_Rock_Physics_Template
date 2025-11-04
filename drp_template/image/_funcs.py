@@ -464,12 +464,60 @@ def ortho_views(data,
     
     Parameters:
     -----------
-    ...existing parameters...
+    data : 3D numpy array
+        The volumetric data to be visualized.
+    paramsfile : str, optional (default='parameters.json')
+        Name of the JSON file containing plotting parameters.
+    cmap_set : Matplotlib colormap, optional (default=None)
+        The colormap to be used for the plot. If not specified, uses default from settings.
+    slice_indices : dict or list, optional (default=None)
+        Slice indices for each view. Can be a dict with keys 'slice_xy', 'slice_yz', 'slice_xz'
+        or a list [slice_xy, slice_yz, slice_xz]. If None, uses middle slices.
+    subvolume : int or float, optional (default=None)
+        Specifies a subvolume indicated in the figure.
+    labels : dict or list, optional (default=None)
+        Labels for the colorbar ticks. Can be a dict mapping values to labels (e.g., {0: 'Pore', 1: 'Solid'})
+        or a list of label strings. Used to annotate discrete phases or categories.
+    title : str, optional (default=None)
+        Overall title for the figure (currently not used, individual subplot titles are set).
+    voxel_size : int or float, optional (default=None)
+        The size of the voxels for axis scaling. If provided, axes will show physical units.
+    dark_mode : bool, optional (default=False)
+        If True, use dark background and light text; otherwise use light background.
+    cmap_intensity : float, optional (default=1.0)
+        Multiplier for colormap brightness. Values > 1.0 increase brightness, < 1.0 decrease it.
     layout_type : str, optional (default=None)
         The layout configuration to use. Options are:
         - None: Use arbitrary layout (default)
         - 'rectangular': Layout optimized for rectangular data
         - 'arbitrary': Custom layout with manually specified positions (default)
+    add_slice_ref : bool, optional (default=True)
+        If True, add reference lines showing slice positions across different views.
+    
+    Returns:
+    --------
+    fig : Matplotlib Figure
+        The Matplotlib figure object.
+    axes : list of Matplotlib Axes
+        List of three axes objects [ax_xy, ax_yz, ax_xz].
+    
+    Examples:
+    ---------
+    ```python
+    import numpy as np
+    from drp_template.image import ortho_views
+    
+    # Create sample binary data
+    data = np.random.randint(0, 2, (100, 100, 100), dtype=np.uint8)
+    
+    # Visualize with labels
+    labels = {0: 'Pore', 1: 'Solid'}
+    fig, axes = ortho_views(data, labels=labels, dark_mode=True)
+    
+    # Specify custom slice positions
+    slice_indices = {'slice_xy': 50, 'slice_yz': 40, 'slice_xz': 60}
+    fig, axes = ortho_views(data, slice_indices=slice_indices, labels=labels)
+    ```
     """
     import matplotlib.pyplot as plt
 
@@ -578,7 +626,35 @@ def ortho_views(data,
         axes[i].set_position(positions[i])
 
     # Add the colorbar separately
-    fig.colorbar(pcms[0], cax=cbar_ax, orientation='vertical')
+    cbar = fig.colorbar(pcms[0], cax=cbar_ax, orientation='vertical')
+    
+    # Apply labels to colorbar if provided
+    if labels is not None:
+        # Convert the dictionary to sortable items
+        if isinstance(labels, dict):
+            # Convert string keys to integers for proper ordering
+            label_items = []
+            for k, v in labels.items():
+                try:
+                    # Try to convert key to integer for sorting
+                    label_items.append((int(k), v))
+                except ValueError:
+                    # If key can't be converted to int, use it as is
+                    label_items.append((k, v))
+            
+            # Sort by key
+            label_items.sort()
+            
+            # Set the ticks and labels
+            tick_positions = [k for k, v in label_items]
+            tick_labels = [v for k, v in label_items]
+            
+            cbar.set_ticks(tick_positions)
+            cbar.ax.set_yticklabels(tick_labels)
+        else:
+            # Handle case where labels is a list
+            cbar.set_ticks(np.arange(len(labels)))
+            cbar.ax.set_yticklabels(labels)
     
     # Add reference lines to show slice positions across views
     if add_slice_ref is True:

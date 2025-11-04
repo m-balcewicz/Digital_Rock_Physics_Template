@@ -11,5 +11,8 @@ from ._funcs import infer_dtype_from_filesize
 from ._funcs import classify_data_type
 from ._funcs import get_value_statistics
 from ._funcs import get_model_properties
+from ._funcs import create_binary_model
+from ._funcs import create_binary_model_2d
+from ._funcs import create_binary_model_3d
 from .dirify import mk_dir
 from .dirify import check_output_folder
