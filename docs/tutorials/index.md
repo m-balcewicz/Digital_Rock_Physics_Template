@@ -32,6 +32,14 @@ caption: Image Examples
 ../examples/image/get_colored_histogram.ipynb
 ```
 
+```{toctree}
+---
+maxdepth: 1
+caption: Visualization Guides
+---
+paraview_guide.md
+```
+
 ```{tip}
 To run these examples interactively:
 1. Clone the repository
