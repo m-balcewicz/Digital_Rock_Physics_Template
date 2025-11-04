@@ -187,8 +187,18 @@ def get_phase_fractions(data, labels=None, paramsfile='parameters.json', log=Fal
     table = df_table.to_string(index=False)
     
     # Update the parameters file with the fractions
-    # fractions = {labels[int(phase)]: fraction for phase, fraction in zip(unique_values, percentages)}
-    fractions = {labels[str(int(phase))]: fraction for phase, fraction in zip(unique_values, percentages)}
+    # Build fractions dict, trying different key formats (int, str) to match labels
+    fractions = {}
+    for phase, fraction in zip(unique_values, percentages):
+        phase_label = None
+        # Try different formats for the key lookup
+        for key_format in [int(phase), str(int(phase)), phase, str(phase)]:
+            if key_format in labels:
+                phase_label = labels[key_format]
+                break
+        if phase_label is not None:
+            fractions[phase_label] = fraction
+    
     update_parameters_file(paramsfile, fractions=fractions)
 
     if log:
