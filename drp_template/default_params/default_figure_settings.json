@@ -18,9 +18,10 @@
     },
     "ortho_views_layouts": {
         "rectangular": {
-            "fig_width": 26,
-            "fig_height": 8,
+            "fig_width": 40,
+            "fig_height": 10,
             "cbar_width": 0.02,
+            "cbar_spacing": 0.02,
             "wspace": 4,
             "title_pad": 10,
             "positions": [
@@ -30,15 +31,16 @@
             ]
         },
         "arbitrary": {
-            "fig_width": 14,
+            "fig_width": 20,
             "fig_height": 8,
             "cbar_width": 0.02,
-            "wspace": 0.01,
+            "cbar_spacing": 0.03,
+            "wspace": 10,
             "title_pad": 15,
             "positions": [
-                [0.03, 0.1, 0.27, 0.8],
-                [0.35, 0.1, 0.27, 0.8],
-                [0.67, 0.1, 0.27, 0.8]
+                [0.03, 0.1, 0.22, 0.8],
+                [0.30, 0.1, 0.22, 0.8],
+                [0.57, 0.1, 0.22, 0.8]
             ]
         }
     }

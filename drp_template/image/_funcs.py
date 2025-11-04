@@ -537,7 +537,8 @@ def ortho_views(data,
     axes = [fig.add_axes(pos) for pos in positions]
     
     # Calculate colorbar position
-    cbar_left = positions[2][0] + positions[2][2] + 0.01
+    cbar_spacing = layout_config.get('cbar_spacing', 0.01)  # Default to 0.01 if not specified
+    cbar_left = positions[2][0] + positions[2][2] + cbar_spacing
     cbar_width = layout_config.get('cbar_width')
     bottom = positions[0][1]
     height = positions[0][3]
