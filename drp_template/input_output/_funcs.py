@@ -368,7 +368,7 @@ def export_model(filename, data, voxel_size, dtype='uint8', order='F', filetype=
     params_filename = filename + '.json'
     
     # Determine endianness from order
-    endian = 'small' if order == 'C' else 'big'
+    endian = 'little' if order == 'C' else 'big'
     
     # Write essential metadata
     update_parameters_file(paramsfile=params_filename, file_path=file_path)
