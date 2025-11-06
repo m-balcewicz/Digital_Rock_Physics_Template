@@ -43,5 +43,21 @@
                 [0.57, 0.1, 0.22, 0.8]
             ]
         }
+    },
+    "volume_rendering": {
+        "view_shift_x": 0.035,
+        "view_shift_y": -0.035,
+        "camera_zoom": 0.85,
+        "legend_size": [0.2, 0.5],
+        "legend_position": "center left",
+        "window_size": [2400, 1800],
+        "title_font_size": 30,
+        "axes_line_width": 2,
+        "background_color": "white",
+        "light_position": [350, 350, 400],
+        "light_focal_point": [0, 0, 0],
+        "light_intensity": 0.95,
+        "ambient_intensity": 0.3,
+        "opacity_slice": 1.0
     }
 }
