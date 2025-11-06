@@ -5,3 +5,6 @@ from ._funcs import histogram
 from ._funcs import plot_effective_modulus
 from ._funcs import save_figure
 from ._funcs import get_figure_colors
+from ._funcs import volume_rendering
+from ._funcs import get_lighting_preset
+from ._funcs import create_rotation_animation

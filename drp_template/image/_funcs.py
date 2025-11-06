@@ -2,6 +2,11 @@ import glob
 import os
 import numpy as np
 from drp_template.default_params import read_parameters_file, read_package_config, check_output_folder
+import os
+try:
+    import pyvista as pv
+except Exception:
+    pv = None  # Will raise informative error when function is called
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from matplotlib.colors import ListedColormap
@@ -15,7 +20,10 @@ __all__ = [
     'save_figure',
     'histogram',
     'plot_effective_modulus',
-    'get_figure_colors'
+    'get_figure_colors',
+    'volume_rendering',
+    'create_rotation_animation',
+    'get_lighting_preset'
 ]
 
 # S E T T I N G S
@@ -1603,6 +1611,1063 @@ def get_figure_colors(fig, num_colors=10, format='all', print_colors=True, data_
         print("=" * 80)
     
     return result
+
+
+def get_lighting_preset(preset='default'):
+    """
+    Get predefined lighting configurations for PyVista volume rendering.
+    
+    Parameters
+    ----------
+    preset : str, optional
+        Lighting preset name. Options:
+        - 'bright': High intensity key light with strong ambient
+        - 'soft': Moderate lighting with high ambient for soft shadows
+        - 'dramatic': Strong directional light with minimal ambient
+        - 'default': PyVista's default lighting
+        - 'custom': Returns None (for manual configuration)
+        - 'none': No lighting
+    
+    Returns
+    -------
+    dict or None
+        Dictionary with keys 'mode', 'key_light' (dict with 'position', 'focal_point', 'intensity'),
+        'ambient_intensity', or None for 'default'/'none'/'custom'.
+    
+    Examples
+    --------
+    >>> # Get bright lighting preset
+    >>> lighting = get_lighting_preset('bright')
+    >>> volume_rendering(data, lighting=lighting)
+    
+    >>> # Use in combined mode
+    >>> lighting = get_lighting_preset('dramatic')
+    >>> volume_rendering(data, mode='combined', lighting=lighting)
+    """
+    presets = {
+        'bright': {
+            'mode': 'custom',
+            'key_light': {
+                'position': (400, 400, 500),
+                'focal_point': (0, 0, 0),
+                'intensity': 1.2
+            },
+            'ambient_intensity': 0.5
+        },
+        'soft': {
+            'mode': 'custom',
+            'key_light': {
+                'position': (300, 300, 350),
+                'focal_point': (0, 0, 0),
+                'intensity': 0.7
+            },
+            'ambient_intensity': 0.6
+        },
+        'dramatic': {
+            'mode': 'custom',
+            'key_light': {
+                'position': (500, 200, 600),
+                'focal_point': (0, 0, 0),
+                'intensity': 1.5
+            },
+            'ambient_intensity': 0.1
+        },
+        'default': None,
+        'custom': None,
+        'none': {'mode': 'none'}
+    }
+    
+    if preset not in presets:
+        raise ValueError(f"Unknown preset '{preset}'. Choose from: {list(presets.keys())}")
+    
+    return presets[preset]
+
+
+def create_rotation_animation(
+    data,
+    save_path,
+    paramsfile='parameters.json',
+    cmap_set=None,
+    labels=None,
+    title=None,
+    dark_mode=False,
+    window_size=None,
+    mode='3d',
+    phase_opacity=None,
+    slice_indices=None,
+    slice_opacity=None,
+    show_3d_edges=False,
+    edge_color='white',
+    phase_colors=None,
+    n_frames=60,
+    fps=15,
+    rotation_axis='z',
+    camera_zoom=None,
+    lighting='custom',
+    show_legend=True,
+    show_axes=True,
+    show_bounds=True
+):
+    """
+    Create a rotating animation of 3D volume rendering.
+    
+    Parameters
+    ----------
+    data : np.ndarray (3D, integer labels)
+        Labeled 3D array where each integer is a phase id.
+    save_path : str
+        Output path for animation (supports .gif, .mp4, .avi).
+    paramsfile : str, optional
+        JSON file containing parameters.
+    cmap_set : colormap or None
+        Matplotlib colormap. If None, uses cm.batlow.
+    labels : dict or None
+        Phase labels mapping.
+    title : str or None
+        Animation title.
+    dark_mode : bool
+        Use dark background if True.
+    window_size : list[int,int] or None
+        Window size in pixels.
+    mode : {'slices', '3d', 'combined'}
+        Rendering mode.
+    phase_opacity : dict or list or None
+        Phase opacity control (see volume_rendering).
+    slice_indices : dict or list or None
+        Slice positions for 'slices' or 'combined' mode.
+    slice_opacity : float or None
+        Opacity for slice planes (0.0 to 1.0). If None, uses default from settings.
+    show_3d_edges : bool, optional
+        Show edges on 3D meshes. Default False.
+    edge_color : str or tuple, optional
+        Color for mesh edges. Default 'white'.
+    phase_colors : dict or None
+        Custom colors for specific phases {phase_id: (R, G, B)}.
+    n_frames : int, optional
+        Number of frames in animation. Default 60.
+    fps : int, optional
+        Frames per second. Default 15.
+    rotation_axis : str, optional
+        Rotation axis: 'x', 'y', or 'z'. Default 'z'.
+    camera_zoom : float or None
+        Camera zoom level.
+    lighting : str or dict
+        Lighting configuration.
+    show_legend, show_axes, show_bounds : bool
+        Display toggles.
+    
+    Returns
+    -------
+    None
+    
+    Examples
+    --------
+    >>> # Create rotating GIF of pore network
+    >>> create_rotation_animation(
+    ...     data,
+    ...     save_path='output/rotation.gif',
+    ...     mode='3d',
+    ...     phase_opacity={0: 0.5},
+    ...     n_frames=36,
+    ...     fps=12
+    ... )
+    
+    >>> # Combined mode animation
+    >>> create_rotation_animation(
+    ...     data,
+    ...     save_path='output/combined_rotation.mp4',
+    ...     mode='combined',
+    ...     phase_opacity={0: 0.3},
+    ...     slice_indices=[40, 40, 40],
+    ...     n_frames=60
+    ... )
+    """
+    if pv is None:
+        raise ImportError("PyVista is required for create_rotation_animation.")
+    
+    # Load settings
+    vr_settings = default_figure_settings.get('volume_rendering', {})
+    def _vr(key, default):
+        return vr_settings.get(key, default)
+    
+    # Prepare all the same parameters as volume_rendering
+    view_shift_x_rel = _vr('view_shift_x', 0.075)  # Relative to window width
+    view_shift_y_rel = _vr('view_shift_y', -0.055)  # Relative to window height
+    default_camera_zoom = _vr('camera_zoom', 0.85)
+    legend_size = tuple(_vr('legend_size', [0.2, 0.5]))
+    legend_position = _vr('legend_position', 'center left')
+    win_size_default = _vr('window_size', [2400, 1800])
+    title_font_size = _vr('title_font_size', 30)
+    axes_line_width = _vr('axes_line_width', 2)
+    background_color = 'black' if dark_mode else _vr('background_color', 'white')
+    light_position_default = tuple(_vr('light_position', [350, 350, 400]))
+    light_focal_point = tuple(_vr('light_focal_point', [0, 0, 0]))
+    light_intensity_default = _vr('light_intensity', 0.95)
+    ambient_intensity_default = _vr('ambient_intensity', 0.3)
+    opacity_slice = _vr('opacity_slice', 1.0)
+    
+    # Load labels
+    try:
+        params = read_parameters_file(paramsfile=paramsfile)
+        if labels is None:
+            labels = params.get('labels', None)
+    except Exception:
+        pass
+    
+    if labels is None:
+        n_phases_guess = int(data.max()) + 1
+        labels = {i: f"Phase {i}" for i in range(n_phases_guess)}
+    
+    # Resolve colormap
+    if cmap_set is None:
+        cmap = cm.batlow
+    else:
+        try:
+            cmap = _resolve_colormap(cmap_set)
+        except Exception:
+            cmap = cm.batlow
+    
+    # Compute phase colors from colormap (will be overridden by phase_colors parameter if provided)
+    n_phases = max(int(data.max()) + 1, len(labels))
+    computed_phase_colors = {}
+    if n_phases <= 1:
+        computed_phase_colors[0] = tuple(cmap(0.5)[:3])
+    else:
+        for i in range(n_phases):
+            t = i / (n_phases - 1)
+            rgba = cmap(t)
+            computed_phase_colors[i] = tuple(rgba[:3])
+    
+    # Override with user-provided phase_colors if specified
+    if phase_colors is not None:
+        for pid, color in phase_colors.items():
+            if isinstance(color, (list, tuple)) and len(color) == 3:
+                computed_phase_colors[pid] = tuple(color)
+    
+    # Use the final computed colors
+    final_phase_colors = computed_phase_colors
+    
+    # Handle slice_opacity parameter
+    if slice_opacity is None:
+        slice_opacity_value = opacity_slice
+    else:
+        slice_opacity_value = max(0.0, min(1.0, float(slice_opacity)))
+    
+    # Determine slice positions
+    nx, ny, nz = data.shape
+    if slice_indices is None:
+        sx, sy, sz = nx // 2, ny // 2, nz // 2
+    elif isinstance(slice_indices, dict):
+        sx = slice_indices.get('x', nx // 2)
+        sy = slice_indices.get('y', ny // 2)
+        sz = slice_indices.get('z', nz // 2)
+    elif isinstance(slice_indices, (list, tuple)) and len(slice_indices) == 3:
+        sx, sy, sz = slice_indices
+    else:
+        sx, sy, sz = nx // 2, ny // 2, nz // 2
+    
+    # Build PyVista grid
+    grid = pv.ImageData()
+    grid.dimensions = (nx, ny, nz)
+    grid.point_data["phase"] = data.flatten(order="F")
+    
+    # Create plotter for animation
+    win_size = window_size or win_size_default
+    
+    # Handle lighting
+    if isinstance(lighting, dict):
+        mode = lighting.get('mode', 'custom')
+        if mode == 'custom':
+            use_custom_light = True
+            lighting_mode = 'none'
+        elif mode == 'none':
+            use_custom_light = False
+            lighting_mode = 'none'
+        elif mode == 'default':
+            use_custom_light = False
+            lighting_mode = 'default'
+        else:
+            # Unknown mode, default to custom lighting
+            use_custom_light = True
+            lighting_mode = 'none'
+    elif isinstance(lighting, str):
+        if lighting == 'custom':
+            use_custom_light = True
+            lighting_mode = 'none'
+        else:
+            preset = get_lighting_preset(lighting)
+            if preset is None or preset.get('mode') == 'default':
+                use_custom_light = False
+                lighting_mode = 'default'
+            elif preset.get('mode') == 'none':
+                use_custom_light = False
+                lighting_mode = 'none'
+            else:
+                use_custom_light = True
+                lighting_mode = 'none'
+                lighting = preset
+    else:
+        use_custom_light = True
+        lighting_mode = 'none'
+    
+    plotter = pv.Plotter(
+        off_screen=True,
+        window_size=win_size,
+        lighting=lighting_mode
+    )
+    plotter.set_background(background_color)
+    
+    # Add lighting
+    if use_custom_light:
+        if isinstance(lighting, dict):
+            key_cfg = lighting.get('key_light', {})
+            Lpos = key_cfg.get('position', light_position_default)
+            Lfoc = key_cfg.get('focal_point', light_focal_point)
+            Lint = key_cfg.get('intensity', light_intensity_default)
+            Aint = lighting.get('ambient_intensity', ambient_intensity_default)
+        else:
+            Lpos = light_position_default
+            Lfoc = light_focal_point
+            Lint = light_intensity_default
+            Aint = ambient_intensity_default
+        
+        key_light = pv.Light()
+        key_light.position = Lpos
+        key_light.focal_point = Lfoc
+        key_light.intensity = Lint
+        plotter.add_light(key_light)
+        
+        amb = pv.Light(light_type='headlight')
+        amb.intensity = Aint
+        plotter.add_light(amb)
+    
+    # Add meshes based on mode (same logic as volume_rendering)
+    if mode == '3d':
+        phase_opacity_map = {}
+        if phase_opacity is None:
+            for pid in range(n_phases):
+                phase_opacity_map[pid] = slice_opacity_value
+        elif isinstance(phase_opacity, dict):
+            phase_opacity_map = phase_opacity.copy()
+        elif isinstance(phase_opacity, (list, tuple)):
+            for pid, opacity_val in enumerate(phase_opacity):
+                if pid < n_phases:
+                    phase_opacity_map[pid] = opacity_val
+        
+        for pid, opacity_val in phase_opacity_map.items():
+            if opacity_val <= 0.0:
+                continue
+            opacity_val = max(0.0, min(1.0, opacity_val))
+            pname = labels.get(pid, f"Phase {pid}") if isinstance(labels, dict) else f"Phase {pid}"
+            phase_mesh = grid.threshold(value=[pid - 0.1, pid + 0.1], scalars='phase')
+            
+            if phase_mesh.n_cells > 0:
+                plotter.add_mesh(
+                    phase_mesh,
+                    color=final_phase_colors.get(pid, (1.0, 1.0, 1.0)),
+                    opacity=opacity_val,
+                    show_edges=show_3d_edges,
+                    edge_color=edge_color,
+                    label=pname,
+                    smooth_shading=True
+                )
+    
+    elif mode == 'slices':
+        origin = [sx, sy, sz]
+        slice_xy = grid.slice(normal=[0, 0, 1], origin=origin)
+        slice_xz = grid.slice(normal=[0, 1, 0], origin=origin)
+        slice_yz = grid.slice(normal=[1, 0, 0], origin=origin)
+        slice_planes = [slice_xy, slice_xz, slice_yz]
+        
+        for pid in range(n_phases):
+            pname = labels.get(pid, f"Phase {pid}") if isinstance(labels, dict) else f"Phase {pid}"
+            for i, plane in enumerate(slice_planes):
+                p_slice = plane.threshold(value=[pid - 0.1, pid + 0.1], scalars='phase')
+                if p_slice.n_cells > 0:
+                    plotter.add_mesh(
+                        p_slice,
+                        color=final_phase_colors.get(pid, (1.0, 1.0, 1.0)),
+                        opacity=slice_opacity_value,
+                        show_edges=False,
+                        label=pname if i == 0 else None,
+                        show_scalar_bar=False,
+                    )
+    
+    elif mode == 'combined':
+        origin = [sx, sy, sz]
+        slice_xy = grid.slice(normal=[0, 0, 1], origin=origin)
+        slice_xz = grid.slice(normal=[0, 1, 0], origin=origin)
+        slice_yz = grid.slice(normal=[1, 0, 0], origin=origin)
+        slice_planes = [slice_xy, slice_xz, slice_yz]
+        
+        for pid in range(n_phases):
+            pname = labels.get(pid, f"Phase {pid}") if isinstance(labels, dict) else f"Phase {pid}"
+            for i, plane in enumerate(slice_planes):
+                p_slice = plane.threshold(value=[pid - 0.1, pid + 0.1], scalars='phase')
+                if p_slice.n_cells > 0:
+                    plotter.add_mesh(
+                        p_slice,
+                        color=final_phase_colors.get(pid, (1.0, 1.0, 1.0)),
+                        opacity=slice_opacity_value,
+                        show_edges=False,
+                        label=pname if i == 0 else None,
+                        show_scalar_bar=False,
+                    )
+        
+        if phase_opacity is not None:
+            phase_opacity_map = {}
+            if isinstance(phase_opacity, dict):
+                phase_opacity_map = phase_opacity.copy()
+            elif isinstance(phase_opacity, (list, tuple)):
+                for pid, opacity_val in enumerate(phase_opacity):
+                    if pid < n_phases:
+                        phase_opacity_map[pid] = opacity_val
+            
+            for pid, opacity_val in phase_opacity_map.items():
+                if opacity_val <= 0.0:
+                    continue
+                opacity_val = max(0.0, min(1.0, opacity_val))
+                pname = labels.get(pid, f"Phase {pid}") if isinstance(labels, dict) else f"Phase {pid}"
+                phase_mesh = grid.threshold(value=[pid - 0.1, pid + 0.1], scalars='phase')
+                
+                if phase_mesh.n_cells > 0:
+                    plotter.add_mesh(
+                        phase_mesh,
+                        color=final_phase_colors.get(pid, (1.0, 1.0, 1.0)),
+                        opacity=opacity_val,
+                        show_edges=show_3d_edges,
+                        edge_color=edge_color,
+                        label=None,
+                        smooth_shading=True
+                    )
+    
+    # Bounds/Legend/Axes
+    if show_bounds:
+        plotter.add_mesh(grid.outline(), color='black', line_width=2)
+        plotter.show_bounds(location='outer', all_edges=True, color='gray')
+    
+    if show_legend:
+        plotter.add_legend(
+            size=legend_size,
+            loc=legend_position,
+            face='rectangle',
+            bcolor='white',
+            border=True
+        )
+    
+    if show_axes:
+        plotter.add_axes(
+            xlabel='X', ylabel='Y', zlabel='Z',
+            line_width=axes_line_width,
+            labels_off=False
+        )
+    
+    if title:
+        plotter.add_title(title, font_size=title_font_size, color=('white' if dark_mode else 'black'))
+    
+    # Set camera
+    plotter.camera_position = 'iso'
+    plotter.camera.zoom(camera_zoom if camera_zoom is not None else default_camera_zoom)
+    
+    # Apply view shift (calculated from relative values and window size)
+    win_size = window_size or win_size_default
+    view_shift_x = view_shift_x_rel * win_size[0]
+    view_shift_y = view_shift_y_rel * win_size[1]
+    fp = plotter.camera.focal_point
+    plotter.camera.focal_point = (fp[0] + view_shift_x, fp[1] + view_shift_y, fp[2])
+    
+    # Ensure output directory exists
+    save_dir = os.path.dirname(save_path)
+    if save_dir and not os.path.exists(save_dir):
+        os.makedirs(save_dir, exist_ok=True)
+    
+    # Open movie and capture frames
+    plotter.open_movie(save_path, framerate=fps)
+    
+    # Rotation angles
+    angles = np.linspace(0, 360, n_frames, endpoint=False)
+    
+    print(f"Creating animation with {n_frames} frames at {fps} fps...")
+    for i, angle in enumerate(angles):
+        if rotation_axis.lower() == 'z':
+            plotter.camera.azimuth = angle
+        elif rotation_axis.lower() == 'y':
+            plotter.camera.elevation = angle
+        elif rotation_axis.lower() == 'x':
+            plotter.camera.roll = angle
+        else:
+            raise ValueError(f"rotation_axis must be 'x', 'y', or 'z', got '{rotation_axis}'")
+        
+        plotter.write_frame()
+        
+        if (i + 1) % 10 == 0:
+            print(f"  Frame {i+1}/{n_frames}")
+    
+    plotter.close()
+    print(f"Animation saved: {os.path.abspath(save_path)}")
+
+
+def volume_rendering(
+    data,
+    paramsfile='parameters.json',
+    cmap_set=None,
+    slice_indices=None,
+    labels=None,
+    title=None,
+    voxel_size=None,
+    dark_mode=False,
+    save_path=None,
+    window_size=None,
+    show_legend=True,
+    show_axes=True,
+    show_bounds=True,
+    lighting='custom',
+    light_position=None,
+    light_intensity=None,
+    ambient_intensity=None,
+    view_shift=(None, None),
+    camera_zoom=None,
+    mode='slices',
+    phase_opacity=None,
+    slice_opacity=None,
+    show_3d_edges=False,
+    edge_color='black',
+    phase_colors=None
+):
+    """
+    Visualize 3D labeled volume using PyVista with Digital Rock Physics package defaults.
+    
+    Features:
+    - Three rendering modes: 'slices', '3d', and 'combined'
+    - Per-phase opacity control for selective 3D visualization
+    - Independent slice and 3D mesh opacity settings
+    - Edge visualization on 3D meshes
+    - Custom phase colors
+    - Pre-configured lighting presets
+    - Window-size independent camera positioning
+    
+    Parameters
+    ----------
+    data : np.ndarray (3D, integer labels)
+        Labeled 3D array where each integer is a phase id.
+    paramsfile : str, default 'parameters.json'
+        Used to read labels and voxel_size if not provided.
+    cmap_set : colormap or None
+        Matplotlib colormap or name. If None, uses cm.batlow.
+    slice_indices : dict or list or None
+        (mode='slices' or 'combined') Dict with keys {'x','y','z'} or list [x,y,z]. 
+        Defaults to center slices.
+    labels : dict or None
+        Mapping {phase_id: name}. If None, read from paramsfile; if missing, autogenerated.
+    title : str or None
+        Figure title.
+    voxel_size : float or None
+        Unused for now (kept for future scaling support).
+    dark_mode : bool
+        If True, black background; else white.
+    save_path : str or None
+        If provided, saves screenshot to this path; else shows interactively.
+    window_size : list[int,int] or None
+        Window size in pixels. Default [2400, 1800]. Camera positioning scales automatically.
+    show_legend, show_axes, show_bounds : bool
+        Toggles for legend, axes, and outer bounding box.
+    lighting : str or dict
+        Lighting configuration:
+        - str: Preset name ('bright', 'soft', 'dramatic', 'default', 'custom', 'none')
+        - dict: Custom lighting config from get_lighting_preset() or manual dict
+    light_position : tuple or None
+        Light (x,y,z). Default (350,350,400). Used when lighting='custom'.
+    light_intensity : float or None
+        Main light intensity. Default 0.95. Used when lighting='custom'.
+    ambient_intensity : float or None
+        Ambient (headlight) intensity. Default 0.3. Used when lighting='custom'.
+    view_shift : tuple(float|None,float|None)
+        Shift camera focal point in absolute units. If None, uses relative defaults 
+        (0.075 * window_width, -0.055 * window_height) for window-size-independent positioning.
+    camera_zoom : float or None
+        Camera zoom. Default 0.85.
+    mode : {'slices', '3d', 'combined'}
+        Rendering mode:
+        - 'slices': Orthogonal slice planes only (all phases on slices)
+        - '3d': 3D volumetric meshes only (controlled by phase_opacity)
+        - 'combined': Both slices (all phases) + 3D meshes (selective phases via phase_opacity)
+    phase_opacity : dict or list or None
+        (mode='3d' or 'combined') Control which phases to show in 3D and their opacity values.
+        - dict: {phase_id: opacity_value}, e.g., {0: 0.3, 1: 1.0, 2: 0.5}
+          Only specified phases will be rendered with their given opacity (0.0-1.0).
+        - list: [opacity_0, opacity_1, ...] in phase order. Use 0.0 to hide a phase.
+        - None: (mode='3d') shows all phases; (mode='combined') shows no 3D meshes, only slices.
+        
+        For 'combined' mode: Slices always show all phases; phase_opacity controls only 3D meshes.
+    slice_opacity : float or None
+        Opacity for slice planes (0.0-1.0). If None, uses default from settings (1.0).
+        Useful in 'combined' mode to make slices semi-transparent so 3D meshes are visible.
+    show_3d_edges : bool, default False
+        If True, show edges on 3D volumetric meshes for better structure visualization.
+    edge_color : str or tuple, default 'white'
+        Color for 3D mesh edges when show_3d_edges=True. Can be color name or RGB tuple.
+    phase_colors : dict or None
+        Override default phase colors. Dict mapping {phase_id: (R, G, B)} with RGB in [0,1].
+        If None, colors are generated from cmap_set. Example: {0: (1.0, 0.0, 0.0), 1: (0.0, 0.0, 1.0)}
+    
+    Returns
+    -------
+    None
+    
+    Examples
+    --------
+    >>> # Orthogonal slices (default)
+    >>> volume_rendering(data, title="Slices View")
+    
+    >>> # 3D volumetric meshes with all phases
+    >>> volume_rendering(data, mode='3d', title="3D Phase Rendering")
+    
+    >>> # Show only pores (phase 0) with 30% opacity, solid (phase 1) fully opaque
+    >>> volume_rendering(data, mode='3d', phase_opacity={0: 0.3, 1: 1.0})
+    
+    >>> # Hide phase 2, show others with varying opacity
+    >>> volume_rendering(data, mode='3d', phase_opacity=[1.0, 0.5, 0.0])
+    
+    >>> # Combined: slices for all phases + 3D mesh only for pores (phase 0)
+    >>> volume_rendering(data, mode='combined', phase_opacity={0: 0.5})
+    
+    >>> # Combined: slices + translucent 3D pores
+    >>> volume_rendering(data, mode='combined', slice_indices=[40, 40, 40],
+    ...                  phase_opacity={0: 0.3}, title="Pore Network Analysis")
+    
+    >>> # Semi-transparent slices with solid 3D pores
+    >>> volume_rendering(data, mode='combined', slice_opacity=0.3, phase_opacity={0: 1.0})
+    
+    >>> # Show mesh edges for better structure visualization
+    >>> volume_rendering(data, mode='3d', show_3d_edges=True, edge_color='white', dark_mode=True)
+    
+    >>> # Custom phase colors (red pores, blue matrix)
+    >>> volume_rendering(data, mode='3d', phase_colors={0: (1.0, 0.0, 0.0), 1: (0.0, 0.0, 1.0)})
+    
+    >>> # Use lighting preset
+    >>> volume_rendering(data, mode='3d', lighting='dramatic')
+    
+    >>> # Get preset and modify
+    >>> lighting = get_lighting_preset('bright')
+    >>> lighting['key_light']['intensity'] = 1.5
+    >>> volume_rendering(data, mode='3d', lighting=lighting)
+    
+    >>> # Window size scales automatically - same composition at different resolutions
+    >>> volume_rendering(data, mode='3d', window_size=[800, 600])    # Preview
+    >>> volume_rendering(data, mode='3d', window_size=[3200, 2400])  # High-res
+    
+    >>> # Save high-res 3D render with all features
+    >>> volume_rendering(data, mode='combined', 
+    ...                  slice_opacity=0.2, 
+    ...                  phase_opacity={0: 0.8},
+    ...                  show_3d_edges=True,
+    ...                  edge_color='yellow',
+    ...                  phase_colors={0: (0.0, 0.8, 1.0)},
+    ...                  lighting='bright',
+    ...                  save_path='output/advanced_render.png',
+    ...                  window_size=[2400, 1800])
+    """
+    if pv is None:
+        raise ImportError(
+            "PyVista is required for volume_rendering. Please install 'pyvista' to use this function."
+        )
+
+    # Load volume rendering defaults from package settings
+    vr_settings = default_figure_settings.get('volume_rendering', {})
+    # Helper accessor with fallback
+    def _vr(key, default):
+        return vr_settings.get(key, default)
+
+    view_shift_x_rel = _vr('view_shift_x', 0.075)  # Relative to window width
+    view_shift_y_rel = _vr('view_shift_y', -0.055)  # Relative to window height
+    default_camera_zoom = _vr('camera_zoom', 0.85)
+    legend_size = tuple(_vr('legend_size', [0.2, 0.5]))
+    legend_position = _vr('legend_position', 'center left')
+    win_size_default = _vr('window_size', [2400, 1800])
+    title_font_size = _vr('title_font_size', 30)
+    axes_line_width = _vr('axes_line_width', 2)
+    background_color = 'black' if dark_mode else _vr('background_color', 'white')
+    light_position_default = tuple(_vr('light_position', [350, 350, 400]))
+    light_focal_point = tuple(_vr('light_focal_point', [0, 0, 0]))
+    light_intensity_default = _vr('light_intensity', 0.95)
+    ambient_intensity_default = _vr('ambient_intensity', 0.3)
+    opacity_slice = _vr('opacity_slice', 1.0)
+
+    # Resolve labels and voxel_size from params file if needed
+    try:
+        params = read_parameters_file(paramsfile=paramsfile)
+        if labels is None:
+            labels = params.get('labels', None)
+        if voxel_size is None:
+            voxel_size = params.get('voxel_size', None)
+    except Exception:
+        pass
+
+    # Labels fallback
+    if labels is None:
+        # Autogenerate from data
+        n_phases_guess = int(data.max()) + 1
+        labels = {i: f"Phase {i}" for i in range(n_phases_guess)}
+
+    # Resolve colormap
+    if cmap_set is None:
+        cmap = cm.batlow
+    else:
+        try:
+            # Reuse package resolver if available
+            cmap = _resolve_colormap(cmap_set)
+        except Exception:
+            cmap = cm.batlow
+
+    # Compute phase colors (RGB tuples acceptable by PyVista)
+    n_phases = max(int(data.max()) + 1, len(labels))
+    
+    # Use custom phase_colors if provided, otherwise generate from colormap
+    if phase_colors is None:
+        phase_colors = {}
+        if n_phases <= 1:
+            phase_colors[0] = tuple(cmap(0.5)[:3])
+        else:
+            for i in range(n_phases):
+                t = i / (n_phases - 1)
+                rgba = cmap(t)
+                phase_colors[i] = tuple(rgba[:3])
+    else:
+        # Validate custom phase_colors format
+        if not isinstance(phase_colors, dict):
+            raise TypeError("phase_colors must be a dict mapping {phase_id: (R, G, B)}")
+        # Ensure all values are RGB tuples with values in [0,1]
+        for pid, color in phase_colors.items():
+            if not isinstance(color, (tuple, list)) or len(color) != 3:
+                raise ValueError(f"phase_colors[{pid}] must be RGB tuple (R, G, B)")
+            if not all(0 <= c <= 1 for c in color):
+                raise ValueError(f"phase_colors[{pid}] RGB values must be in range [0, 1]")
+        # Fill in missing phases with colormap colors
+        for i in range(n_phases):
+            if i not in phase_colors:
+                t = i / (n_phases - 1) if n_phases > 1 else 0.5
+                rgba = cmap(t)
+                phase_colors[i] = tuple(rgba[:3])
+    
+    # Resolve slice_opacity
+    if slice_opacity is None:
+        slice_opacity = opacity_slice
+    else:
+        slice_opacity = max(0.0, min(1.0, slice_opacity))
+
+    # Determine slice positions
+    nx, ny, nz = data.shape
+    if slice_indices is None:
+        sx, sy, sz = nx // 2, ny // 2, nz // 2
+    elif isinstance(slice_indices, dict):
+        sx = slice_indices.get('x', nx // 2)
+        sy = slice_indices.get('y', ny // 2)
+        sz = slice_indices.get('z', nz // 2)
+    elif isinstance(slice_indices, (list, tuple)) and len(slice_indices) == 3:
+        sx, sy, sz = slice_indices
+    else:
+        sx, sy, sz = nx // 2, ny // 2, nz // 2
+
+    # Build PyVista grid
+    grid = pv.ImageData()
+    grid.dimensions = (nx, ny, nz)
+    grid.point_data["phase"] = data.flatten(order="F")
+
+    # Plotter
+    win_size = window_size or win_size_default
+    
+    # Handle lighting parameter - can be string (preset name) or dict (custom config)
+    if isinstance(lighting, dict):
+        # User provided custom lighting dict
+        mode = lighting.get('mode', 'custom')
+        if mode == 'custom':
+            use_custom_light = True
+            lighting_mode = 'none'
+        elif mode == 'none':
+            use_custom_light = False
+            lighting_mode = 'none'
+        elif mode == 'default':
+            use_custom_light = False
+            lighting_mode = 'default'
+        else:
+            # Unknown mode, default to custom lighting
+            use_custom_light = True
+            lighting_mode = 'none'
+    elif isinstance(lighting, str):
+        if lighting == 'custom':
+            # Default custom lighting
+            use_custom_light = True
+            lighting_mode = 'none'
+        else:
+            # Try to get preset
+            preset = get_lighting_preset(lighting)
+            if preset is None or preset.get('mode') == 'default':
+                use_custom_light = False
+                lighting_mode = 'default'
+            elif preset.get('mode') == 'none':
+                use_custom_light = False
+                lighting_mode = 'none'
+            else:
+                use_custom_light = True
+                lighting_mode = 'none'
+                lighting = preset  # Replace string with preset dict
+    else:
+        use_custom_light = True
+        lighting_mode = 'none'
+    
+    plotter = pv.Plotter(
+        off_screen=(save_path is not None),
+        window_size=win_size,
+        lighting=lighting_mode
+    )
+    plotter.set_background(background_color)
+
+    # Lighting
+    if use_custom_light:
+        # If lighting is dict (preset or custom), use its values
+        if isinstance(lighting, dict):
+            key_cfg = lighting.get('key_light', {})
+            Lpos = key_cfg.get('position', light_position_default)
+            Lfoc = key_cfg.get('focal_point', light_focal_point)
+            Lint = key_cfg.get('intensity', light_intensity_default)
+            Aint = lighting.get('ambient_intensity', ambient_intensity_default)
+        else:
+            # Use function parameters or defaults
+            Lpos = light_position or light_position_default
+            Lfoc = light_focal_point
+            Lint = light_intensity if light_intensity is not None else light_intensity_default
+            Aint = ambient_intensity if ambient_intensity is not None else ambient_intensity_default
+
+        key_light = pv.Light()
+        key_light.position = Lpos
+        key_light.focal_point = Lfoc
+        key_light.intensity = Lint
+        plotter.add_light(key_light)
+
+        amb = pv.Light(light_type='headlight')
+        amb.intensity = Aint
+        plotter.add_light(amb)
+
+    # Rendering based on mode
+    if mode == '3d':
+        # Prepare phase opacity mapping
+        phase_opacity_map = {}
+        
+        if phase_opacity is None:
+            # Show all phases with default opacity
+            for pid in range(n_phases):
+                phase_opacity_map[pid] = opacity_slice
+        elif isinstance(phase_opacity, dict):
+            # User provided dict: {phase_id: opacity}
+            # Only render phases specified in the dict
+            phase_opacity_map = phase_opacity.copy()
+        elif isinstance(phase_opacity, (list, tuple)):
+            # User provided list: [opacity_0, opacity_1, ...]
+            for pid, opacity_val in enumerate(phase_opacity):
+                if pid < n_phases:
+                    phase_opacity_map[pid] = opacity_val
+        else:
+            raise TypeError("phase_opacity must be dict, list, or None")
+        
+        # 3D volumetric mesh rendering: threshold each phase and add as mesh
+        for pid, opacity_val in phase_opacity_map.items():
+            # Skip phases with zero opacity (hidden)
+            if opacity_val <= 0.0:
+                continue
+            
+            # Clamp opacity to valid range [0.0, 1.0]
+            opacity_val = max(0.0, min(1.0, opacity_val))
+            
+            pname = labels.get(pid, f"Phase {pid}") if isinstance(labels, dict) else f"Phase {pid}"
+            phase_mesh = grid.threshold(value=[pid - 0.1, pid + 0.1], scalars='phase')
+            
+            if phase_mesh.n_cells > 0:
+                plotter.add_mesh(
+                    phase_mesh,
+                    color=phase_colors.get(pid, (1.0, 1.0, 1.0)),
+                    opacity=opacity_val,
+                    show_edges=show_3d_edges,
+                    edge_color=edge_color if show_3d_edges else None,
+                    label=pname,
+                    smooth_shading=True
+                )
+    
+    elif mode == 'slices':
+        # Orthogonal slices rendering (original behavior)
+        origin = [sx, sy, sz]
+        slice_xy = grid.slice(normal=[0, 0, 1], origin=origin)
+        slice_xz = grid.slice(normal=[0, 1, 0], origin=origin)
+        slice_yz = grid.slice(normal=[1, 0, 0], origin=origin)
+        slice_planes = [slice_xy, slice_xz, slice_yz]
+
+        # Add each phase to slices
+        for pid in range(n_phases):
+            pname = labels.get(pid, f"Phase {pid}") if isinstance(labels, dict) else f"Phase {pid}"
+            for i, plane in enumerate(slice_planes):
+                p_slice = plane.threshold(value=[pid - 0.1, pid + 0.1], scalars='phase')
+                if p_slice.n_cells > 0:
+                    plotter.add_mesh(
+                        p_slice,
+                        color=phase_colors.get(pid, (1.0, 1.0, 1.0)),
+                        opacity=slice_opacity,
+                        show_edges=False,
+                        label=pname if i == 0 else None,
+                        show_scalar_bar=False,
+                    )
+    
+    elif mode == 'combined':
+        # Combined mode: orthogonal slices (all phases) + selective 3D meshes
+        
+        # First, add orthogonal slices for all phases
+        origin = [sx, sy, sz]
+        slice_xy = grid.slice(normal=[0, 0, 1], origin=origin)
+        slice_xz = grid.slice(normal=[0, 1, 0], origin=origin)
+        slice_yz = grid.slice(normal=[1, 0, 0], origin=origin)
+        slice_planes = [slice_xy, slice_xz, slice_yz]
+
+        for pid in range(n_phases):
+            pname = labels.get(pid, f"Phase {pid}") if isinstance(labels, dict) else f"Phase {pid}"
+            for i, plane in enumerate(slice_planes):
+                p_slice = plane.threshold(value=[pid - 0.1, pid + 0.1], scalars='phase')
+                if p_slice.n_cells > 0:
+                    plotter.add_mesh(
+                        p_slice,
+                        color=phase_colors.get(pid, (1.0, 1.0, 1.0)),
+                        opacity=slice_opacity,
+                        show_edges=False,
+                        label=pname if i == 0 else None,
+                        show_scalar_bar=False,
+                    )
+        
+        # Then, add selective 3D meshes based on phase_opacity
+        if phase_opacity is not None:
+            phase_opacity_map = {}
+            
+            if isinstance(phase_opacity, dict):
+                phase_opacity_map = phase_opacity.copy()
+            elif isinstance(phase_opacity, (list, tuple)):
+                for pid, opacity_val in enumerate(phase_opacity):
+                    if pid < n_phases:
+                        phase_opacity_map[pid] = opacity_val
+            else:
+                raise TypeError("phase_opacity must be dict, list, or None")
+            
+            # Add 3D meshes for specified phases
+            for pid, opacity_val in phase_opacity_map.items():
+                # Skip phases with zero opacity (hidden)
+                if opacity_val <= 0.0:
+                    continue
+                
+                # Clamp opacity to valid range [0.0, 1.0]
+                opacity_val = max(0.0, min(1.0, opacity_val))
+                
+                pname = labels.get(pid, f"Phase {pid}") if isinstance(labels, dict) else f"Phase {pid}"
+                phase_mesh = grid.threshold(value=[pid - 0.1, pid + 0.1], scalars='phase')
+                
+                if phase_mesh.n_cells > 0:
+                    plotter.add_mesh(
+                        phase_mesh,
+                        color=phase_colors.get(pid, (1.0, 1.0, 1.0)),
+                        opacity=opacity_val,
+                        show_edges=show_3d_edges,
+                        edge_color=edge_color if show_3d_edges else None,
+                        label=None,  # Don't duplicate legend entries
+                        smooth_shading=True
+                    )
+    
+    else:
+        raise ValueError(f"Invalid mode '{mode}'. Choose 'slices', '3d', or 'combined'.")
+
+    # Outline/bounds
+    if show_bounds:
+        plotter.add_mesh(grid.outline(), color='black', line_width=2)
+        plotter.show_bounds(location='outer', all_edges=True, color='gray')
+
+    # Legend
+    if show_legend:
+        plotter.add_legend(
+            size=legend_size,
+            loc=legend_position,
+            face='rectangle',
+            bcolor='white',
+            border=True
+        )
+
+    # Axes
+    if show_axes:
+        plotter.add_axes(
+            xlabel='X', ylabel='Y', zlabel='Z',
+            line_width=axes_line_width,
+            labels_off=False
+        )
+
+    # Title
+    if title:
+        plotter.add_title(title, font_size=title_font_size, color=('white' if dark_mode else 'black'))
+
+    # Camera
+    plotter.camera_position = 'iso'
+    plotter.camera.zoom(camera_zoom if camera_zoom is not None else default_camera_zoom)
+    
+    # Calculate absolute shifts from relative values based on window size
+    win_size = window_size or win_size_default
+    view_shift_x = view_shift_x_rel * win_size[0]
+    view_shift_y = view_shift_y_rel * win_size[1]
+    
+    fx, fy = view_shift
+    fx = view_shift_x if fx is None else fx
+    fy = view_shift_y if fy is None else fy
+    fp = plotter.camera.focal_point
+    plotter.camera.focal_point = (fp[0] + fx, fp[1] + fy, fp[2])
+
+    # Render
+    if save_path:
+        # Ensure directory exists
+        save_dir = os.path.dirname(save_path)
+        if save_dir and not os.path.exists(save_dir):
+            os.makedirs(save_dir, exist_ok=True)
+        plotter.screenshot(save_path, scale=1)
+        print(f"Saved volume rendering screenshot: {os.path.abspath(save_path)}")
+    else:
+        plotter.show()
+
+    # Console info
+    if mode == 'slices':
+        print(f"Orthoslices at X={sx}, Y={sy}, Z={sz}")
+    elif mode == 'combined':
+        print(f"Combined rendering: Orthoslices at X={sx}, Y={sy}, Z={sz}")
+        if phase_opacity is None or (isinstance(phase_opacity, dict) and len(phase_opacity) == 0):
+            print(f"  3D meshes: None (slices only)")
+        elif isinstance(phase_opacity, dict):
+            visible_phases = sum(1 for v in phase_opacity.values() if v > 0.0)
+            phase_list = [f"Phase {pid} (opacity={opacity:.2f})" 
+                         for pid, opacity in phase_opacity.items() if opacity > 0.0]
+            print(f"  3D meshes: {visible_phases} phase(s) - {', '.join(phase_list)}")
+        elif isinstance(phase_opacity, (list, tuple)):
+            visible_phases = sum(1 for v in phase_opacity if v > 0.0)
+            phase_list = [f"Phase {i} (opacity={v:.2f})" 
+                         for i, v in enumerate(phase_opacity) if v > 0.0]
+            print(f"  3D meshes: {visible_phases} phase(s) - {', '.join(phase_list)}")
+    else:
+        # Count visible phases (opacity > 0)
+        if phase_opacity is None:
+            visible_phases = n_phases
+            print(f"3D volume rendering with {n_phases} phases (all visible)")
+        elif isinstance(phase_opacity, dict):
+            visible_phases = sum(1 for v in phase_opacity.values() if v > 0.0)
+            phase_list = [f"Phase {pid} (opacity={opacity:.2f})" 
+                         for pid, opacity in phase_opacity.items() if opacity > 0.0]
+            print(f"3D volume rendering: {visible_phases}/{n_phases} phases visible")
+            print(f"  Visible phases: {', '.join(phase_list)}")
+        elif isinstance(phase_opacity, (list, tuple)):
+            visible_phases = sum(1 for v in phase_opacity if v > 0.0)
+            phase_list = [f"Phase {i} (opacity={v:.2f})" 
+                         for i, v in enumerate(phase_opacity) if v > 0.0]
+            print(f"3D volume rendering: {visible_phases}/{n_phases} phases visible")
+            print(f"  Visible phases: {', '.join(phase_list)}")
+        else:
+            print(f"3D volume rendering with {n_phases} phases")
+
 
 
 def save_figure(figure, filename=None, format="png", dpi=300, log=True):
