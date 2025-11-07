@@ -110,7 +110,7 @@ Use this to set ParaView properties:
 ### Python Export
 ```python
 from drp_template.input_output import export_model
-from drp_template.tools import create_binary_model
+from drp_template.model import create_binary_model_3d as create_binary_model
 
 # Create model
 data = create_binary_model(nx=100, ny=100, nz=100, num_inclusions=5)

@@ -70,6 +70,7 @@ caption: API Reference
 api/input_output
 api/image
 api/tools
+api/model
 api/math
 api/default_params
 ```

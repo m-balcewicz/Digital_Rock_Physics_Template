@@ -2,11 +2,10 @@
 
 ## Overview
 
-The `drp_template` package now provides three functions for binary model creation:
+The `drp_template` package now provides explicit functions for binary model creation (generic `create_binary_model` removed):
 
 1. **`create_binary_model_2d()`** - Dedicated 2D function (creates nx × ny × 1 volume)
-2. **`create_binary_model_3d()`** - Dedicated 3D function  
-3. **`create_binary_model()`** - Original function (backward compatible)
+2. **`create_binary_model_3d()`** - Dedicated 3D function
 
 ## Architecture & Maintainability
 
@@ -217,20 +216,16 @@ data_2d = create_binary_model_2d(200, 200, num_inclusions=10)
 data_3d = create_binary_model_3d(200, 200, 200, num_inclusions=10)
 ```
 
-### No Breaking Changes
+### Removal of Generic Function
 
-The original `create_binary_model()` still works exactly as before:
-```python
-# This still works!
-data = create_binary_model(100, 100, 100, num_inclusions=5)
-```
+The previous generic `create_binary_model()` has been removed. Use explicit 2D or 3D creation for clarity.
 
 ## Code Examples
 
 ### Example 1: 2D Thin Section
 
 ```python
-from drp_template.tools import create_binary_model_2d
+from drp_template.model import create_binary_model_2d
 from drp_template.input_output import export_model
 import matplotlib.pyplot as plt
 
@@ -258,7 +253,7 @@ export_model('thin_section_2d', data_2d, voxel_size=1.0, labels={0: 'Pore', 1: '
 ### Example 2: 3D Pore Network
 
 ```python
-from drp_template.tools import create_binary_model_3d
+from drp_template.model import create_binary_model_3d
 from drp_template.image import ortho_views
 
 # Create 3D model with randomly oriented prolate ellipsoids
@@ -326,9 +321,9 @@ data_2d = create_binary_model_2d(200, 200, num_inclusions=10)
 data_3d = create_binary_model_3d(200, 200, 200, num_inclusions=10)
 ```
 
-❌ **AVOID THIS**:
+❌ **AVOID THIS** (legacy pattern removed):
 ```python
-data = create_binary_model(200, 200, 1, num_inclusions=10)  # Is this meant to be 2D?
+# data = create_binary_model(200, 200, 1, num_inclusions=10)
 ```
 
 ### 2. Choose Right Dimensions
@@ -477,7 +472,7 @@ Both 2D and 3D functions support **periodic boundary conditions (PBC)** via the 
 #### 2D Periodic RVE
 
 ```python
-from drp_template.tools import create_binary_model_2d
+from drp_template.model import create_binary_model_2d
 
 # Create 2D RVE with periodic boundaries
 data_rve_2d = create_binary_model_2d(
@@ -502,7 +497,7 @@ tiled = np.block([
 #### 3D Periodic RVE
 
 ```python
-from drp_template.tools import create_binary_model_3d
+from drp_template.model import create_binary_model_3d
 
 # Create 3D RVE with periodic boundaries
 data_rve_3d = create_binary_model_3d(

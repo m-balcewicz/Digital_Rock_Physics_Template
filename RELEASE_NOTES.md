@@ -1,18 +1,44 @@
 # Release Notes - Binary Model Creation Update (2025-01-05)
 
+## 🚀 Quick Start
+
+**New Clean API**:
+```python
+from drp_template.model import binary_2d, binary_3d
+
+# Create 2D model
+data_2d = binary_2d(200, 200, num_inclusions=10, periodic=True)
+
+# Create 3D model  
+data_3d = binary_3d(100, 100, 100, num_inclusions=15, random_orientation=True)
+```
+
+**What Changed**:
+- ✅ **Shorter names**: `binary_2d()` and `binary_3d()` (60% shorter!)
+- ✅ **New location**: `drp_template.model` (dedicated package)
+- ⚠️ **Breaking**: Old verbose names removed
+
+---
+
 ## 🎉 Major Features
 
-### 1. Dedicated 2D and 3D Functions
+### 1. New Simplified API with Dedicated 2D and 3D Functions
 
-**New Architecture**:
-- `create_binary_model_2d(nx, ny, ...)` - Dedicated 2D function
-- `create_binary_model_3d(nx, ny, nz, ...)` - Dedicated 3D function  
-- `create_binary_model(nx, ny, nz, ...)` - Original (backward compatible)
+**Clean, Concise Function Names**:
+- `binary_2d(nx, ny, ...)` - Create 2D binary models
+- `binary_3d(nx, ny, nz, ...)` - Create 3D binary models
+
+**New Location**:
+```python
+from drp_template.model import binary_2d, binary_3d
+```
 
 **Benefits**:
+- ✅ Shorter, cleaner names
 - ✅ Clear intent (explicit 2D vs 3D)
+- ✅ Works beautifully with module prefix: `model.binary_2d()`
 - ✅ Better maintainability (Single Responsibility Principle)
-- ✅ No breaking changes (original function preserved)
+- ⚠️ **Breaking Change**: Generic `create_binary_model()` removed
 
 ### 2. Periodic Boundary Conditions 🔄
 
@@ -20,14 +46,14 @@
 
 ```python
 # 2D with periodic boundaries
-data_2d = create_binary_model_2d(
+data_2d = binary_2d(
     200, 200,
     num_inclusions=15,
     periodic=True  # ← NEW!
 )
 
 # 3D with periodic boundaries
-data_3d = create_binary_model_3d(
+data_3d = binary_3d(
     100, 100, 100,
     num_inclusions=10,
     periodic=True  # ← NEW!
@@ -51,7 +77,7 @@ data_3d = create_binary_model_3d(
 - ✅ Rotation matrix: `R = Rz(α) @ Ry(β) @ Rx(γ)`
 
 ```python
-data = create_binary_model_3d(
+data = binary_3d(
     100, 100, 100,
     num_inclusions=10,
     random_orientation=True  # Now produces TRUE 3D rotation!
@@ -81,48 +107,47 @@ This was a **fundamental geometry error** affecting all ellipsoidal inclusions!
 ## 📚 Documentation Updates
 
 ### New Guides
-- **`docs/guides/2d_vs_3d_models.md`**: Comprehensive 40+ page guide
-  - When to use 2D vs 3D
-  - Feature comparison tables
+ `binary_2d(nx, ny, ...)` - Dedicated 2D function (formerly `create_binary_model_2d`)
+ `binary_3d(nx, ny, nz, ...)` - Dedicated 3D function (formerly `create_binary_model_3d`)
   - Periodic boundaries explained
-  - Code examples
-  - Migration guide
-  - Troubleshooting
-
-### Updated Examples
-- **`examples/tools/create_binary_2D_model.ipynb`** (NEW)
-  - Single circular pore
-  - Multiple elliptical pores
-  - Periodic boundary demonstrations
-  - 2×2 tiling visualization
-  
-- **`examples/tools/create_binary_3D_model.ipynb`** (UPDATED)
+ `binary_3d(nx, ny, nz, ...)`
+ **Example: 2D Model with PBC**
+ ```python
+ from drp_template.model import binary_2d
+ # Create 2D RVE
+ data_rve = binary_2d(
+     nx=200, ny=200,
+     num_inclusions=15,
+     inclusion_radius=12,
+     periodic=True,
+     seed=42
+ )
   - Added Example 5: Periodic Boundary Conditions
-  - Before/after PBC comparisons
-  - 2×2×2 tiling demonstration
-  - Updated parameter summary
-
-### Updated Core Docs
-- **`README.md`**: Added new features section
-- **`docs/changelog.md`**: Detailed changelog
-- **`docs/quickstart.md`**: Added synthetic model creation section
-
-## 🧪 Testing
-
-### New Test Suite
-**`dev/test_periodic_boundaries.py`**:
-- Tests 2D periodic boundaries
-- Tests 3D periodic boundaries  
-- Tests multiple inclusions with PBC
-- Visual validation with before/after plots
-
-**All tests passing**: ✅
-
-## 📊 Comparison: 2D vs 3D
-
-| Feature | 2D | 3D |
+ `binary_3d(nx, ny, nz, ...)`
+ ```python
+ from drp_template.model import binary_3d
+ # Create 3D model with random orientations
+ data_3d = binary_3d(
+     nx=100, ny=100, nz=100,
+     num_inclusions=10,
+     inclusion_radius=15,
+     inclusion_aspect_ratio=1.5,
+     random_orientation=True,
+     seed=123
+ )
+    - `binary_2d()` function
+    - `binary_3d()` function  
+ ✅ Explicit 2D/3D APIs (`binary_2d`, `binary_3d`)
+ The previous generic `create_binary_model()` has been removed to enforce explicit 2D vs 3D intent. Use:
+ ```python
+ from drp_template.model import binary_2d, binary_3d
+ # 2D
+ data2d = binary_2d(...)
+ # 3D
+ data3d = binary_3d(...)
+ ```
 |---------|-----|-----|
-| **Function** | `create_binary_model_2d()` | `create_binary_model_3d()` |
+| **Function** | `binary_2d()` | `binary_3d()` |
 | **Output Shape** | (nx, ny, 1) | (nx, ny, nz) |
 | **Inclusions** | Ellipses | Ellipsoids |
 | **Position Format** | (N, 2) | (N, 3) |
@@ -136,11 +161,11 @@ This was a **fundamental geometry error** affecting all ellipsoidal inclusions!
 ### Example 1: 2D RVE with Periodic Boundaries
 
 ```python
-from drp_template.tools import create_binary_model_2d
+from drp_template.model import binary_2d
 import numpy as np
 
 # Create 2D RVE
-data_rve = create_binary_model_2d(
+data_rve = binary_2d(
     nx=200, ny=200,
     num_inclusions=15,
     inclusion_radius=25,
@@ -158,23 +183,13 @@ tiled = np.block([
 # No visible seams! ✅
 ```
 
-### Example 2: 3D RVE with True 3D Rotation
+### Example 2: 3D Model with Full 3D Rotation
 
 ```python
-from drp_template.tools import create_binary_model_3d
+from drp_template.model import binary_3d
 
-# Create 3D RVE
-data_3d = create_binary_model_3d(
-    nx=100, ny=100, nz=100,
-    num_inclusions=10,
-    inclusion_radius=18,
-    inclusion_aspect_ratio=1.2,
-    random_orientation=True,  # Full 3D Euler rotation
-    periodic=True,            # Seamless tiling
-    seed=123
-)
-# Ellipsoids oriented in all directions ✅
-```
+# Create 3D model with random orientations
+data_3d = binary_3d(
 
 ### Example 3: Demonstrating PBC Effect
 
@@ -182,7 +197,7 @@ data_3d = create_binary_model_3d(
 import matplotlib.pyplot as plt
 
 # Without periodic boundaries
-data_no_pbc = create_binary_model_2d(
+data_no_pbc = binary_2d(
     100, 100,
     num_inclusions=1,
     inclusion_radius=30,
@@ -191,7 +206,7 @@ data_no_pbc = create_binary_model_2d(
 )
 
 # With periodic boundaries
-data_pbc = create_binary_model_2d(
+data_pbc = binary_2d(
     100, 100,
     num_inclusions=1,
     inclusion_radius=30,
@@ -208,28 +223,38 @@ axes[1].set_title('With PBC (wrapped)')
 plt.show()
 ```
 
-## 🔧 Backward Compatibility
+## 🔧 Migration Guide
 
-**100% backward compatible!**
+**Breaking Change**: Simplified API
 
-All existing code using `create_binary_model()` continues to work:
+The previous verbose function names have been replaced with cleaner, shorter names:
 
+**Old (removed)**:
 ```python
-# Old code still works!
-data = create_binary_model(100, 100, 100, num_inclusions=5)
+from drp_template.tools import create_binary_model_2d, create_binary_model_3d
+data = create_binary_model_2d(...)  # Long name
 ```
 
-**Migration recommended** but not required:
+**New (use this)**:
 ```python
-# New code (clearer intent)
-data = create_binary_model_3d(100, 100, 100, num_inclusions=5)
+from drp_template.model import binary_2d, binary_3d
+data = binary_2d(...)  # Clean and concise!
 ```
+
+**Benefits**:
+- ✅ 60% shorter function names
+- ✅ Cleaner imports
+- ✅ Better with module prefix: `model.binary_3d()`
+- ✅ Follows Python conventions
+
+**Note**: Generic `create_binary_model()` completely removed - use explicit `binary_2d()` or `binary_3d()`.
 
 ## 📝 Summary of Changes
 
 ### Added
-- ✅ `create_binary_model_2d()` function
-- ✅ `create_binary_model_3d()` function  
+- ✅ `binary_2d()` function (clean API)
+- ✅ `binary_3d()` function (clean API)
+- ✅ New package location: `drp_template.model`
 - ✅ `periodic` parameter for PBC
 - ✅ True 3D Euler angle rotation
 - ✅ Comprehensive documentation and examples
@@ -240,12 +265,17 @@ data = create_binary_model_3d(100, 100, 100, num_inclusions=5)
 - ✅ 2D-only rotation bug (now true 3D)
 
 ### Changed
-- ✅ Improved architecture (Single Responsibility)
+- ✅ **API Simplification**: Shorter function names (`binary_2d`, `binary_3d`)
+- ✅ **New Package**: Functions moved from `drp_template.tools` to `drp_template.model`
+- ✅ **Removed**: Generic `create_binary_model()` function (use explicit 2D or 3D)
+- ✅ Improved architecture (Single Responsibility Principle)
 - ✅ Better maintainability and testability
 
 ### Maintained
-- ✅ 100% backward compatibility
-- ✅ All existing APIs preserved
+- ✅ All core functionality preserved
+- ✅ Periodic boundary logic
+- ✅ True 3D rotation features
+- ✅ Comprehensive parameter control
 
 ## 🎯 Use Cases
 
@@ -260,6 +290,50 @@ data = create_binary_model_3d(100, 100, 100, num_inclusions=5)
 - ✅ Modeling finite domains (real rock samples)
 - ✅ Boundary conditions matter for your application
 - ✅ Inclusions should naturally be cut off at edges
+
+---
+
+## 📊 API Evolution Summary
+
+### The Journey to Simplification
+
+```
+Version 1.x → Version 2.0
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OLD (tools):                    NEW (model):
+────────────────────────────    ─────────────────────
+create_binary_model()           ❌ Removed (ambiguous)
+create_binary_model_2d()    →   binary_2d() ✨
+create_binary_model_3d()    →   binary_3d() ✨
+
+Character count: 23 chars   →   9 chars (-60%) 🎉
+```
+
+### Why This Matters
+
+| Aspect | Before | After | Benefit |
+|--------|--------|-------|---------|
+| **Import** | `from drp_template.tools` | `from drp_template.model` | Clearer intent |
+| **Function** | `create_binary_model_3d()` | `binary_3d()` | 60% shorter |
+| **Usage** | `tools.create_binary_model_3d(...)` | `model.binary_3d(...)` | Self-documenting |
+| **Ambiguity** | 3 functions (1 generic) | 2 explicit functions | No confusion |
+
+### The Result
+```python
+# Clean, concise, obvious
+from drp_template.model import binary_2d, binary_3d
+
+# 2D model - explicitly named
+img_2d = binary_2d(200, 200, porosity=0.3)
+
+# 3D model - explicitly named  
+img_3d = binary_3d(100, 100, 100, porosity=0.2)
+```
+
+**Simple. Explicit. Pythonic.** ✨
+
+---
 
 ## 📖 Further Reading
 

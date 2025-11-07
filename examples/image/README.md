@@ -5,11 +5,11 @@ This directory contains examples for the Digital Rock Physics image visualizatio
 ## Quick Start
 
 ```python
-import drp_template.tools as tools
+import drp_template.model as model
 import drp_template.image as image
 
 # Create sample data
-data = tools.create_binary_model_3d(nx=80, ny=80, nz=80, seed=42)
+data = model.create_binary_model_3d(nx=80, ny=80, nz=80, seed=42)
 labels = {0: 'Pore Space', 1: 'Solid Matrix'}
 
 # Basic 3D visualization

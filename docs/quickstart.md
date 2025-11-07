@@ -101,7 +101,7 @@ table = drp_math.get_phase_fractions(
 ### 2D Binary Model
 
 ```python
-from drp_template.tools import create_binary_model_2d
+from drp_template.model import create_binary_model_2d
 
 # Create 2D model with periodic boundaries (perfect for RVE)
 data_2d = create_binary_model_2d(
@@ -119,7 +119,7 @@ data_2d = create_binary_model_2d(
 ### 3D Binary Model
 
 ```python
-from drp_template.tools import create_binary_model_3d
+from drp_template.model import create_binary_model_3d
 
 # Create 3D model with periodic boundaries
 data_3d = create_binary_model_3d(
