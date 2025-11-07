@@ -7,7 +7,7 @@ This guide will walk you through the basic workflow of the Digital Rock Physics 
 ### From RAW binary file
 
 ```python
-import drp_template.input_output as io
+import drp_template.io as io
 
 # Import raw binary data
 data = io.import_model(
@@ -77,7 +77,7 @@ props = tools.get_model_properties(
 ### Detailed phase analysis
 
 ```python
-import drp_template.math as drp_math
+import drp_template.compute as compute
 
 # Define phase labels
 labels = {
@@ -170,5 +170,5 @@ print(f"Valid: {is_valid}")
 ## Next Steps
 
 - Check out the [Tutorials](tutorials/index.md) for detailed examples
-- Explore the [API Reference](api/input_output.md) for all available functions
+- Explore the [API Reference](api/io.md) for all available functions
 - Learn about [Schema Versioning](schema_versioning.md) for data provenance

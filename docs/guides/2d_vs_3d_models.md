@@ -226,7 +226,7 @@ The previous generic `create_binary_model()` has been removed. Use explicit 2D o
 
 ```python
 from drp_template.model import create_binary_model_2d
-from drp_template.input_output import export_model
+from drp_template.io import export_model
 import matplotlib.pyplot as plt
 
 # Create 2D model

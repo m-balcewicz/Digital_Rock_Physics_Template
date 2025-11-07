@@ -1,4 +1,163 @@
-# Release Notes - Binary Model Creation Update (2025-01-05)
+# Release Notes – 0.1.0b1 Beta (2025-11-07)
+
+This beta release consolidates a broad architectural refactor plus the new binary model API introduced earlier. The focus is on a cleaner package structure, explicit public functions, SI unit consistency, and streamlined export/visualization tooling.
+
+---
+
+## 🧱 Package Structure (New Modular Layout)
+
+The library is now intentionally decomposed into focused subpackages. Each namespace exposes a small, explicit set of functions.
+
+| Package | Purpose | Key Public Functions / Objects |
+|---------|---------|--------------------------------|
+| `drp_template.model` | Synthetic binary model generation | `binary_2d`, `binary_3d` |
+| `drp_template.image` | Visualization helpers (orthos, histograms, rendering, animation) | `ortho_slice`, `ortho_views`, `histogram`, `volume_rendering`, `create_rotation_animation` |
+| `drp_template.tools.validation` | Data validation & statistics | `check_binary`, `classify_data_type`, `get_value_statistics` |
+| `drp_template.tools.labeling` | Connected component labeling & relabeling | `label_binary`, `reorder_labels` |
+| `drp_template.tools.file_utils` | Model metadata & file helpers | `get_model_properties`, `infer_dtype_from_filesize` |
+| `drp_template.io.writers` | Export functions (raw, VTK) | `export_model`, `export_vti` |
+| `drp_template.io.utils` | IO utilities | `open_in_paraview`, `reorient_volume`, `resolve_params_filename` |
+| `drp_template.compute` | Rock physics / math utilities | `ct_geometry`, wavelength-related functions, length conversions (`m2mm`, etc.) |
+
+### Why This Matters
+* Explicit boundaries: Easier discovery, less hidden coupling.
+* Future stability: Clear migration path; deprecated legacy monoliths now isolated.
+* Testability: Fine-grained units facilitate targeted tests.
+
+---
+
+## 🧪 Binary Model API (Recap & Integration)
+
+The earlier alpha update introduced the simplified, explicit binary model API. In beta, that API is fully integrated with the new structure and documentation paths.
+
+```python
+from drp_template.model import binary_2d, binary_3d
+
+data2d = binary_2d(200, 200, num_inclusions=12, periodic=True)
+data3d = binary_3d(150, 150, 150, num_inclusions=20, random_orientation=True)
+```
+
+Highlights:
+* Short names (`binary_2d`, `binary_3d`) replace verbose legacy names.
+* True 3D Euler rotations for inclusions (`random_orientation=True`).
+* Periodic boundary generation (2D: up to 9 copies; 3D: up to 27).
+* Fixed ellipsoid axis aspect-ratio mapping (geometry correctness guaranteed).
+
+---
+
+## 🌍 SI Unit Standardization
+
+All geometry-related functions (e.g. `ct_geometry`) use SI units (meters) internally. Helper conversions shipped in `compute`:
+
+```python
+from drp_template.compute import m2mm, mm2m, m2um, um2m
+```
+
+Benefits: Consistent downstream physics, unambiguous metadata, simplified multi-tool integration.
+
+---
+
+## 📤 Export & Visualization Tooling
+
+### Unified VTK Export
+`export_vti` (in `io.writers`) writes VTK ImageData (`.vti`) plus a JSON sidecar with SI metadata:
+
+```python
+from drp_template.io import export_vti
+export_vti(array_xyz, path="output/model.vti", spacing=(0.001, 0.001, 0.001))
+```
+
+Rules:
+* Enforces array order = xyz (no silent permutation) for clarity.
+* Sidecar JSON: spacing, origin, dtype, shape.
+
+### ParaView Launcher
+`open_in_paraview("output/model.vti")` attempts OS-aware executable discovery, opening the exported file directly if ParaView is installed.
+
+### Deprecation Shim
+Former `io.vtk` heavy implementation now a lightweight shim re-exporting `export_vti` and `open_in_paraview` with a `DeprecationWarning`.
+
+---
+
+## 🧩 Deprecated Legacy Modules
+
+Monolithic `_funcs` modules in `image` and `tools` are replaced by stubs guiding users to new submodules. They remain temporarily for backward compatibility and will be removed in a future minor release.
+
+Migration is intentionally frictionless: import paths simply change; function semantics preserved or improved.
+
+---
+
+## 🧪 Testing & Scripts
+* `test_io_export_model.py` validates raw export + metadata.
+* Standalone VTI export script demonstrates `export_vti` with a synthetic sphere volume.
+* Additional granular tests (image slicing, labeling, stats, IO readers) planned for the next iteration.
+
+---
+
+## 📚 Documentation & Generation
+* Docs generator relocated to `docs/scripts/generate_docs.py`.
+* Examples reorganized (ongoing) under `examples/<module>/reference` & `examples/<module>/tutorials`.
+* Release notes emphasize discoverability and explicit API boundaries.
+
+---
+
+## ➕ Optional Dependencies (Extras)
+
+Install minimal core:
+```bash
+pip install drp_template==0.1.0b1
+```
+
+Add visualization stack:
+```bash
+pip install drp_template[viz]
+```
+
+Add VTK export support:
+```bash
+pip install drp_template[vtk]
+```
+
+Combination:
+```bash
+pip install drp_template[viz,vtk]
+```
+
+---
+
+## 🔧 Migration Guide (Beta Focus)
+
+| Legacy | Replacement | Notes |
+|--------|-------------|-------|
+| `tools.create_binary_model_2d` | `model.binary_2d` | Shorter & explicit dimensionality |
+| `tools.create_binary_model_3d` | `model.binary_3d` | Full Euler rotations |
+| `image._funcs.histogram` | `image.histogram` | Same behavior, moved |
+| `tools._funcs.get_model_properties` | `tools.file_utils.get_model_properties` | Extended metadata |
+| `io.vtk.export_vti` (old) | `io.writers.export_vti` | xyz-only enforcement |
+
+Action Items for Users:
+1. Update imports to new package paths.
+2. Remove reliance on implicit array reordering (prepare xyz layout upstream).
+3. Adopt SI spacing/origin when exporting or computing geometry.
+
+---
+
+## 🗺️ Roadmap (Post-Beta)
+* Remove deprecated stubs (`_funcs`, shim in `io.vtk`).
+* Expand test coverage (image, labeling, IO readers).
+* Notebook consolidation under examples structure.
+* Performance profiling for large model generation and VTI export.
+
+---
+
+## ✅ Summary
+The 0.1.0b1 beta crystallizes a modular architecture, explicit binary model APIs, SI unit normalization, and transparent export tooling. It sets a stable foundation for adding physics features and expanding test coverage without future large-scale breaking reorganizations.
+
+---
+
+# Historical Note – Binary Model Creation Update (2025-01-05)
+
+The earlier alpha introduced the streamlined binary model API. Core details retained below for completeness.
 
 ## 🚀 Quick Start
 
@@ -348,6 +507,14 @@ These improvements address fundamental issues in the binary model creation syste
 
 ---
 
-**Version**: 0.1.0-alpha  
+**Version at time of section**: 0.1.0-alpha  
 **Date**: 2025-01-05  
-**Status**: Production Ready ✅
+**Status**: Superseded by 0.1.0b1 Beta
+
+---
+
+## Current Beta Version
+**Version**: 0.1.0b1  
+**Date**: 2025-11-07  
+**Status**: Feature-Complete Beta (API stabilization phase)
+

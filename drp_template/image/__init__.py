@@ -1,10 +1,4 @@
-from ._funcs import ortho_slice
-from ._funcs import ortho_views
-from ._funcs import add_slice_reference_lines
-from ._funcs import histogram
-from ._funcs import plot_effective_modulus
-from ._funcs import save_figure
-from ._funcs import get_figure_colors
-from ._funcs import volume_rendering
-from ._funcs import get_lighting_preset
-from ._funcs import create_rotation_animation
+from .slicing import ortho_slice, ortho_views, add_slice_reference_lines
+from .plotting import histogram, plot_effective_modulus, save_figure, get_figure_colors
+from .rendering import volume_rendering, get_lighting_preset
+from .animation import create_rotation_animation

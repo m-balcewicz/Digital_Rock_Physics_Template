@@ -1,6 +1,45 @@
 # Documentation
 
-This directory contains the Sphinx documentation for the Digital Rock Physics Template.
+This folder contains user and API documentation. Serve locally with MkDocs or Sphinx.
+
+Scripts
+-------
+- docs/scripts/generate_docs.py: Autogenerates Markdown from example notebooks and injects example blocks into function docstrings. Run after adding notebooks under examples/<module>/reference/.
+
+Usage
+-----
+Run the generator from the repo root (so paths resolve correctly):
+
+```bash
+conda activate dev_DRP
+python docs/scripts/generate_docs.py
+```
+
+Generated files
+---------------
+- docs/<module>_examples.md: Per-module example roundups extracted from notebooks.
+- Docstrings in drp_template/<module>/*.py may be updated to include an "Examples (auto-generated)" section.
+
+## Auto-Generated Examples Integration
+
+Run `python scripts/generate_docs.py` to:
+
+1. Parse notebooks under `examples/<module>/reference/`.
+2. Emit `docs/<module>_examples.md` (auto-generated – do not edit by hand).
+3. Patch selected function docstrings by appending an `Examples (auto-generated)` section if not already present.
+
+Include the generated examples pages in the table of contents by referencing them from `index.md` or a suitable section page:
+
+```markdown
+```{toctree}
+:maxdepth: 1
+examples/image_examples
+examples/io_examples
+examples/tools_examples
+```
+```
+
+Regenerate docs any time you change a reference notebook. Commit the updated Python sources (with patched docstrings) and the new `*_examples.md` pages.
 
 ## Quick Start
 
@@ -52,7 +91,7 @@ docs/
 ├── schema_versioning.md  # Schema versioning docs
 ├── changelog.md          # Version history
 ├── api/                  # API reference
-│   ├── input_output.md
+│   ├── io.md
 │   ├── image.md
 │   ├── tools.md
 │   ├── math.md
@@ -85,7 +124,7 @@ Regular markdown content...
 ## Code Examples
 
 \```python
-import drp_template.input_output as io
+import drp_template.io as io
 data = io.import_model('data.raw', dtype='uint8', dimensions={'nz': 400, 'ny': 400, 'nx': 400})
 \```
 ```

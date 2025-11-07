@@ -109,7 +109,7 @@ Use this to set ParaView properties:
 
 ### Python Export
 ```python
-from drp_template.input_output import export_model
+from drp_template.io import export_model
 from drp_template.model import create_binary_model_3d as create_binary_model
 
 # Create model
@@ -166,6 +166,6 @@ float64 → double
 
 ## See Also
 
-- [Input/Output API Reference](../api/input_output.md)
+- [Input/Output API Reference](../api/io.md)
 - [Tools API Reference](../api/tools.md) - Creating synthetic models
 - [Quickstart Guide](../quickstart.md)

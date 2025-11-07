@@ -67,6 +67,6 @@ def subvolume(data, set_subvolume, name_subvolume, voxel_size, directory=None, d
         from drp_template.default_params import check_output_folder
         directory = check_output_folder()
     file_path = os.path.join(directory, varname)
-    import drp_template.input_output as in_out
-    in_out.export_model(filename=file_path, data=data_subvolume, voxel_size=voxel_size, dtype=dtype, order=order)
+    import drp_template.io as io
+    io.export_model(filename=file_path, data=data_subvolume, voxel_size=voxel_size, dtype=dtype, order=order)
     return data_subvolume

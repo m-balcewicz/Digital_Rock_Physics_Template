@@ -104,7 +104,7 @@ def my_function(data, threshold, verbose=False):
 
 When adding new functionality:
 
-1. **Add to appropriate module** (`input_output`, `image`, `tools`, `math`, etc.)
+1. **Add to appropriate module** (`io`, `image`, `tools`, `math`, etc.)
 2. **Write comprehensive docstrings** (NumPy style)
 3. **Update API documentation** in `docs/api/`
 4. **Add examples** to `examples/` folder

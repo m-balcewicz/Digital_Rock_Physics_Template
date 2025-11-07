@@ -1,15 +1,18 @@
-from ._funcs import check_binary
-from ._funcs import list_dir_info
-from ._funcs import mk_paramsfile
-from ._funcs import get_model_dimensions
-from ._funcs import reshape_model
-from ._funcs import create_subvolume
-from ._funcs import find_slice_with_all_values
-from ._funcs import label_binary
-from ._funcs import infer_dimensions_from_filesize
-from ._funcs import infer_dtype_from_filesize
-from ._funcs import classify_data_type
-from ._funcs import get_value_statistics
-from ._funcs import get_model_properties
-from .dirify import mk_dir
-from .dirify import check_output_folder
+from .validation import (
+	check_binary,
+	infer_dimensions_from_filesize,
+	infer_dtype_from_filesize,
+	classify_data_type,
+	get_value_statistics,
+)
+from .labeling import (
+	find_slice_with_all_values,
+	label_binary,
+	reorder_labels,
+)
+from .file_utils import (
+	list_dir_info,
+	get_model_properties,
+)
+# Deprecated exports (dirify) removed; check_output_folder provided by default_params
+from drp_template.default_params import check_output_folder

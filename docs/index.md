@@ -24,7 +24,7 @@ pip install -e .
 ### Basic Usage
 
 ```python
-import drp_template.input_output as io
+import drp_template.io as io
 import drp_template.image as image
 import drp_template.tools as tools
 
@@ -67,11 +67,11 @@ tutorials/index
 maxdepth: 2
 caption: API Reference
 ---
-api/input_output
+api/io
 api/image
 api/tools
 api/model
-api/math
+api/compute
 api/default_params
 ```
 
