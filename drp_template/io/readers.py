@@ -87,6 +87,16 @@ def import_model(file_path, dtype, voxel_size=None, dimensions=None, mode='r', o
     ```
     """
     from drp_template.tools import check_binary
+    
+    # Warn user if voxel_size is not provided
+    if voxel_size is None:
+        print_style(
+            "WARNING: voxel_size not provided!\n"
+            "Physical scale information will be missing from metadata.\n"
+            "Recommended: io.import_model(..., voxel_size=<value_in_meters>)",
+            style='box'
+        )
+    
     # Resolve parameters file name allowing user override and avoiding collisions
     params_filename = resolve_params_filename(paramsfile)
     file_format = file_path.split('.')[-1]

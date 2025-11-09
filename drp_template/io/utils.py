@@ -120,10 +120,16 @@ def _update_params_common(params_filename, file_path, arr, voxel_size, dtype, en
     print(f"nx: {arr.shape[0]}")
     print(f"ny: {arr.shape[1]}")
     print(f"nz: {arr.shape[2]}")
-    update_parameters_file(paramsfile=params_filename, voxel_size=voxel_size)
-    update_parameters_file(paramsfile=params_filename, endian=endian)
-    update_parameters_file(paramsfile=params_filename, dtype=dtype)
-    update_parameters_file(paramsfile=params_filename, file_format=file_format)
+    
+    # Only update fields that have actual values (not None)
+    if voxel_size is not None:
+        update_parameters_file(paramsfile=params_filename, voxel_size=voxel_size)
+    if endian is not None:
+        update_parameters_file(paramsfile=params_filename, endian=endian)
+    if dtype is not None:
+        update_parameters_file(paramsfile=params_filename, dtype=dtype)
+    if file_format is not None:
+        update_parameters_file(paramsfile=params_filename, file_format=file_format)
 
     # Add on-disk file size (single-file imports)
     # For multi-file imports (e.g., TIFF sequences), this will be overridden later.
