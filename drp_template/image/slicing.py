@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from matplotlib.ticker import FixedLocator, FixedFormatter
 from drp_template.default_params import read_parameters_file
-from drp_template.image._config import global_settings, fig_width, fig_height, im_left, im_left_xz, im_bottom, im_width, im_height, cax_width, cax_space_left, cax_space_right, im_title, default_figure_settings
+from drp_template.image import _config
 
 
 __all__ = [
@@ -13,11 +13,19 @@ __all__ = [
     'add_slice_reference_lines'
 ]
 
-fig_width = global_settings.get('fig_width')
-fig_height = global_settings.get('fig_height')
-cax_space_left = global_settings.get('cax_space_left')
-cax_space_right = global_settings.get('cax_space_right')
-plt.rcParams['font.family'] = global_settings.get('font_family')
+# Get settings from config module
+global_settings = _config.get_global_settings()
+fig_width = _config.fig_width
+fig_height = _config.fig_height
+im_left = _config.im_left
+im_left_xz = _config.im_left_xz
+im_bottom = _config.im_bottom
+im_width = _config.im_width
+im_height = _config.im_height
+cax_width = _config.cax_width
+cax_space_left = _config.cax_space_left
+cax_space_right = _config.cax_space_right
+im_title = _config.im_title
 
 def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None, dark_mode=True, cmap_intensity=1.0, ax=None, show_colorbar=True):
     """
@@ -487,20 +495,8 @@ def ortho_views(data,
 
     nz, ny, nx = data.shape
     
-    # Get layout settings from default_figure_settings.json
-    layout_settings = default_figure_settings.get('ortho_views_layouts', {})
-    
-    # By default, use arbitrary layout
-    if layout_type is None or layout_type not in ['rectangular']:
-        layout_type = 'arbitrary'
-        
-    # Get layout config
-    layout_config = layout_settings.get(layout_type)
-    
-    # If specified layout doesn't exist, fall back to arbitrary
-    if not layout_config:
-        layout_type = 'arbitrary'
-        layout_config = layout_settings.get('arbitrary', {})
+    # Get layout config using _config helper (handles fallback internally)
+    layout_config = _config.get_layout_config(layout_type or 'arbitrary')
 
     def safe_index(idx, size):
         return min(max(idx, 0), size - 1)

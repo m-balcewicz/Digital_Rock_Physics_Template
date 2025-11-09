@@ -7,7 +7,7 @@ from matplotlib.colors import ListedColormap
 from cmcrameri import cm
 
 from drp_template.default_params import read_parameters_file, check_output_folder
-from drp_template.image._config import global_settings, fig_width, fig_height
+from drp_template.image import _config
 
 __all__ = [
     'histogram',
@@ -15,6 +15,11 @@ __all__ = [
     'get_figure_colors',
     'save_figure',
 ]
+
+# Get settings from config
+global_settings = _config.get_global_settings()
+fig_width = _config.fig_width
+fig_height = _config.fig_height
 
 
 def _resolve_colormap(cmap_input):
