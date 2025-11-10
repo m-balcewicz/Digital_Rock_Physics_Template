@@ -9,6 +9,7 @@ including effective medium models, elastic bounds, and fluid substitution.
 
 Submodules
 ----------
+- effective_medium: Backus averaging and other effective medium theories
 - mixing: Effective medium and mixing laws (Brie, density mixing, elastic bounds)
 - bounds: Voigt-Reuss-Hill and Hashin-Shtrikman bounds
 - elastic: Elastic moduli conversions and seismic velocities
@@ -19,6 +20,12 @@ Quick Reference
 ---------------
 ```python
 import drp_template.compute.rockphysics as rp
+
+# Effective medium models
+from drp_template.compute.rockphysics.effective_medium import (
+    backus_average,
+    thomsen_params
+)
 
 # Mixing laws
 from drp_template.compute.rockphysics.mixing import (
@@ -49,9 +56,16 @@ References
 ----------
 - Mavko, G., Mukerji, T., Dvorkin, J. (2020): The Rock Physics Handbook
 - Berryman, J.G. (1993): Mixture theories for rock properties
+- Backus, G. E. (1962): Long-wave elastic anisotropy produced by horizontal layering
+- Thomsen, L. (1986): Weak elastic anisotropy
 """
 
 # Import all functions from submodules
+from .effective_medium import (
+    backus_average,
+    thomsen_params,
+    vti_velocity_vs_angle,
+)
 from .mixing import (
     density_solid_mix,
     density_fluid_mix,
@@ -75,6 +89,10 @@ from .gassmann import gassmann
 from .wood import wood
 
 __all__ = [
+    # Effective medium
+    'backus_average',
+    'thomsen_params',
+    'vti_velocity_vs_angle',
     # Mixing laws
     'density_solid_mix',
     'density_fluid_mix',

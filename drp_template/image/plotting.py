@@ -14,6 +14,7 @@ __all__ = [
     'plot_effective_modulus',
     'get_figure_colors',
     'save_figure',
+    'plot_velocity_vs_angle',
 ]
 
 # Get settings from config
@@ -501,3 +502,150 @@ def save_figure(figure, filename=None, format="png", dpi=300, log=True):
 
     if log:
         print(f"Figure saved at: {os.path.abspath(full_path)}")
+
+
+def plot_velocity_vs_angle(angles, Vp, Vsv, Vsh, title=None, legend_loc='upper center', step_size=None):
+    """
+    Plot wave velocities as a function of propagation angle for VTI media.
+    
+    Creates a publication-quality plot showing P-wave, SV-wave, and SH-wave 
+    velocities across different propagation angles for a VTI (Vertically 
+    Transversely Isotropic) medium.
+    
+    Parameters
+    ----------
+    angles : array-like
+        Propagation angles in degrees (0° = vertical, 90° = horizontal).
+    Vp : array-like
+        Quasi-P-wave velocities in m/s.
+    Vsv : array-like
+        Quasi-SV-wave velocities in m/s.
+    Vsh : array-like
+        SH-wave velocities in m/s.
+    title : str, optional
+        Custom plot title. If None, uses default title. Default is None.
+    legend_loc : str, optional
+        Legend location. Default is 'upper center'. Can be 'best', 'upper left', 
+        'upper right', 'lower left', 'lower right', 'center', etc.
+    step_size : float, optional
+        Y-axis tick step size in m/s. If None, automatically determined based on 
+        velocity range. Default is None.
+    
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The created figure object for further customization if needed.
+    
+    Notes
+    -----
+    - Uses cmcrameri colormap (batlow) for colorblind-friendly colors
+    - Applies global figure settings from drp_template configuration
+    - Includes both major and minor grids for better readability
+    - Automatic step_size selection: 500 m/s (>4000 range), 200 m/s (>2000), 
+      100 m/s (>1000), or 50 m/s (≤1000)
+    - Use with `save_figure()` to save the plot
+    
+    Examples
+    --------
+    >>> # From Backus averaging results
+    >>> from drp_template.compute.rockphysics.effective_medium import backus_average, vti_velocity_vs_angle
+    >>> from drp_template.image import plot_velocity_vs_angle, save_figure
+    >>> 
+    >>> # Calculate Backus elastic constants
+    >>> backus_results = backus_average(5200, 2700, 2450, 0.75, 2900, 1400, 2340, 0.5)
+    >>> 
+    >>> # Calculate velocities vs angle
+    >>> angles, Vp, Vsv, Vsh = vti_velocity_vs_angle(
+    ...     A=backus_results['A'],
+    ...     C=backus_results['C'],
+    ...     D=backus_results['D'],
+    ...     F=backus_results['F'],
+    ...     M=backus_results['M'],
+    ...     rho_eq=backus_results['rho_eq']
+    ... )
+    >>> 
+    >>> # Plot and save
+    >>> fig = plot_velocity_vs_angle(angles, Vp, Vsv, Vsh, step_size=200)
+    >>> save_figure(fig, 'vti_velocities.png')
+    
+    >>> # Custom styling
+    >>> fig = plot_velocity_vs_angle(
+    ...     angles, Vp, Vsv, Vsh,
+    ...     title='VTI Velocity Analysis',
+    ...     legend_loc='best',
+    ...     step_size=100
+    ... )
+    
+    See Also
+    --------
+    save_figure : Save matplotlib figures with consistent formatting
+    vti_velocity_vs_angle : Calculate VTI velocities for angle array
+    """
+    # Get settings from config
+    font_size = global_settings.get('font_size', 20)
+    
+    plt.figure(figsize=(fig_width, fig_height))
+    
+    # Plot velocities with colorblind-friendly colors from cmcrameri
+    plt.plot(angles, Vp, color=cm.batlow(0.8), linewidth=2, label='Vp')
+    plt.plot(angles, Vsv, color=cm.batlow(0.5), linewidth=2, label='Vsv')
+    plt.plot(angles, Vsh, color=cm.batlow(0.2), linewidth=2, label='Vsh')
+    
+    # Add grid and legend
+    plt.grid(True, alpha=0.3)
+    if legend_loc == 'upper center':
+        plt.legend(loc=legend_loc, bbox_to_anchor=(0.5, 1), ncol=3, fontsize=font_size-2)
+    else:
+        plt.legend(loc=legend_loc, fontsize=font_size-2)
+    
+    # Set labels and title
+    plt.xlabel('Angle (degrees)', fontsize=font_size)
+    plt.ylabel('Velocity (m/s)', fontsize=font_size)
+    if title:
+        plt.title(title, fontsize=font_size+2)
+    else:
+        plt.title('Wave Velocities for VTI Medium', fontsize=font_size+2)
+    
+    # Set x-axis ticks at 15-degree intervals
+    plt.xticks(np.arange(0, 91, 15), fontsize=font_size-2)
+    
+    # Get automatic y-limits and define better resolution
+    ymin, ymax = plt.ylim()
+    
+    # Calculate adaptive step size based on velocity range (if not provided)
+    if step_size is None:
+        velocity_range = ymax - ymin
+        if velocity_range > 4000:
+            step_size = 500  # 500 m/s steps for very large ranges
+        elif velocity_range > 2000:
+            step_size = 200  # 200 m/s steps for large ranges
+        elif velocity_range > 1000:
+            step_size = 100  # 100 m/s steps for medium ranges
+        else:
+            step_size = 50   # 50 m/s steps for small ranges
+    
+    # Round down min to nearest step_size multiple
+    ymin_new = np.floor(ymin / step_size) * step_size
+    
+    # Round up max to nearest step_size multiple
+    ymax_new = np.ceil(ymax / step_size) * step_size
+    
+    # Create ticks with the calculated step size
+    yticks = np.arange(ymin_new, ymax_new + step_size, step_size)
+    
+    # Set the new y-axis limits and ticks
+    plt.ylim(ymin_new, ymax_new)
+    plt.yticks(yticks, fontsize=font_size-2)
+    
+    # Add minor ticks for even more resolution
+    plt.minorticks_on()
+    plt.grid(True, which='minor', alpha=0.1)
+    
+    # Add horizontal and vertical guide lines to highlight important values
+    plt.axvline(x=0, color='gray', linestyle='--', alpha=0.5)   # Vertical axis
+    plt.axvline(x=90, color='gray', linestyle='--', alpha=0.5)  # 90 degrees
+
+    # Tighten layout
+    plt.tight_layout()
+    
+    return plt.gcf()
