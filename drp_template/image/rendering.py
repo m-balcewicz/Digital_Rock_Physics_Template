@@ -4,6 +4,24 @@ from cmcrameri import cm
 
 try:
     import pyvista as pv
+    # Configure PyVista for Jupyter notebooks if available
+    try:
+        from IPython import get_ipython
+        get_ipython()
+        # We're in a Jupyter environment, set up interactive backend
+        if not hasattr(pv, '_jupyter_backend_set'):
+            try:
+                pv.set_jupyter_backend('trame')  # Interactive 3D viewer
+            except Exception:
+                # Trame not installed, fall back to panel or ipyvtklink
+                try:
+                    pv.set_jupyter_backend('ipyvtklink')
+                except Exception:
+                    pv.set_jupyter_backend('static')  # Last resort
+            pv._jupyter_backend_set = True
+    except NameError:
+        # Not in Jupyter, no need to set backend
+        pass
 except Exception:
     pv = None
 
@@ -75,14 +93,77 @@ def volume_rendering(
     lighting='custom',
     show_legend=True,
     show_axes=True,
-    show_bounds=True
+    show_bounds=True,
+    off_screen=None
 ):
-    """Render a 3D labeled volume with optional slices and lighting using PyVista."""
+    """Render a 3D labeled volume with optional slices and lighting using PyVista.
+    
+    Parameters
+    ----------
+    data : np.ndarray
+        3D array containing phase labels.
+    paramsfile : str, optional
+        Path to parameters JSON file for loading labels and metadata.
+    cmap_set : str or Colormap, optional
+        Colormap to use for phase colors.
+    slice_indices : list, tuple, or dict, optional
+        Slice positions [x, y, z] or {'x': val, 'y': val, 'z': val}.
+    labels : dict, optional
+        Phase labels mapping {phase_id: 'Phase Name'}.
+    title : str, optional
+        Plot title.
+    dark_mode : bool, optional
+        Use dark background if True.
+    window_size : list, optional
+        Window size [width, height] in pixels.
+    mode : str, optional
+        Rendering mode: '3d', 'slices', or 'combined'. Default '3d'.
+    phase_opacity : dict or list, optional
+        Opacity values for 3D meshes {phase_id: opacity} or [opacity1, opacity2, ...].
+    slice_opacity : float, optional
+        Opacity for slice planes (0.0 to 1.0).
+    show_3d_edges : bool, optional
+        Show mesh edges on 3D objects.
+    edge_color : str or tuple, optional
+        Color for mesh edges.
+    phase_colors : dict, optional
+        Custom RGB colors {phase_id: (R, G, B)}.
+    camera_zoom : float, optional
+        Camera zoom factor.
+    lighting : str or dict, optional
+        Lighting preset ('bright', 'soft', 'dramatic', 'default', 'none', 'custom') 
+        or custom lighting configuration dict.
+    show_legend : bool, optional
+        Display legend with phase labels.
+    show_axes : bool, optional
+        Display XYZ axes.
+    show_bounds : bool, optional
+        Display bounding box.
+    off_screen : bool or None, optional
+        If True, render off-screen (for saving images). If False, render interactively.
+        If None (default), auto-detect: False in Jupyter notebooks, True otherwise.
+    
+    Returns
+    -------
+    image or pv.Plotter
+        When off_screen=False (notebooks): displays visualization and returns image array.
+        When off_screen=True (scripts): returns PyVista plotter for .screenshot() or further customization.
+    """
     if pv is None:
         raise ImportError("PyVista is required for volume_rendering.")
 
     if not isinstance(data, np.ndarray) or data.ndim != 3:
         raise ValueError("'data' must be a 3D numpy array.")
+
+    # Auto-detect off_screen mode if not specified
+    if off_screen is None:
+        try:
+            # Check if running in Jupyter/IPython environment
+            from IPython import get_ipython
+            get_ipython()
+            off_screen = False  # Interactive mode in notebooks
+        except Exception:
+            off_screen = True  # Off-screen mode in scripts
 
     vr_settings = get_volume_rendering_config()
     def _vr(key, default):
@@ -193,7 +274,7 @@ def volume_rendering(
         use_custom_light = True
         lighting_mode = 'none'
 
-    plotter = pv.Plotter(off_screen=True, window_size=win_size, lighting=lighting_mode)
+    plotter = pv.Plotter(off_screen=off_screen, window_size=win_size, lighting=lighting_mode)
     plotter.set_background(background_color)
 
     if use_custom_light:
@@ -317,4 +398,10 @@ def volume_rendering(
     plotter.camera.focal_point = (fp[0] + view_shift_x, fp[1] + view_shift_y, fp[2])
 
     print(f"3D volume rendering with {n_phases} phases")
-    return plotter
+    
+    # In interactive mode (notebooks), show the plot and return the image
+    # In off-screen mode (scripts), just return the plotter for saving
+    if not off_screen:
+        return plotter.show()
+    else:
+        return plotter
