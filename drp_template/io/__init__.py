@@ -92,7 +92,6 @@ from .readers import (
 from .writers import (
     export_model,
     export_header,
-    export_vti,
 )
 
 from .utils import (
@@ -109,6 +108,5 @@ __all__ = [
     'export_model',
     'export_header',
     # VTK / ParaView
-    'export_vti',
     'open_in_paraview',
 ]

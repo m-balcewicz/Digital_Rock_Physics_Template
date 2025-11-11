@@ -35,6 +35,7 @@ Examples
 from drp_template.model.generators import (
     binary_2d,
     binary_3d,
+    binary_vti,
 )
 
 from drp_template.model.utils import (
@@ -46,6 +47,7 @@ from drp_template.model.utils import (
 __all__ = [
     'binary_2d',
     'binary_3d',
+    'binary_vti',
     'get_dim',
     'reshape',
     'subvolume',
