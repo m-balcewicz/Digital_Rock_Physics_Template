@@ -1,6 +1,6 @@
 # Documentation
 
-This folder contains user and API documentation. Serve locally with MkDocs or Sphinx.
+This folder contains user and API documentation. Serve locally with Sphinx.
 
 Scripts
 -------
@@ -36,6 +36,7 @@ Include the generated examples pages in the table of contents by referencing the
 examples/image_examples
 examples/io_examples
 examples/tools_examples
+examples/compute_examples
 ```
 ```
 
@@ -94,7 +95,7 @@ docs/
 │   ├── io.md
 │   ├── image.md
 │   ├── tools.md
-│   ├── math.md
+│   ├── compute.md
 │   └── default_params.md
 ├── conf.py              # Sphinx configuration
 ├── Makefile             # Build commands
@@ -185,6 +186,26 @@ pip install sphinx-rtd-theme
 **Issue: "Unknown directive type 'toctree'"**
 - Make sure you're using `.md` files with MyST parser
 - Check that `myst-parser` is installed
+
+## Release 0.1.0b2 Highlights (Docs Impact)
+
+- Rock physics reorganized under `drp_template.compute.rockphysics` with focused subpackages:
+
+```
+drp_template/compute/rockphysics/
+├── mixing/            # e.g., brie_fluid_mixing, density_solid_mix
+├── bounds/            # voigt_reuss_hill_bounds, hashin_shtrikman_bounds
+└── effective_medium/  # backus_average, gassmann
+```
+
+- Bounds/mixing return dictionaries with descriptive keys (e.g., `bulk_modulus_hill`).
+- New examples and docstrings reference the updated imports:
+
+```python
+from drp_template.compute.rockphysics.effective_medium import backus_average, thomsen_params
+from drp_template.compute.rockphysics.bounds import voigt_reuss_hill_bounds
+from drp_template.compute.rockphysics.mixing import brie_fluid_mixing
+```
 
 **Issue: Port 8000 already in use**
 ```bash

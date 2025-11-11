@@ -11,11 +11,12 @@ sys.path.insert(0, os.path.abspath('..'))
 project = 'Digital Rock Physics Template'
 copyright = '2025, Martin Balcewicz'
 author = 'Martin Balcewicz'
-release = '0.1.0-alpha'
+release = '0.1.0b1'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
     'sphinx.ext.autodoc',        # Auto-generate docs from docstrings
+    'sphinx.ext.autosummary',    # Generate summary pages for modules/classes/functions
     'sphinx.ext.napoleon',       # Support for NumPy/Google style docstrings
     'sphinx.ext.viewcode',       # Add links to source code
     'sphinx.ext.intersphinx',    # Link to other project docs
@@ -23,6 +24,18 @@ extensions = [
     'myst_parser',               # Markdown support
     'nbsphinx',                  # Jupyter notebook support
 ]
+
+# Autosummary / Autodoc settings
+autosummary_generate = True
+add_module_names = False
+autodoc_typehints = 'description'
+autodoc_member_order = 'bysource'
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True,
+    'show-inheritance': True,
+    'inherited-members': True,
+}
 
 # nbsphinx configuration
 nbsphinx_execute = 'never'  # Don't execute notebooks during build (use saved outputs)

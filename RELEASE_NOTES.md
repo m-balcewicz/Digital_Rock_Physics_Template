@@ -1,3 +1,145 @@
+# Release Notes – 0.1.0b1 Beta (2025-11-11)
+
+This beta adds a clean, modular Rock Physics structure, a production-ready Backus averaging implementation (with Thomsen parameters), a consistency guide for VTI layered models, and a sweeping descriptive-naming update across the rockphysics API. It also introduces dictionary-based return values for bounds/mixing functions and clarifies import paths. See the migration notes below.
+
+---
+
+## Rock Physics: new modular layout and APIs
+
+A focused re-organization of `drp_template.compute.rockphysics` improves discoverability and scalability.
+
+```
+drp_template/compute/rockphysics/
+├── mixing/                          # Pure mixing operations
+│   ├── density.py                   # density_solid_mix, density_fluid_mix
+│   ├── fluid.py                     # brie_fluid_mixing (Brie's law)
+│   └── utils.py                     # get_normalized_f_solid
+│
+├── bounds/                          # Theoretical bounds only
+│   ├── voigt_reuss.py               # VR bounds, Hill average
+│   └── hashin_shtrikman.py          # HS bounds
+│
+├── effective_medium/                # Specific physical models
+│   ├── backus.py                    # Backus averaging (VTI anisotropy)
+│   └── gassmann.py                  # Gassmann fluid substitution
+│
+├── elastic.py                       # Elastic moduli conversions
+├── wood.py                          # Wood's formula
+├── bounds.py                        # Deprecated shim
+└── mixing.py                        # Deprecated shim
+```
+
+Why it helps
+- Conceptual clarity: mixing vs bounds vs effective medium models
+- Consistent style and return types (dicts) across modules
+- Easier to extend with new physics models
+
+---
+
+## Backus averaging and Thomsen parameters (new)
+
+Added a complete implementation with rich metadata and SI units throughout.
+
+- Location: `drp_template.compute.rockphysics.effective_medium`
+- Public functions: `backus_average()`, `thomsen_params()`
+- Returns structured dicts of elastic constants and velocities; Thomsen parameters: epsilon, gamma, delta
+- Designed as pure calculations (no prints), with comprehensive docstrings and references
+
+Example use
+```python
+from drp_template.compute.rockphysics.effective_medium import backus_average, thomsen_params
+results = backus_average(
+    Vp_layers=[5200, 2900], Vs_layers=[2700, 1400], rho_layers=[2450, 2340], d_layers=[0.75, 0.50]
+)
+anis = thomsen_params(A=results['A'], C=results['C'], F=results['F'], D=results['D'], M=results['M'])
+```
+
+---
+
+## VTI model consistency with Backus fractions (guide)
+
+To make analytical Backus results comparable with voxel VTI models, preserve the layer thickness ratios. You can use Backus `d_layers` directly, scale to a target voxel count, or apply a scale factor—ratios must remain the same. A small verification helper is provided in dev utilities.
+
+Key rule
+```
+VTI fraction_i = thickness_i / sum(thickness) = Backus d_i / sum(d)
+```
+
+---
+
+## API consistency: descriptive naming and dict returns
+
+We standardized variable and key names to descriptive forms across rockphysics. This is a breaking change for code accessing old return keys or positional tuples.
+
+Highlights
+- Descriptive parameters: `bulk_modulus`, `shear_modulus`, etc. (PEP 8 friendly)
+- Bounds/mixing functions return dictionaries with explicit keys
+- Gassmann uses descriptive parameter names and returns descriptive keys
+
+Changed return keys (examples)
+- Voigt-Reuss-Hill: `K_hill` → `bulk_modulus_hill`, `G_hill` → `shear_modulus_hill`
+- Hashin-Shtrikman: `K_lower/upper/avg` → `bulk_modulus_lower/upper/avg`; `G_lower/upper/avg` → `shear_modulus_lower/upper/avg`
+- Wood mixing: `K_reuss` → `bulk_modulus_reuss`
+
+Gassmann parameter and return changes (examples)
+- Params: `K_mineral` → `bulk_modulus_mineral`, `K_dry` → `bulk_modulus_dry`, `K_fl1/2` → `bulk_modulus_fluid1/2`, `G_dry` → `shear_modulus_dry`
+- Returns: `'K_sat2'` → `'bulk_modulus_sat2'`, `'G_sat2'` → `'shear_modulus_sat2'`
+
+---
+
+## Imports and deprecations
+
+Recommended imports
+```python
+from drp_template.compute.rockphysics.mixing import brie_fluid_mixing, density_solid_mix
+from drp_template.compute.rockphysics.bounds import voigt_reuss_hill_bounds, hashin_shtrikman_bounds
+from drp_template.compute.rockphysics.effective_medium import backus_average, gassmann
+```
+
+Deprecations
+- Legacy `bounds.py` and `mixing.py` remain as shims for a transition period; prefer the submodules.
+- `elastic_bounds` removed; use `voigt_reuss_hill_bounds` or `hashin_shtrikman_bounds` explicitly.
+
+---
+
+## Migration notes
+
+Function names
+- `Brie_law` → `brie_fluid_mixing`
+
+Bounds return format
+- VRH now returns a dict with keys: `bulk_modulus_voigt`, `bulk_modulus_reuss`, `bulk_modulus_hill`, `shear_modulus_voigt`, `shear_modulus_reuss`, `shear_modulus_hill`
+- HS now returns a dict with keys: `bulk_modulus_lower/upper/avg`, `shear_modulus_lower/upper/avg`
+
+Gassmann
+- Use descriptive parameter names and read descriptive return keys (see examples above)
+
+Wood mixing
+- Use `results['bulk_modulus_reuss']` for effective fluid bulk modulus
+
+Backwards compatibility
+- Deprecated modules keep imports working short-term, but code accessing old tuple returns or old key names must be updated.
+
+---
+
+## Documentation and examples
+
+- All affected docstrings updated to new naming
+- The tutorial `examples/compute/tutorials/Elastic_Boundaries.ipynb` was refreshed to reflect the updated keys and imports
+- Developer notes and migration guidance live under `dev/` for transparency
+
+
+---
+
+## Roadmap highlights
+
+- Future re-homing of fluid substitution models under `fluid_substitution/` (Gassmann, Wood, Biot)
+- Expansion with granular, empirical, and poroelasticity modules
+- Metadata registry and auto-generated documentation
+- Comprehensive tests across rockphysics categories
+
+---
+
 # Release Notes – 0.1.0b1 Beta (2025-11-07)
 
 This beta release consolidates a broad architectural refactor plus the new binary model API introduced earlier. The focus is on a cleaner package structure, explicit public functions, SI unit consistency, and streamlined export/visualization tooling.

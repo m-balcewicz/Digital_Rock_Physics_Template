@@ -87,13 +87,14 @@ labels = {
     '3': 'Clay'
 }
 
-# Get detailed phase fractions
-table = drp_math.get_phase_fractions(
+# Get detailed phase fractions (formatted table string)
+table = compute.phase_fractions(
     data=data,
     labels=labels,
     paramsfile='data.json',
-    log=True
+    verbose=True
 )
+print(table)
 ```
 
 ## 4. Create Synthetic Models
@@ -101,10 +102,10 @@ table = drp_math.get_phase_fractions(
 ### 2D Binary Model
 
 ```python
-from drp_template.model import create_binary_model_2d
+from drp_template.model import binary_2d
 
 # Create 2D model with periodic boundaries (perfect for RVE)
-data_2d = create_binary_model_2d(
+data_2d = binary_2d(
     nx=200, ny=200,
     num_inclusions=15,
     inclusion_radius=20,
@@ -119,10 +120,10 @@ data_2d = create_binary_model_2d(
 ### 3D Binary Model
 
 ```python
-from drp_template.model import create_binary_model_3d
+from drp_template.model import binary_3d
 
 # Create 3D model with periodic boundaries
-data_3d = create_binary_model_3d(
+data_3d = binary_3d(
     nx=100, ny=100, nz=100,
     num_inclusions=10,
     inclusion_radius=15,
@@ -172,3 +173,17 @@ print(f"Valid: {is_valid}")
 - Check out the [Tutorials](tutorials/index.md) for detailed examples
 - Explore the [API Reference](api/io.md) for all available functions
 - Learn about [Schema Versioning](schema_versioning.md) for data provenance
+
+## Bonus: Rock Physics (New in 0.1.0b2)
+
+Backus-averaged VTI properties and Thomsen parameters:
+
+```python
+from drp_template.compute.rockphysics.effective_medium import backus_average, thomsen_params
+
+results = backus_average(
+    Vp_layers=[5200, 2900], Vs_layers=[2700, 1400], rho_layers=[2450, 2340], d_layers=[0.75, 0.50]
+)
+anis = thomsen_params(A=results['A'], C=results['C'], F=results['F'], D=results['D'], M=results['M'])
+print(anis)
+```

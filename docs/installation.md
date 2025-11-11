@@ -15,6 +15,19 @@ cd Digital_Rock_Physics_Template
 pip install -e .
 ```
 
+Optional extras (install only what you need):
+
+```bash
+# Visualization stack (plotting, animations)
+pip install -e .[viz]
+
+# VTK export support
+pip install -e .[vtk]
+
+# Both extras
+pip install -e .[viz,vtk]
+```
+
 ## Dependencies
 
 The following packages will be automatically installed:
@@ -27,6 +40,10 @@ The following packages will be automatically installed:
 - h5py >= 2.2.3
 - jsonschema >= 4.0.0
 - cmcrameri ~= 1.7
+
+Optional extras pull additional dependencies (examples):
+- [viz] may include seaborn, imageio-ffmpeg, etc.
+- [vtk] enables VTK `.vti` export and ParaView integration helpers
 
 ## Verify installation
 

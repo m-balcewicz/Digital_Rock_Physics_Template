@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0b1] - 2025-11-11
+
+### Added
+- Backus averaging implementation with Thomsen parameters under `drp_template.compute.rockphysics.effective_medium`:
+	- `backus_average()`, `thomsen_params()`, and `vti_velocity_vs_angle()` return structured dicts with SI units.
+- Rock physics examples refreshed; VTI consistency guidance added for layered voxel models.
+
+### Changed
+- Rock physics namespace reorganized into focused subpackages:
+	- `mixing/`, `bounds/`, `effective_medium/`, plus `isotropic.py` and `wood.py`.
+- Consistent, descriptive parameter and return-key naming across rock physics APIs (e.g., `bulk_modulus_hill`, `shear_modulus_lower/upper/avg`).
+- Bounds, mixing, and substitution functions now return dictionaries instead of tuples.
+
+### Deprecated
+- Legacy `drp_template.compute.rockphysics.bounds.py` and `mixing.py` kept as lightweight shims; prefer the submodules.
+- Old key names and tuple-style returns will be removed in a future minor release.
+
+### Documentation
+- API and tutorials updated to new imports and key names.
+- Autosummary/autodoc configuration improved to pull full docstrings for submodules.
+
+### Migration Notes
+- Update imports to subpackages, for example:
+	- `from drp_template.compute.rockphysics.bounds import voigt_reuss_hill_bounds`
+	- `from drp_template.compute.rockphysics.mixing import brie_fluid_mixing`
+	- `from drp_template.compute.rockphysics.effective_medium import backus_average, gassmann_fluid_substitution`
+- Adjust code to read descriptive dict keys instead of positional tuple returns.
+
+## [0.1.0b1] - 2025-11-07
+
+### Added
+- Modularized package layout with explicit public APIs across `model`, `image`, `tools`, `io`, and `compute`.
+- Integrated Binary Model API (`binary_2d`, `binary_3d`) with periodic boundary generation and true 3D rotations.
+- Unified VTK export: `io.writers.export_vti` with JSON sidecar metadata; `io.utils.open_in_paraview` helper.
+- Optional dependencies via extras:
+	- `pip install drp_template[viz]`, `drp_template[vtk]`, or `drp_template[viz,vtk]`.
+
+### Changed
+- SI unit standardization across geometry-related functions; conversions available under `drp_template.compute`.
+- Deprecated monolithic legacy modules; replaced with stubs that forward to new submodules.
+
+### Documentation
+- Docs generator moved to `docs/scripts/generate_docs.py`.
+- Examples reorganized under `examples/<module>/{reference,tutorials}`.
+
+### Testing
+- Added tests for raw export + metadata; sample VTI export script provided.
+
 ## [0.1.0-alpha] - 2025-10-31
 
 ### Added
