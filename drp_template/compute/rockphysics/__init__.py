@@ -4,17 +4,16 @@ Rock Physics Theory Module
 
 Classical rock physics models and theoretical frameworks.
 
-This submodule contains implementations of fundamental rock physics theories
-including effective medium models, elastic bounds, and fluid substitution.
+This module contains implementations of fundamental rock physics theories
+including effective medium models, elastic bounds, fluid substitution, and
+mixing laws.
 
 Submodules
 ----------
-- effective_medium: Backus averaging and other effective medium theories
-- mixing: Effective medium and mixing laws (Brie, density mixing, elastic bounds)
-- bounds: Voigt-Reuss-Hill and Hashin-Shtrikman bounds
-- elastic: Elastic moduli conversions and seismic velocities
-- gassmann: Gassmann fluid substitution
-- wood: Wood's formula for fluid suspensions
+effective_medium/ : Backus averaging, Gassmann fluid substitution, VTI anisotropy
+mixing/           : Density mixing, fluid mixing (Brie, Wood), volume fraction utilities
+bounds/           : Voigt-Reuss-Hill and Hashin-Shtrikman elastic bounds
+isotropic         : Elastic moduli conversions and seismic velocities (isotropic media)
 
 Quick Reference
 ---------------
@@ -23,89 +22,102 @@ import drp_template.compute.rockphysics as rp
 
 # Effective medium models
 from drp_template.compute.rockphysics.effective_medium import (
-    backus_average,
-    thomsen_params
+    backus_average,           # VTI anisotropy from layering
+    thomsen_params,           # Thomsen anisotropy parameters
+    vti_velocity_vs_angle,    # Phase velocities vs angle
+    gassmann_fluid_substitution  # Gassmann fluid substitution
 )
 
-# Mixing laws
+# Mixing utilities
 from drp_template.compute.rockphysics.mixing import (
-    density_solid_mix,
-    density_fluid_mix,
-    Brie_law,
-    elastic_bounds
+    density_solid_mix,      # Solid density mixing
+    density_fluid_mix,      # Fluid density mixing
+    brie_fluid_mixing,      # Brie's empirical fluid law
+    wood_fluid_mixing,      # Wood's equation for fluid suspensions
+    get_normalized_f_solid  # Normalize solid fractions
 )
 
 # Elastic bounds
 from drp_template.compute.rockphysics.bounds import (
-    hashin_shtrikman_bounds,
-    voigt_reuss_hill_bounds
+    voigt_reuss_hill_bounds,  # VRH bounds and average
+    hashin_shtrikman_bounds,  # Narrowest possible bounds
+    voigt_bound,              # Upper bound
+    reuss_bound,              # Lower bound
+    hill_average              # VRH average
 )
 
-# Elastic properties
-from drp_template.compute.rockphysics.elastic import (
+# Elastic properties (isotropic media)
+from drp_template.compute.rockphysics.isotropic import (
     elastic_moduli,
     seismic_velocity
 )
 
 # Fluid substitution
-from drp_template.compute.rockphysics.gassmann import gassmann
-from drp_template.compute.rockphysics.wood import wood
+from drp_template.compute.rockphysics.effective_medium import gassmann_fluid_substitution
+from drp_template.compute.rockphysics.mixing import wood_fluid_mixing
 ```
 
 References
 ----------
 - Mavko, G., Mukerji, T., Dvorkin, J. (2020): The Rock Physics Handbook
-- Berryman, J.G. (1993): Mixture theories for rock properties
 - Backus, G. E. (1962): Long-wave elastic anisotropy produced by horizontal layering
 - Thomsen, L. (1986): Weak elastic anisotropy
+- Hashin & Shtrikman (1963): Variational bounds for elastic behavior
+- Brie et al. (1995): Fluid mixing law for patchy mixtures
+
+Author
+------
+Martin Balcewicz (martin.balcewicz@rockphysics.org)
 """
 
-# Import all functions from submodules
+# Import from submodules
 from .effective_medium import (
     backus_average,
     thomsen_params,
     vti_velocity_vs_angle,
+    gassmann_fluid_substitution,
 )
+
 from .mixing import (
     density_solid_mix,
     density_fluid_mix,
-    Brie_law,
+    brie_fluid_mixing,
+    wood_fluid_mixing,
     get_normalized_f_solid,
-    elastic_bounds,
 )
 
 from .bounds import (
-    hashin_shtrikman_bounds,
     voigt_reuss_hill_bounds,
+    hashin_shtrikman_bounds,
+    voigt_bound,
+    reuss_bound,
+    hill_average,
 )
 
-from .elastic import (
+from .isotropic import (
     elastic_moduli,
     seismic_velocity,
 )
 
-from .gassmann import gassmann
-
-from .wood import wood
-
 __all__ = [
-    # Effective medium
+    # Effective medium models
     'backus_average',
     'thomsen_params',
     'vti_velocity_vs_angle',
-    # Mixing laws
+    'gassmann_fluid_substitution',
+    # Mixing utilities
     'density_solid_mix',
     'density_fluid_mix',
-    'Brie_law',
+    'brie_fluid_mixing',
+    'wood_fluid_mixing',
     'get_normalized_f_solid',
-    'elastic_bounds',
-    # Bounds
-    'hashin_shtrikman_bounds',
+    # Elastic bounds
     'voigt_reuss_hill_bounds',
+    'hashin_shtrikman_bounds',
+    'voigt_bound',
+    'reuss_bound',
+    'hill_average',
     # Elastic properties
     'elastic_moduli',
     'seismic_velocity',
-    # Fluid substitution
-    'gassmann',
-    'wood',
 ]

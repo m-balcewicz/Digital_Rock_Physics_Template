@@ -1,25 +1,28 @@
 """
-Elastic Moduli and Seismic Velocities
-======================================
+Isotropic Elastic Properties
+=============================
 
-Conversions between elastic moduli, stiffness coefficients, and seismic velocities.
+Elastic moduli conversions and seismic velocities for isotropic media.
 
 This module provides functions for calculating and converting between various
 representations of elastic properties for isotropic, linear, elastic media.
 
+The module handles conversions between:
+- Bulk modulus (K) and shear modulus (G)
+- Young's modulus (E) and Poisson's ratio (ν)
+- Lamé parameters (λ, μ)
+- Stiffness coefficients (c11, c44)
+- Seismic wave velocities (Vp, Vs, Ve)
+
 References
 ----------
 - Hooke's Law (isotropic form)
-- Mavko, G., Mukerji, T., Dvorkin, J. (2020): The Rock Physics Handbook
+- Mavko, G., Mukerji, T., Dvorkin, J. (2020): The Rock Physics Handbook, 
+  3rd edition, Cambridge University Press
 
 Author
 ------
 Martin Balcewicz (martin.balcewicz@rockphysics.org)
-
-Functions
----------
-- elastic_moduli: Convert between elastic constants (K, G, E, ν, c11, c44)
-- seismic_velocity: Calculate seismic wave velocities from elastic properties
 """
 
 import math

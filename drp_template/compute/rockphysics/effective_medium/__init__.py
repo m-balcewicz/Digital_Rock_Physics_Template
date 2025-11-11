@@ -10,6 +10,7 @@ calculate bulk properties from constituent components and microstructure.
 Available Models
 ----------------
 - Backus averaging: Effective properties of finely layered VTI media
+- Gassmann fluid substitution: Predicting fluid effects on seismic velocities
 - [Future] Self-consistent approximation
 - [Future] Differential effective medium (DEM)
 - [Future] Kuster-Toksöz inclusions
@@ -64,9 +65,11 @@ References
 """
 
 from .backus import backus_average, thomsen_params, vti_velocity_vs_angle
+from .gassmann import gassmann_fluid_substitution
 
 __all__ = [
     'backus_average',
     'thomsen_params',
     'vti_velocity_vs_angle',
+    'gassmann_fluid_substitution',
 ]
