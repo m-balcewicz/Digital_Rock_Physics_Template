@@ -46,9 +46,11 @@ def voigt_bound(fractions, moduli):
         
     Examples
     --------
+    >>> from drp_template.compute.conversions import GPa2Pa
+    >>> import numpy as np
     >>> # Quartz-Calcite mixture
-    >>> K_voigt = voigt_bound([0.6, 0.4], [37e9, 76e9])
-    >>> print(f"K_voigt = {K_voigt/1e9:.2f} GPa")
+    >>> bulk_modulus_voigt = voigt_bound([0.6, 0.4], GPa2Pa(np.array([37, 76])))
+    >>> print(f"bulk_modulus_voigt = {bulk_modulus_voigt/1e9:.2f} GPa")
     """
     fractions = np.asarray(fractions)
     moduli = np.asarray(moduli)
@@ -77,9 +79,11 @@ def reuss_bound(fractions, moduli):
         
     Examples
     --------
+    >>> from drp_template.compute.conversions import GPa2Pa
+    >>> import numpy as np
     >>> # Quartz-Calcite mixture
-    >>> K_reuss = reuss_bound([0.6, 0.4], [37e9, 76e9])
-    >>> print(f"K_reuss = {K_reuss/1e9:.2f} GPa")
+    >>> bulk_modulus_reuss = reuss_bound([0.6, 0.4], GPa2Pa(np.array([37, 76])))
+    >>> print(f"bulk_modulus_reuss = {bulk_modulus_reuss/1e9:.2f} GPa")
     """
     fractions = np.asarray(fractions)
     moduli = np.asarray(moduli)
@@ -132,12 +136,12 @@ def voigt_reuss_hill_bounds(fractions, bulk_moduli, shear_moduli):
     -------
     dict
         Dictionary containing:
-        - 'K_voigt' : Voigt (upper) bound for bulk modulus (Pa)
-        - 'K_reuss' : Reuss (lower) bound for bulk modulus (Pa)
-        - 'K_hill' : Hill average for bulk modulus (Pa)
-        - 'G_voigt' : Voigt (upper) bound for shear modulus (Pa)
-        - 'G_reuss' : Reuss (lower) bound for shear modulus (Pa)
-        - 'G_hill' : Hill average for shear modulus (Pa)
+        - 'bulk_modulus_voigt' : Voigt (upper) bound for bulk modulus (Pa)
+        - 'bulk_modulus_reuss' : Reuss (lower) bound for bulk modulus (Pa)
+        - 'bulk_modulus_hill' : Hill average for bulk modulus (Pa)
+        - 'shear_modulus_voigt' : Voigt (upper) bound for shear modulus (Pa)
+        - 'shear_modulus_reuss' : Reuss (lower) bound for shear modulus (Pa)
+        - 'shear_modulus_hill' : Hill average for shear modulus (Pa)
     
     Raises
     ------
@@ -165,29 +169,31 @@ def voigt_reuss_hill_bounds(fractions, bulk_moduli, shear_moduli):
     
     Examples
     --------
+    >>> from drp_template.compute.conversions import GPa2Pa
+    >>> import numpy as np
     >>> # Quartz-Calcite mixture (60%-40%)
     >>> bounds = voigt_reuss_hill_bounds(
     ...     fractions=[0.6, 0.4],
-    ...     bulk_moduli=[37e9, 76e9],
-    ...     shear_moduli=[44e9, 32e9]
+    ...     bulk_moduli=GPa2Pa(np.array([37, 76])),
+    ...     shear_moduli=GPa2Pa(np.array([44, 32]))
     ... )
-    >>> print(f"K_hill = {bounds['K_hill']/1e9:.2f} GPa")
-    >>> print(f"G_hill = {bounds['G_hill']/1e9:.2f} GPa")
-    K_hill = 51.06 GPa
-    G_hill = 39.24 GPa
+    >>> print(f"bulk_modulus_hill = {bounds['bulk_modulus_hill']/1e9:.2f} GPa")
+    >>> print(f"shear_modulus_hill = {bounds['shear_modulus_hill']/1e9:.2f} GPa")
+    bulk_modulus_hill = 51.06 GPa
+    shear_modulus_hill = 39.24 GPa
     
     >>> # Three-component mixture
     >>> bounds = voigt_reuss_hill_bounds(
     ...     fractions=[0.5, 0.3, 0.2],
-    ...     bulk_moduli=[37e9, 76e9, 2.2e9],  # Quartz, Calcite, Water
-    ...     shear_moduli=[44e9, 32e9, 0]
+    ...     bulk_moduli=GPa2Pa(np.array([37, 76, 2.2])),  # Quartz, Calcite, Water
+    ...     shear_moduli=GPa2Pa(np.array([44, 32, 0]))
     ... )
-    >>> print(f"Bounds: K=[{bounds['K_reuss']/1e9:.1f}, {bounds['K_voigt']/1e9:.1f}] GPa")
+    >>> print(f"Bounds: K=[{bounds['bulk_modulus_reuss']/1e9:.1f}, {bounds['bulk_modulus_voigt']/1e9:.1f}] GPa")
     
     >>> # Access individual values
-    >>> K_upper = bounds['K_voigt']
-    >>> K_lower = bounds['K_reuss']
-    >>> K_avg = bounds['K_hill']
+    >>> bulk_modulus_upper = bounds['bulk_modulus_voigt']
+    >>> bulk_modulus_lower = bounds['bulk_modulus_reuss']
+    >>> bulk_modulus_avg = bounds['bulk_modulus_hill']
     """
     fractions = np.asarray(fractions)
     bulk_moduli = np.asarray(bulk_moduli)
@@ -207,19 +213,19 @@ def voigt_reuss_hill_bounds(fractions, bulk_moduli, shear_moduli):
         )
     
     # Calculate bounds
-    K_voigt = voigt_bound(fractions, bulk_moduli)
-    K_reuss = reuss_bound(fractions, bulk_moduli)
-    K_hill = hill_average(K_voigt, K_reuss)
+    bulk_modulus_voigt = voigt_bound(fractions, bulk_moduli)
+    bulk_modulus_reuss = reuss_bound(fractions, bulk_moduli)
+    bulk_modulus_hill = hill_average(bulk_modulus_voigt, bulk_modulus_reuss)
     
-    G_voigt = voigt_bound(fractions, shear_moduli)
-    G_reuss = reuss_bound(fractions, shear_moduli)
-    G_hill = hill_average(G_voigt, G_reuss)
+    shear_modulus_voigt = voigt_bound(fractions, shear_moduli)
+    shear_modulus_reuss = reuss_bound(fractions, shear_moduli)
+    shear_modulus_hill = hill_average(shear_modulus_voigt, shear_modulus_reuss)
     
     return {
-        'K_voigt': K_voigt,
-        'K_reuss': K_reuss,
-        'K_hill': K_hill,
-        'G_voigt': G_voigt,
-        'G_reuss': G_reuss,
-        'G_hill': G_hill
+        'bulk_modulus_voigt': bulk_modulus_voigt,
+        'bulk_modulus_reuss': bulk_modulus_reuss,
+        'bulk_modulus_hill': bulk_modulus_hill,
+        'shear_modulus_voigt': shear_modulus_voigt,
+        'shear_modulus_reuss': shear_modulus_reuss,
+        'shear_modulus_hill': shear_modulus_hill
     }

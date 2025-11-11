@@ -52,6 +52,24 @@ from drp_template.compute.rockphysics.isotropic import (
     seismic_velocity
 )
 
+# Elastic conversions (simple parameter-to-parameter)
+from drp_template.compute.rockphysics.isotropic import (
+    poisson,       # K, G → ν
+    youngs,        # K, G → E
+    lame_lambda,   # K, G → λ
+    bulk,          # E, ν → K
+    shear          # E, ν → G
+)
+
+# Example usage:
+# >>> from drp_template.compute import GPa2Pa
+# >>> K = GPa2Pa(37)  # Convert 37 GPa to Pa
+# >>> G = GPa2Pa(44)  # Convert 44 GPa to Pa
+# >>> nu = poisson(K, G)
+# >>> E = youngs(K, G)
+# >>> K_back = bulk(E, nu)
+# >>> G_back = shear(E, nu)
+
 # Fluid substitution
 from drp_template.compute.rockphysics.effective_medium import gassmann_fluid_substitution
 from drp_template.compute.rockphysics.mixing import wood_fluid_mixing
@@ -97,6 +115,11 @@ from .bounds import (
 from .isotropic import (
     elastic_moduli,
     seismic_velocity,
+    poisson,
+    youngs,
+    lame_lambda,
+    bulk,
+    shear,
 )
 
 __all__ = [
@@ -117,7 +140,12 @@ __all__ = [
     'voigt_bound',
     'reuss_bound',
     'hill_average',
-    # Elastic properties
+    # Elastic properties and conversions
     'elastic_moduli',
     'seismic_velocity',
+    'poisson',
+    'youngs',
+    'lame_lambda',
+    'bulk',
+    'shear',
 ]

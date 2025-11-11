@@ -20,7 +20,8 @@ import numpy as np
 __all__ = ['brie_fluid_mixing', 'wood_fluid_mixing']
 
 
-def brie_fluid_mixing(s_water, s_oil, s_gas, k_water, k_oil, k_gas, exponent=3):
+def brie_fluid_mixing(saturation_water, saturation_oil, saturation_gas, 
+                      bulk_modulus_water, bulk_modulus_oil, bulk_modulus_gas, exponent=3):
     """
     Calculate effective fluid bulk modulus using Brie's empirical equation.
     
@@ -31,17 +32,17 @@ def brie_fluid_mixing(s_water, s_oil, s_gas, k_water, k_oil, k_gas, exponent=3):
     
     Parameters
     ----------
-    s_water : float
+    saturation_water : float
         Water saturation (0-1).
-    s_oil : float
+    saturation_oil : float
         Oil saturation (0-1).
-    s_gas : float
-        Gas saturation (0-1). Must satisfy: s_water + s_oil + s_gas = 1.
-    k_water : float
+    saturation_gas : float
+        Gas saturation (0-1). Must satisfy: saturation_water + saturation_oil + saturation_gas = 1.
+    bulk_modulus_water : float
         Bulk modulus of water (Pa).
-    k_oil : float
+    bulk_modulus_oil : float
         Bulk modulus of oil (Pa).
-    k_gas : float
+    bulk_modulus_gas : float
         Bulk modulus of gas (Pa).
     exponent : float, optional
         Empirical constant (default=3 from original experiments).
@@ -71,52 +72,53 @@ def brie_fluid_mixing(s_water, s_oil, s_gas, k_water, k_oil, k_gas, exponent=3):
         
     Examples
     --------
+    >>> from drp_template.compute.conversions import GPa2Pa
     >>> # Water-gas mixture (50% water, 50% gas)
-    >>> k_brie = brie_fluid_mixing(
-    ...     s_water=0.5, s_oil=0.0, s_gas=0.5,
-    ...     k_water=2.2e9, k_oil=0, k_gas=0.01e9,
+    >>> bulk_modulus_brie = brie_fluid_mixing(
+    ...     saturation_water=0.5, saturation_oil=0.0, saturation_gas=0.5,
+    ...     bulk_modulus_water=GPa2Pa(2.2), bulk_modulus_oil=0, bulk_modulus_gas=GPa2Pa(0.01),
     ...     exponent=3
     ... )
-    >>> print(f"Effective K_fluid: {k_brie/1e9:.3f} GPa")
+    >>> print(f"Effective bulk_modulus_fluid: {bulk_modulus_brie/1e9:.3f} GPa")
     
     >>> # Water-oil-gas mixture
-    >>> k_brie = brie_fluid_mixing(
-    ...     s_water=0.4, s_oil=0.3, s_gas=0.3,
-    ...     k_water=2.2e9, k_oil=0.8e9, k_gas=0.01e9,
+    >>> bulk_modulus_brie = brie_fluid_mixing(
+    ...     saturation_water=0.4, saturation_oil=0.3, saturation_gas=0.3,
+    ...     bulk_modulus_water=GPa2Pa(2.2), bulk_modulus_oil=GPa2Pa(0.8), bulk_modulus_gas=GPa2Pa(0.01),
     ...     exponent=3
     ... )
     
     >>> # Effect of exponent on mixing
     >>> for e in [1, 2, 3, 5, 10]:
-    ...     k = brie_fluid_mixing(0.5, 0, 0.5, 2.2e9, 0, 0.01e9, exponent=e)
-    ...     print(f"e={e}: K_fluid = {k/1e9:.3f} GPa")
+    ...     k = brie_fluid_mixing(0.5, 0, 0.5, GPa2Pa(2.2), 0, GPa2Pa(0.01), exponent=e)
+    ...     print(f"e={e}: bulk_modulus_fluid = {k/1e9:.3f} GPa")
     """
     # Validate saturations sum to 1
-    total_saturation = s_water + s_oil + s_gas
+    total_saturation = saturation_water + saturation_oil + saturation_gas
     if not np.isclose(total_saturation, 1.0):
         raise ValueError(
             f'Saturations must sum to 1. Got: '
-            f's_water={s_water}, s_oil={s_oil}, s_gas={s_gas}, '
+            f'saturation_water={saturation_water}, saturation_oil={saturation_oil}, saturation_gas={saturation_gas}, '
             f'sum={total_saturation:.6f}'
         )
     
     # Handle zero bulk moduli (replace with small value to avoid division by zero)
-    k_water = k_water if k_water > 0 else 1e-10
-    k_oil = k_oil if k_oil > 0 else 1e-10
-    k_gas = k_gas if k_gas > 0 else 1e-10
+    bulk_modulus_water = bulk_modulus_water if bulk_modulus_water > 0 else 1e-10
+    bulk_modulus_oil = bulk_modulus_oil if bulk_modulus_oil > 0 else 1e-10
+    bulk_modulus_gas = bulk_modulus_gas if bulk_modulus_gas > 0 else 1e-10
     
     # Brie's equation
-    if s_oil > 0:
+    if saturation_oil > 0:
         # Water + oil mixture (no gas case handled first)
-        k_liquid = 1.0 / (s_water / k_water + s_oil / k_oil)
+        bulk_modulus_liquid = 1.0 / (saturation_water / bulk_modulus_water + saturation_oil / bulk_modulus_oil)
     else:
         # Water only (no oil)
-        k_liquid = k_water
+        bulk_modulus_liquid = bulk_modulus_water
     
     # Add gas contribution with Brie exponent
-    k_brie = (k_liquid - k_gas) * (1 - s_gas)**exponent + k_gas
+    bulk_modulus_brie = (bulk_modulus_liquid - bulk_modulus_gas) * (1 - saturation_gas)**exponent + bulk_modulus_gas
     
-    return float(k_brie)
+    return float(bulk_modulus_brie)
 
 
 def wood_fluid_mixing(fractions, bulk_moduli, densities):
@@ -140,7 +142,7 @@ def wood_fluid_mixing(fractions, bulk_moduli, densities):
     -------
     dict
         Dictionary containing:
-        - 'K_reuss' : Reuss average bulk modulus (Pa)
+        - 'bulk_modulus_reuss' : Reuss average bulk modulus (Pa)
         - 'rho_avg' : Arithmetic average density (kg/m³)
         - 'Vp' : P-wave velocity in fluid mixture (m/s)
     
@@ -157,9 +159,9 @@ def wood_fluid_mixing(fractions, bulk_moduli, densities):
     - Long wavelength limit (quasi-static)
     
     The formulas are:
-    - K_Reuss = 1 / Σ(f_i / K_i)  (Harmonic average)
-    - ρ_avg = Σ(f_i × ρ_i)        (Arithmetic average)
-    - V_P = √(K_Reuss / ρ_avg)    (P-wave velocity)
+    - bulk_modulus_reuss = 1 / Σ(f_i / bulk_modulus_i)  (Harmonic average)
+    - ρ_avg = Σ(f_i × ρ_i)                              (Arithmetic average)
+    - V_P = √(bulk_modulus_reuss / ρ_avg)               (P-wave velocity)
     
     Wood's equation is exact for fluid mixtures in the long wavelength limit,
     unlike empirical formulas like Brie's law.
@@ -172,30 +174,32 @@ def wood_fluid_mixing(fractions, bulk_moduli, densities):
     
     Examples
     --------
+    >>> from drp_template.compute.conversions import GPa2Pa
+    >>> import numpy as np
     >>> # Example 1: Water-gas mixture
     >>> results = wood_fluid_mixing(
     ...     fractions=[0.6, 0.4],
-    ...     bulk_moduli=[2.2e9, 0.01e9],  # Water, Gas
-    ...     densities=[1000, 1.2]          # kg/m³
+    ...     bulk_moduli=GPa2Pa(np.array([2.2, 0.01])),  # Water, Gas
+    ...     densities=[1000, 1.2]                       # kg/m³
     ... )
-    >>> print(f"Effective K_fluid: {results['K_reuss']/1e9:.3f} GPa")
+    >>> print(f"Effective bulk_modulus_fluid: {results['bulk_modulus_reuss']/1e9:.3f} GPa")
     >>> print(f"P-wave velocity: {results['Vp']:.0f} m/s")
     
     >>> # Example 2: Quartz-water-air suspension
     >>> results = wood_fluid_mixing(
     ...     fractions=[0.6, 0.3, 0.1],
-    ...     bulk_moduli=[37e9, 2.2e9, 1.31e5],  # Quartz, Water, Air
-    ...     densities=[2650, 1000, 1.19]         # kg/m³
+    ...     bulk_moduli=GPa2Pa(np.array([37, 2.2, 0.0001313])),  # Quartz, Water, Air
+    ...     densities=[2650, 1000, 1.19]                          # kg/m³
     ... )
     >>> print(f"Suspension Vp: {results['Vp']:.0f} m/s")
     
     >>> # Example 3: Brine-oil mixture
     >>> results = wood_fluid_mixing(
     ...     fractions=[0.7, 0.3],
-    ...     bulk_moduli=[2.4e9, 0.8e9],  # Brine, Oil
-    ...     densities=[1050, 850]         # kg/m³
+    ...     bulk_moduli=GPa2Pa(np.array([2.4, 0.8])),  # Brine, Oil
+    ...     densities=[1050, 850]                       # kg/m³
     ... )
-    >>> K_eff = results['K_reuss']
+    >>> bulk_modulus_eff = results['bulk_modulus_reuss']
     >>> rho_eff = results['rho_avg']
     >>> Vp = results['Vp']
     """
@@ -217,16 +221,16 @@ def wood_fluid_mixing(fractions, bulk_moduli, densities):
         )
     
     # Reuss (harmonic) average for bulk modulus
-    K_reuss = 1.0 / np.sum(fractions / bulk_moduli)
+    bulk_modulus_reuss = 1.0 / np.sum(fractions / bulk_moduli)
     
     # Arithmetic (Voigt) average for density
     rho_avg = np.sum(fractions * densities)
     
     # P-wave velocity using Wood's formula
-    Vp = np.sqrt(K_reuss / rho_avg)
+    Vp = np.sqrt(bulk_modulus_reuss / rho_avg)
     
     return {
-        'K_reuss': float(K_reuss),
+        'bulk_modulus_reuss': float(bulk_modulus_reuss),
         'rho_avg': float(rho_avg),
         'Vp': float(Vp)
     }

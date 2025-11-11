@@ -46,12 +46,12 @@ def hashin_shtrikman_bounds(fractions, bulk_moduli, shear_moduli):
     -------
     dict
         Dictionary containing:
-        - 'K_lower' : Lower (Reuss-like) bound for bulk modulus (Pa)
-        - 'K_upper' : Upper (Voigt-like) bound for bulk modulus (Pa)
-        - 'G_lower' : Lower bound for shear modulus (Pa)
-        - 'G_upper' : Upper bound for shear modulus (Pa)
-        - 'K_avg' : Average of K bounds (Pa)
-        - 'G_avg' : Average of G bounds (Pa)
+        - 'bulk_modulus_lower' : Lower (Reuss-like) bound for bulk modulus (Pa)
+        - 'bulk_modulus_upper' : Upper (Voigt-like) bound for bulk modulus (Pa)
+        - 'shear_modulus_lower' : Lower bound for shear modulus (Pa)
+        - 'shear_modulus_upper' : Upper bound for shear modulus (Pa)
+        - 'bulk_modulus_avg' : Average of bulk modulus bounds (Pa)
+        - 'shear_modulus_avg' : Average of shear modulus bounds (Pa)
     
     Raises
     ------
@@ -71,14 +71,14 @@ def hashin_shtrikman_bounds(fractions, bulk_moduli, shear_moduli):
     **Bound formulas:**
     
     For bulk modulus:
-    - K_upper = [Σ f_i/(K_i + 4/3 × G_max)]⁻¹ - 4/3 × G_max
-    - K_lower = [Σ f_i/(K_i + 4/3 × G_min)]⁻¹ - 4/3 × G_min
+    - bulk_modulus_upper = [Σ f_i/(bulk_modulus_i + 4/3 × shear_modulus_max)]⁻¹ - 4/3 × shear_modulus_max
+    - bulk_modulus_lower = [Σ f_i/(bulk_modulus_i + 4/3 × shear_modulus_min)]⁻¹ - 4/3 × shear_modulus_min
     
     For shear modulus:
-    - G_upper = [Σ f_i/(G_i + ζ_max)]⁻¹ - ζ_max
-    - G_lower = [Σ f_i/(G_i + ζ_min)]⁻¹ - ζ_min
+    - shear_modulus_upper = [Σ f_i/(shear_modulus_i + ζ_max)]⁻¹ - ζ_max
+    - shear_modulus_lower = [Σ f_i/(shear_modulus_i + ζ_min)]⁻¹ - ζ_min
     
-    where ζ = G/6 × (9K + 8G)/(K + 2G)
+    where ζ = shear_modulus/6 × (9×bulk_modulus + 8×shear_modulus)/(bulk_modulus + 2×shear_modulus)
     
     References
     ----------
@@ -88,28 +88,30 @@ def hashin_shtrikman_bounds(fractions, bulk_moduli, shear_moduli):
     
     Examples
     --------
+    >>> from drp_template.compute.conversions import GPa2Pa
+    >>> import numpy as np
     >>> # Quartz-Calcite-Water mixture
     >>> bounds = hashin_shtrikman_bounds(
     ...     fractions=[0.584, 0.146, 0.27],
-    ...     bulk_moduli=[36e9, 75e9, 2.2e9],
-    ...     shear_moduli=[45e9, 31e9, 0]
+    ...     bulk_moduli=GPa2Pa(np.array([36, 75, 2.2])),
+    ...     shear_moduli=GPa2Pa(np.array([45, 31, 0]))
     ... )
-    >>> print(f"K: [{bounds['K_lower']/1e9:.2f}, {bounds['K_upper']/1e9:.2f}] GPa")
-    >>> print(f"G: [{bounds['G_lower']/1e9:.2f}, {bounds['G_upper']/1e9:.2f}] GPa")
+    >>> print(f"K: [{bounds['bulk_modulus_lower']/1e9:.2f}, {bounds['bulk_modulus_upper']/1e9:.2f}] GPa")
+    >>> print(f"G: [{bounds['shear_modulus_lower']/1e9:.2f}, {bounds['shear_modulus_upper']/1e9:.2f}] GPa")
     K: [8.54, 28.59] GPa
     G: [0.00, 25.83] GPa
     
     >>> # Two-phase mixture (Quartz-Porosity)
     >>> bounds = hashin_shtrikman_bounds(
     ...     fractions=[0.7, 0.3],
-    ...     bulk_moduli=[37e9, 0],
-    ...     shear_moduli=[44e9, 0]
+    ...     bulk_moduli=GPa2Pa(np.array([37, 0])),
+    ...     shear_moduli=GPa2Pa(np.array([44, 0]))
     ... )
     >>> print(f"HS bounds narrower than VRH for this case")
     
     >>> # Check if material is well-ordered
-    >>> K = [36e9, 75e9, 2.2e9]
-    >>> G = [45e9, 31e9, 0]
+    >>> K = GPa2Pa(np.array([36, 75, 2.2]))
+    >>> G = GPa2Pa(np.array([45, 31, 0]))
     >>> max_K_idx = np.argmax(K)
     >>> max_G_idx = np.argmax(G)
     >>> if max_K_idx != max_G_idx:
@@ -133,38 +135,38 @@ def hashin_shtrikman_bounds(fractions, bulk_moduli, shear_moduli):
         )
     
     # Find extreme values
-    K_max = np.max(bulk_moduli)
-    K_min = np.min(bulk_moduli)
-    G_max = np.max(shear_moduli)
-    G_min = np.min(shear_moduli)
+    bulk_modulus_max = np.max(bulk_moduli)
+    bulk_modulus_min = np.min(bulk_moduli)
+    shear_modulus_max = np.max(shear_moduli)
+    shear_modulus_min = np.min(shear_moduli)
     
     # Hashin-Shtrikman bounds for bulk modulus
-    # Upper bound (uses G_max)
-    z_upper = (4.0 / 3.0) * G_max
-    K_upper = 1.0 / np.sum(fractions / (bulk_moduli + z_upper)) - z_upper
+    # Upper bound (uses shear_modulus_max)
+    z_upper = (4.0 / 3.0) * shear_modulus_max
+    bulk_modulus_upper = 1.0 / np.sum(fractions / (bulk_moduli + z_upper)) - z_upper
     
-    # Lower bound (uses G_min)
-    z_lower = (4.0 / 3.0) * G_min
-    K_lower = 1.0 / np.sum(fractions / (bulk_moduli + z_lower)) - z_lower
+    # Lower bound (uses shear_modulus_min)
+    z_lower = (4.0 / 3.0) * shear_modulus_min
+    bulk_modulus_lower = 1.0 / np.sum(fractions / (bulk_moduli + z_lower)) - z_lower
     
     # Hashin-Shtrikman bounds for shear modulus
-    # Upper bound (uses K_max, G_max)
-    zeta_max = G_max / 6.0 * (9 * K_max + 8 * G_max) / (K_max + 2 * G_max)
-    G_upper = 1.0 / np.sum(fractions / (shear_moduli + zeta_max)) - zeta_max
+    # Upper bound (uses bulk_modulus_max, shear_modulus_max)
+    zeta_max = shear_modulus_max / 6.0 * (9 * bulk_modulus_max + 8 * shear_modulus_max) / (bulk_modulus_max + 2 * shear_modulus_max)
+    shear_modulus_upper = 1.0 / np.sum(fractions / (shear_moduli + zeta_max)) - zeta_max
     
-    # Lower bound (uses K_min, G_min)
-    zeta_min = G_min / 6.0 * (9 * K_min + 8 * G_min) / (K_min + 2 * G_min)
-    G_lower = 1.0 / np.sum(fractions / (shear_moduli + zeta_min)) - zeta_min
+    # Lower bound (uses bulk_modulus_min, shear_modulus_min)
+    zeta_min = shear_modulus_min / 6.0 * (9 * bulk_modulus_min + 8 * shear_modulus_min) / (bulk_modulus_min + 2 * shear_modulus_min)
+    shear_modulus_lower = 1.0 / np.sum(fractions / (shear_moduli + zeta_min)) - zeta_min
     
     # Calculate averages
-    K_avg = (K_upper + K_lower) / 2.0
-    G_avg = (G_upper + G_lower) / 2.0
+    bulk_modulus_avg = (bulk_modulus_upper + bulk_modulus_lower) / 2.0
+    shear_modulus_avg = (shear_modulus_upper + shear_modulus_lower) / 2.0
     
     return {
-        'K_lower': float(K_lower),
-        'K_upper': float(K_upper),
-        'K_avg': float(K_avg),
-        'G_lower': float(G_lower),
-        'G_upper': float(G_upper),
-        'G_avg': float(G_avg)
+        'bulk_modulus_lower': float(bulk_modulus_lower),
+        'bulk_modulus_upper': float(bulk_modulus_upper),
+        'bulk_modulus_avg': float(bulk_modulus_avg),
+        'shear_modulus_lower': float(shear_modulus_lower),
+        'shear_modulus_upper': float(shear_modulus_upper),
+        'shear_modulus_avg': float(shear_modulus_avg)
     }
