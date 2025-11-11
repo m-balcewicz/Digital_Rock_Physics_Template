@@ -1,10 +1,15 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
+try:
+    # Prefer cmcrameri perceptually uniform colormaps when available
+    from cmcrameri import cm as cmc
+except Exception:
+    cmc = None
+from matplotlib.colors import ListedColormap, BoundaryNorm
 from matplotlib.ticker import FixedLocator, FixedFormatter
 from drp_template.default_params import read_parameters_file
 from drp_template.image import _config
+from drp_template.image.colormaps import get_phase_color_resources
 
 
 __all__ = [
@@ -27,7 +32,7 @@ cax_space_left = _config.cax_space_left
 cax_space_right = _config.cax_space_right
 im_title = _config.im_title
 
-def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None, dark_mode=True, cmap_intensity=1.0, ax=None, show_colorbar=True):
+def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, plane='xy', subvolume=None, labels=None, title=None, voxel_size=None, dark_mode=True, cmap_intensity=1.0, ax=None, show_colorbar=True, norm=None):
     """
     Visualize 2D slice of 3D volumetric data using Matplotlib.
 
@@ -95,10 +100,29 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
         edge_color = 'black'
 
     if cmap_set is None:
-        # Get the default colormap
+        # Get the default colormap (e.g., 'batlow', 'viridis', or 'cm.batlow')
         cmap_set = global_settings.get('colormap')
-        # Evaluate the string to get the actual colormap function
-        cmap_set = eval(cmap_set)
+        # Resolve string safely without eval
+        if isinstance(cmap_set, str):
+            name = cmap_set
+            try:
+                if name.startswith('cm.'):
+                    # Explicit cmcrameri prefix, e.g., 'cm.batlow'
+                    cmap_name = name.split('.', 1)[1]
+                    if cmc is not None and hasattr(cmc, cmap_name):
+                        cmap_set = getattr(cmc, cmap_name)
+                    else:
+                        # Try matplotlib as fallback
+                        cmap_set = plt.cm.get_cmap(cmap_name)
+                else:
+                    # Plain name; try cmcrameri first, then matplotlib
+                    if cmc is not None and hasattr(cmc, name):
+                        cmap_set = getattr(cmc, name)
+                    else:
+                        cmap_set = plt.cm.get_cmap(name)
+            except Exception:
+                # Fallback to a safe default
+                cmap_set = plt.cm.get_cmap('viridis')
         
 
     # Adjust colormap intensity if needed
@@ -182,7 +206,39 @@ def ortho_slice(data, paramsfile='parameters.json', cmap_set=None, slice=None, p
     # Transpose the slice to swap dimensions
     data = data.T
 
-    pcm = ax.pcolormesh(data, cmap=cmap_set)
+    # If a normalization is provided (e.g., from ortho_views), use it directly
+    if norm is not None:
+        pcm = ax.pcolormesh(data, cmap=cmap_set, norm=norm)
+    else:
+        # Decide on discrete vs continuous mapping based on the slice content
+        pcm = None
+        try:
+            is_integer = np.all(np.equal(data, np.round(data)))
+            unique_vals = np.unique(data.astype(int)) if is_integer else None
+        except Exception:
+            is_integer = False
+            unique_vals = None
+
+        if is_integer and unique_vals is not None and unique_vals.size > 0 and unique_vals.size <= 256:
+            # Discrete mapping for integer-labeled phases present in this slice
+            k = unique_vals.size
+            # Build evenly spaced colors from the base colormap
+            if k == 1:
+                t_values = [0.5]
+            else:
+                t_values = [i / (k - 1) for i in range(k)]
+            colors = []
+            sampler = cmap_set if hasattr(cmap_set, '__call__') else plt.cm.get_cmap('viridis')
+            for t in t_values:
+                rgba = sampler(t)
+                colors.append(tuple(np.clip(rgba[:3], 0, 1)))
+            listed = ListedColormap(colors)
+            boundaries = np.concatenate(([unique_vals[0] - 0.5], (unique_vals[:-1] + unique_vals[1:]) / 2.0, [unique_vals[-1] + 0.5]))
+            local_norm = BoundaryNorm(boundaries, ncolors=k, clip=True)
+            pcm = ax.pcolormesh(data, cmap=listed, norm=local_norm)
+        else:
+            # Continuous mapping
+            pcm = ax.pcolormesh(data, cmap=cmap_set)
 
     plt.axis('tight')
     ax.set_aspect('equal', 'box')
@@ -494,6 +550,31 @@ def ortho_views(data,
     import matplotlib.pyplot as plt
 
     nz, ny, nx = data.shape
+    # Determine if data are integer-labeled (phases) for discrete mapping
+    is_integer = np.all(np.equal(data, np.round(data)))
+    unique_vals_all = np.unique(data.astype(int)) if is_integer else None
+    shared_norm = None
+    shared_cmap = None
+    # Use a shared normalization across all views so identical values map to identical colors
+    try:
+        vmin = float(np.nanmin(data))
+        vmax = float(np.nanmax(data))
+    except Exception:
+        vmin, vmax = None, None
+
+    # Build shared discrete colormap/norm via unified helper when applicable
+    if is_integer and unique_vals_all is not None and unique_vals_all.size > 0:
+        # Determine base name from cmap_set or global settings
+        if isinstance(cmap_set, str):
+            base_name = cmap_set.split('.', 1)[1] if cmap_set.startswith('cm.') else cmap_set
+        elif cmap_set is None:
+            base_name = str(global_settings.get('colormap', 'batlow'))
+            base_name = base_name.split('.', 1)[1] if base_name.startswith('cm.') else base_name
+        else:
+            base_name = 'batlow'
+        color_res = get_phase_color_resources(data, cmap_name=base_name, brightness=float(cmap_intensity) if cmap_intensity else 1.0)
+        shared_cmap = color_res.get('cmap', None)
+        shared_norm = color_res.get('norm', None)
     
     # Get layout config using _config helper (handles fallback internally)
     layout_config = _config.get_layout_config(layout_type or 'arbitrary')
@@ -565,7 +646,7 @@ def ortho_views(data,
         _, _, pcm = ortho_slice(
             data,
             paramsfile=paramsfile,
-            cmap_set=cmap_set,
+            cmap_set=(shared_cmap if shared_cmap is not None else cmap_set),
             slice=slc,
             plane=plane,
             subvolume=subvolume,
@@ -576,7 +657,12 @@ def ortho_views(data,
             cmap_intensity=cmap_intensity,
             ax=axes[i],
             show_colorbar=False
+            ,
+            norm=shared_norm
         )
+        # Align color limits across all subplots for continuous mapping only
+        if shared_norm is None and vmin is not None and vmax is not None:
+            pcm.set_clim(vmin=vmin, vmax=vmax)
         pcms.append(pcm)
         axes[i].set_aspect('equal')
         axes[i].set_title(dir_title, fontsize=plt.rcParams['font.size'], 
@@ -587,6 +673,14 @@ def ortho_views(data,
 
     # Add the colorbar separately
     cbar = fig.colorbar(pcms[0], cax=cbar_ax, orientation='vertical')
+    # Ensure colorbar reflects the shared limits or discrete ticks
+    if shared_norm is not None and unique_vals_all is not None:
+        cbar.set_ticks(unique_vals_all)
+        if labels is not None and isinstance(labels, dict):
+            tick_labels = [labels.get(int(v), str(int(v))) for v in unique_vals_all]
+            cbar.ax.set_yticklabels(tick_labels)
+    elif vmin is not None and vmax is not None:
+        pcms[0].set_clim(vmin=vmin, vmax=vmax)
     
     # Apply labels to colorbar if provided
     if labels is not None:

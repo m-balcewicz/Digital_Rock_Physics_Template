@@ -28,6 +28,7 @@ except Exception:
 from drp_template.default_params import read_parameters_file
 from drp_template.image._config import get_volume_rendering_config
 from drp_template.image.plotting import _resolve_colormap
+from drp_template.image.colormaps import get_phase_color_resources
 
 __all__ = [
     'get_lighting_preset',
@@ -195,29 +196,36 @@ def volume_rendering(
         n_phases_guess = int(data.max()) + 1
         labels = {i: f"Phase {i}" for i in range(n_phases_guess)}
 
-    # Resolve colormap
-    if cmap_set is None:
-        cmap = cm.batlow
+    # Unified phase color resources (shared with 2D views)
+    cmap_name = None
+    if isinstance(cmap_set, str):
+        cmap_name = cmap_set.split('.', 1)[1] if cmap_set.startswith('cm.') else cmap_set
+    elif cmap_set is None:
+        cmap_name = 'batlow'
     else:
-        try:
-            cmap = _resolve_colormap(cmap_set)
-        except Exception:
-            cmap = cm.batlow
-
-    n_phases = max(int(data.max()) + 1, len(labels))
-    computed_phase_colors = {}
-    if n_phases <= 1:
-        computed_phase_colors[0] = tuple(cmap(0.5)[:3])
-    else:
-        for i in range(n_phases):
-            t = i / (n_phases - 1)
-            rgba = cmap(t)
-            computed_phase_colors[i] = tuple(rgba[:3])
-    if phase_colors is not None:
+        # Non-string cmap provided; use default name for sampling purposes
+        cmap_name = 'batlow'
+    color_res = get_phase_color_resources(data, cmap_name=cmap_name, brightness=1.0)
+    unique_vals = list(map(int, color_res.get('unique_ids', [])))
+    final_phase_colors = dict(color_res.get('mapping', {}))
+    # Allow user overrides per phase id
+    if phase_colors is not None and isinstance(phase_colors, (dict,)):
         for pid, color in phase_colors.items():
             if isinstance(color, (list, tuple)) and len(color) == 3:
-                computed_phase_colors[pid] = tuple(color)
-    final_phase_colors = computed_phase_colors
+                final_phase_colors[int(pid)] = tuple(color)
+    # Fallback if mapping empty (e.g., non-integer data): sample evenly for a guessed range
+    if not final_phase_colors:
+        # Guess phases from labels or data max
+        n_guess = max(int(data.max()) + 1, len(labels))
+        base = _resolve_colormap(cmap_set) if cmap_set is not None else cm.batlow
+        if n_guess <= 1:
+            final_phase_colors[0] = tuple(base(0.5)[:3])
+            unique_vals = [0]
+        else:
+            for i in range(n_guess):
+                t = i / (n_guess - 1)
+                final_phase_colors[i] = tuple(base(t)[:3])
+            unique_vals = list(range(n_guess))
 
     if slice_opacity is None:
         slice_opacity_value = opacity_slice
@@ -301,25 +309,25 @@ def volume_rendering(
     # Render phases/slices
     if mode == '3d':
         phase_opacity_map = {}
-        if phase_opacity is None:
-            for pid in range(n_phases):
-                phase_opacity_map[pid] = slice_opacity_value
-        elif isinstance(phase_opacity, dict):
-            phase_opacity_map = phase_opacity.copy()
+        if isinstance(phase_opacity, dict):
+            # Respect provided mapping; otherwise default later
+            phase_opacity_map = {int(k): float(v) for k, v in phase_opacity.items()}
         elif isinstance(phase_opacity, (list, tuple)):
-            for pid, opacity_val in enumerate(phase_opacity):
-                if pid < n_phases:
-                    phase_opacity_map[pid] = opacity_val
+            for pid, opacity_val in zip(unique_vals, phase_opacity):
+                phase_opacity_map[int(pid)] = float(opacity_val)
+        else:
+            for pid in unique_vals:
+                phase_opacity_map[int(pid)] = slice_opacity_value
         for pid, opacity_val in phase_opacity_map.items():
             if opacity_val <= 0.0:
                 continue
             opacity_val = max(0.0, min(1.0, opacity_val))
-            pname = labels.get(pid, f"Phase {pid}") if isinstance(labels, dict) else f"Phase {pid}"
-            phase_mesh = grid.threshold(value=[pid - 0.1, pid + 0.1], scalars='phase')
+            pname = labels.get(int(pid), f"Phase {int(pid)}") if isinstance(labels, dict) else f"Phase {int(pid)}"
+            phase_mesh = grid.threshold(value=[int(pid) - 0.1, int(pid) + 0.1], scalars='phase')
             if phase_mesh.n_cells > 0:
                 plotter.add_mesh(
                     phase_mesh,
-                    color=final_phase_colors.get(pid, (1.0, 1.0, 1.0)),
+                    color=final_phase_colors.get(int(pid), (1.0, 1.0, 1.0)),
                     opacity=opacity_val,
                     show_edges=show_3d_edges,
                     edge_color=edge_color,
@@ -332,14 +340,14 @@ def volume_rendering(
         slice_xz = grid.slice(normal=[0, 1, 0], origin=origin)
         slice_yz = grid.slice(normal=[1, 0, 0], origin=origin)
         slice_planes = [slice_xy, slice_xz, slice_yz]
-        for pid in range(n_phases):
-            pname = labels.get(pid, f"Phase {pid}") if isinstance(labels, dict) else f"Phase {pid}"
+        for pid in unique_vals:
+            pname = labels.get(int(pid), f"Phase {int(pid)}") if isinstance(labels, dict) else f"Phase {int(pid)}"
             for i, plane in enumerate(slice_planes):
-                p_slice = plane.threshold(value=[pid - 0.1, pid + 0.1], scalars='phase')
+                p_slice = plane.threshold(value=[int(pid) - 0.1, int(pid) + 0.1], scalars='phase')
                 if p_slice.n_cells > 0:
                     plotter.add_mesh(
                         p_slice,
-                        color=final_phase_colors.get(pid, (1.0, 1.0, 1.0)),
+                        color=final_phase_colors.get(int(pid), (1.0, 1.0, 1.0)),
                         opacity=slice_opacity_value,
                         show_edges=False,
                         label=pname if i == 0 else None,
@@ -348,21 +356,20 @@ def volume_rendering(
         if mode == 'combined' and phase_opacity is not None:
             phase_opacity_map = {}
             if isinstance(phase_opacity, dict):
-                phase_opacity_map = phase_opacity.copy()
+                phase_opacity_map = {int(k): float(v) for k, v in phase_opacity.items()}
             elif isinstance(phase_opacity, (list, tuple)):
-                for pid, opacity_val in enumerate(phase_opacity):
-                    if pid < n_phases:
-                        phase_opacity_map[pid] = opacity_val
+                for pid, opacity_val in zip(unique_vals, phase_opacity):
+                    phase_opacity_map[int(pid)] = float(opacity_val)
             for pid, opacity_val in phase_opacity_map.items():
                 if opacity_val <= 0.0:
                     continue
                 opacity_val = max(0.0, min(1.0, opacity_val))
-                pname = labels.get(pid, f"Phase {pid}") if isinstance(labels, dict) else f"Phase {pid}"
-                phase_mesh = grid.threshold(value=[pid - 0.1, pid + 0.1], scalars='phase')
+                pname = labels.get(int(pid), f"Phase {int(pid)}") if isinstance(labels, dict) else f"Phase {int(pid)}"
+                phase_mesh = grid.threshold(value=[int(pid) - 0.1, int(pid) + 0.1], scalars='phase')
                 if phase_mesh.n_cells > 0:
                     plotter.add_mesh(
                         phase_mesh,
-                        color=final_phase_colors.get(pid, (1.0, 1.0, 1.0)),
+                        color=final_phase_colors.get(int(pid), (1.0, 1.0, 1.0)),
                         opacity=opacity_val,
                         show_edges=show_3d_edges,
                         edge_color=edge_color,
@@ -397,7 +404,11 @@ def volume_rendering(
     fp = plotter.camera.focal_point
     plotter.camera.focal_point = (fp[0] + view_shift_x, fp[1] + view_shift_y, fp[2])
 
-    print(f"3D volume rendering with {n_phases} phases")
+    try:
+        n_phases_print = len(unique_vals)
+    except Exception:
+        n_phases_print = int(data.max()) + 1
+    print(f"3D volume rendering with {n_phases_print} phases")
     
     # In interactive mode (notebooks), show the plot and return the image
     # In off-screen mode (scripts), just return the plotter for saving
