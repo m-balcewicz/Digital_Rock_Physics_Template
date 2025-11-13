@@ -96,6 +96,7 @@ from .writers import (
 
 from .utils import (
     open_in_paraview,
+    resolve_params_filename
 )
 
 __all__ = [
@@ -109,4 +110,5 @@ __all__ = [
     'export_header',
     # VTK / ParaView
     'open_in_paraview',
+    'resolve_params_filename'
 ]
