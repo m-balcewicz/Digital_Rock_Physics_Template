@@ -1,2 +1,1 @@
-*.ipynb filter=nbstripout
-*.ipynb diff=ipynb
+# .gitattributes cleaned of nbstripout/diff rules
