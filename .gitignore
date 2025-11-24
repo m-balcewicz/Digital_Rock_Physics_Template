@@ -53,6 +53,8 @@ site/
 
 # Jupyter
 .ipynb_checkpoints/
+*.nbconvert.ipynb
+*.nbconverted
 
 # IPython
 profile_default/
@@ -98,6 +100,8 @@ projects/
 debugging/
 output/
 dev/
+scripts/__pycache__/
+scripts/*.pyc
 
 # Legacy packaging artifacts (if generated)
 drp_template.egg-info/

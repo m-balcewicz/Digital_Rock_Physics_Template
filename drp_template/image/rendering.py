@@ -92,10 +92,16 @@ def volume_rendering(
     phase_colors=None,
     camera_zoom=None,
     lighting='custom',
+    full_cmap=False,
     show_legend=True,
     show_axes=True,
     show_bounds=True,
-    off_screen=None
+    off_screen=None,
+    colorbar_position=(0.15, 0.1),
+    colorbar_size=(0.06, 0.8),
+    colorbar_title='Amplitude',
+    colorbar_title_offset=(-0.04, 0.38),
+    colorbar_title_font_size=None,
 ):
     """Render a 3D labeled volume with optional slices and lighting using PyVista.
     
@@ -140,6 +146,11 @@ def volume_rendering(
         Display XYZ axes.
     show_bounds : bool, optional
         Display bounding box.
+    full_cmap : bool, optional
+        If True, render the full (continuous) colormap across the scalar
+        range of `data` using PyVista's volume rendering (no discrete phase
+        thresholding). Useful to display all shades of `cmap_set` instead of
+        showing separate phase meshes.
     off_screen : bool or None, optional
         If True, render off-screen (for saving images). If False, render interactively.
         If None (default), auto-detect: False in Jupyter notebooks, True otherwise.
@@ -184,6 +195,20 @@ def volume_rendering(
     light_intensity_default = _vr('light_intensity', 0.95)
     ambient_intensity_default = _vr('ambient_intensity', 0.3)
     opacity_slice = _vr('opacity_slice', 1.0)
+    # Colorbar handles
+    pos_x, pos_y = colorbar_position
+    width, height = colorbar_size
+    tx_off, ty_off = colorbar_title_offset
+    tx = pos_x + tx_off
+    ty = pos_y + ty_off
+    # Title font size (explicit param overrides settings)
+    if colorbar_title_font_size is None:
+        colorbar_title_font_size = title_font_size
+    # Track whether we added a PyVista scalar bar so we don't remove it later
+    _pyvista_scalar_bar_added = False
+    # Track whether VTK scalar bar or text was added so we don't duplicate
+    _vtk_scalar_bar_used = False
+    _vtk_text_added = False
 
     # Load labels from params file if not provided
     if labels is None:
@@ -244,9 +269,40 @@ def volume_rendering(
     else:
         sx, sy, sz = nx // 2, ny // 2, nz // 2
 
+    # Clamp slice indices to valid integer ranges and compute a cell-centered origin
+    try:
+        sx = int(max(0, min(nx - 1, int(sx))))
+        sy = int(max(0, min(ny - 1, int(sy))))
+        sz = int(max(0, min(nz - 1, int(sz))))
+    except Exception:
+        sx, sy, sz = nx // 2, ny // 2, nz // 2
+
+    # Compute a cell-centered origin but clamp it away from the outermost
+    # boundary so slicing doesn't fall outside the grid (which can produce
+    # empty/transparent results). This keeps slices inside the volume.
+    def _cell_center_clamp(idx, dim):
+        if dim <= 1:
+            return 0.0
+        min_c = 0.5
+        max_c = max(min_c, (dim - 1) - 0.5)  # dim-1-0.5 == dim-1.5
+        return float(min(max(min_c, idx + 0.5), max_c))
+
+    origin_coords = [
+        _cell_center_clamp(sx, nx),
+        _cell_center_clamp(sy, ny),
+        _cell_center_clamp(sz, nz),
+    ]
+
     grid = pv.ImageData()
     grid.dimensions = (nx, ny, nz)
+    # Keep original 'phase' key for discrete rendering compatibility,
+    # and also store numeric values under 'values' for continuous colormap
     grid.point_data["phase"] = data.flatten(order="F")
+    try:
+        grid.point_data["values"] = data.astype(float).flatten(order="F")
+    except Exception:
+        # Fallback: if casting fails, keep original array as-is
+        grid.point_data["values"] = data.flatten(order="F")
 
     win_size = window_size or win_size_default
 
@@ -305,9 +361,434 @@ def volume_rendering(
         amb = pv.Light(light_type='headlight')
         amb.intensity = Aint
         plotter.add_light(amb)
+    # Render full continuous colormap if requested (no discrete phase meshes)
+    if full_cmap:
+        # Resolve colormap: prefer provided cmap_set, otherwise use default
+        # Resolve a CMas Crameri colormap when possible (prefer cmcrameri 'cm').
+        cmap_obj = None
+        if isinstance(cmap_set, str):
+            # Allow 'cm.name' or just 'name'
+            name = cmap_set.split('.', 1)[1] if cmap_set.startswith('cm.') else cmap_set
+            # Prefer cm.<name> from cmcrameri if available
+            if hasattr(cm, name):
+                cmap_obj = getattr(cm, name)
+            else:
+                try:
+                    cmap_obj = _resolve_colormap(cmap_set)
+                except Exception:
+                    cmap_obj = None
+        elif cmap_set is None:
+            # Default to a CMas Crameri map
+            cmap_obj = cm.batlow
+        else:
+            # Non-string cmap: try resolving, else fall back to CMas default
+            try:
+                cmap_obj = _resolve_colormap(cmap_set)
+            except Exception:
+                cmap_obj = cm.batlow
 
-    # Render phases/slices
-    if mode == '3d':
+        if cmap_obj is None:
+            cmap_obj = cm.batlow
+
+        # Determine scalar range and a simple opacity transfer function
+        scalar_min = float(np.nanmin(data))
+        scalar_max = float(np.nanmax(data))
+        clim = (scalar_min, scalar_max)
+        # Create a smooth opacity transfer (low -> mostly transparent, high -> opaque)
+        # Ensure a small minimum alpha so the whole volume isn't invisible.
+        min_alpha = 0.02
+        opacity_tf = (min_alpha + (1.0 - min_alpha) * np.linspace(0.0, 1.0, 256)).tolist()
+
+        # Add continuous volume rendering
+        try:
+            # Add volume without automatic scalar bar so we can enforce the scalar range
+            # Use the 'values' scalar for continuous numeric rendering so the
+            # colorbar reflects the true data range and not normalized labels.
+            vol_actor = plotter.add_volume(
+                grid,
+                scalars='values',
+                cmap=cmap_obj,
+                opacity=opacity_tf,
+                clim=clim,
+                shade=True,
+                scalar_bar_args=None
+            )
+            # Ensure the mapper (if available) uses the exact scalar range so the
+            # scalar bar shows the real data values instead of a normalized 0-1 range.
+            try:
+                vol_actor.mapper.scalar_range = clim
+            except Exception:
+                # Some PyVista versions/actors may not expose mapper; ignore if so.
+                pass
+
+            # Add a scalar bar and set its range explicitly (only if requested)
+            if show_legend:                
+                try:
+                    # Some PyVista backends don't pick up the LUT from a volume
+                    # actor when drawing the scalar bar. As a robust fallback we
+                    # create a tiny invisible plane with a linear scalar ramp and
+                    # attach the scalar bar to that mesh so the colorbar colors
+                    # exactly match the chosen colormap. The plane is translated
+                    # far away so it won't be visible in the scene.
+                    try:
+                        # Create a vtkLookupTable from the chosen colormap and
+                        # attach a vtkScalarBarActor directly to the renderer.
+                        # This places the colorbar as a 2D actor and does not
+                        # introduce any 3D geometry that could interfere with
+                        # slicing or scene bounds.
+                        try:
+                            import vtk
+                            n_colors = 256
+                            lut = vtk.vtkLookupTable()
+                            lut.SetNumberOfTableValues(n_colors)
+                            lut.Build()
+                            for ii in range(n_colors):
+                                t = ii / float(n_colors - 1)
+                                rgba = cmap_obj(t)
+                                # cmap_obj may return RGBA with values 0..1
+                                lut.SetTableValue(ii, float(rgba[0]), float(rgba[1]), float(rgba[2]), 1.0)
+
+                            # Ensure the lookup table maps to the actual data range
+                            try:
+                                lut.SetRange(scalar_min, scalar_max)
+                            except Exception:
+                                pass
+
+                            scalar_bar = vtk.vtkScalarBarActor()
+                            scalar_bar.SetLookupTable(lut)
+                            scalar_bar.SetTitle(colorbar_title)
+                            # Move title to the left, center vertically, rotate 90º CCW
+                            try:
+                                scalar_bar.SetTitleSideToLeft()
+                            except Exception:
+                                pass
+                            try:
+                                scalar_bar.SetVerticalTitle(True)
+                            except Exception:
+                                pass
+                            try:
+                                tprop = scalar_bar.GetTitleTextProperty()
+                                tprop.SetOrientation(90)  # 90º CCW
+                                tprop.SetJustificationToCentered()
+                                tprop.SetVerticalJustificationToCentered()
+                            except Exception:
+                                pass
+                            # Position and size (normalized viewport coordinates)
+                            try:
+                                scalar_bar.SetPosition(pos_x, pos_y)
+                                scalar_bar.SetWidth(width)
+                                scalar_bar.SetHeight(height)
+                            except Exception:
+                                try:
+                                    coord = scalar_bar.GetPositionCoordinate()
+                                    coord.SetValue(pos_x, pos_y, 0)
+                                except Exception:
+                                    pass
+                            # Use a fixed number of labels matching the plotted ticks
+                            n_labels = 5
+                            try:
+                                scalar_bar.SetNumberOfLabels(n_labels)
+                            except Exception:
+                                # Older/newer VTK may not support SetNumberOfLabels
+                                pass
+                            # Remove tick labels by setting label format to empty
+                            try:
+                                scalar_bar.SetLabelFormat('')
+                            except Exception:
+                                pass
+                            # Ensure the scalar bar text (title and labels) is
+                            # drawn in black so it's readable on light backgrounds.
+                            try:
+                                tprop = scalar_bar.GetTitleTextProperty()
+                                lprop = scalar_bar.GetLabelTextProperty()
+                                tprop.SetColor(0.0, 0.0, 0.0)
+                                lprop.SetColor(0.0, 0.0, 0.0)
+                                # Set readable font sizes for title and labels
+                                try:
+                                    tprop.SetFontSize(12)
+                                except Exception:
+                                    pass
+                                try:
+                                    lprop.SetFontSize(20)
+                                except Exception:
+                                    pass
+                            except Exception:
+                                pass
+                            # Remove the scalar_bar internal title - we'll draw a
+                            # separate 2D text actor so its placement is independent
+                            try:
+                                scalar_bar.SetTitle('')
+                            except Exception:
+                                pass
+                            # Add a separate 2D text actor for the colorbar title
+                            try:
+                                tx_off, ty_off = colorbar_title_offset
+                                tx = pos_x + tx_off
+                                ty = pos_y + ty_off
+                                try:
+                                    # Create a vtkTextActor placed in normalized viewport
+                                    txt = vtk.vtkTextActor()
+                                    txt.SetInput(colorbar_title)
+                                    tprop2 = txt.GetTextProperty()
+                                    tprop2.SetFontSize(int(colorbar_title_font_size))
+                                    tprop2.SetColor(0.0, 0.0, 0.0)
+                                    tprop2.SetOrientation(90)
+                                    tprop2.SetJustificationToCentered()
+                                    tprop2.SetVerticalJustificationToCentered()
+                                    # Use normalized viewport coordinates
+                                    try:
+                                        pc = txt.GetPositionCoordinate()
+                                        pc.SetCoordinateSystemToNormalizedViewport()
+                                        pc.SetValue(tx, ty, 0)
+                                    except Exception:
+                                        try:
+                                            txt.SetPosition(tx, ty)
+                                        except Exception:
+                                            pass
+                                    plotter.renderer.AddActor2D(txt)
+                                    _vtk_text_added = True
+                                except Exception:
+                                    # Fallback to PyVista text
+                                    try:
+                                        plotter.add_text(colorbar_title, position=(tx, ty), font_size=colorbar_title_font_size, color='black', rotation=90)
+                                        _vtk_text_added = True
+                                    except Exception:
+                                        try:
+                                            plotter.add_text(colorbar_title, position=(tx, ty), font_size=colorbar_title_font_size, color='black')
+                                            _vtk_text_added = True
+                                        except Exception:
+                                            pass
+                            except Exception:
+                                pass
+                            # Ensure the scalar bar orientation is vertical for a
+                            # narrow left-side placement and that the lookup table
+                            # range matches the data values used for tick generation.
+                            try:
+                                scalar_bar.SetOrientationToVertical()
+                            except Exception:
+                                pass
+                            # Add as a 2D actor so it doesn't affect 3D bounds
+                            try:
+                                plotter.renderer.AddActor2D(scalar_bar)
+                                _vtk_scalar_bar_used = True
+                            except Exception:
+                                plotter.renderer.AddActor(scalar_bar)
+                                _vtk_scalar_bar_used = True
+                        except Exception:
+                            # Fallback to PyVista scalar bar if vtk is unavailable
+                            try:
+                                plotter.add_scalar_bar(
+                                    title='',
+                                    n_labels=0,  # Hide tick labels
+                                    position_x=pos_x,
+                                    position_y=pos_y,
+                                    width=width,
+                                    height=height,
+                                    color='black',
+                                    title_font_size=colorbar_title_font_size,
+                                    label_font_size=1,  # Minimize font size
+                                    label_format='',   # Remove tick labels
+                                    vertical=True,     # Title vertical
+                                    title_side='left', # Title on left
+                                    title_orientation=90, # 90º CCW
+                                    title_justify='center',
+                                )
+                                _pyvista_scalar_bar_added = True
+                            except Exception:
+                                # Last-resort fallback with default placement
+                                        try:
+                                            plotter.add_scalar_bar(title='', n_labels=0, color='black', title_font_size=colorbar_title_font_size, label_font_size=1, label_format='', vertical=True, title_side='left', title_orientation=90, title_justify='center', position_x=pos_x, position_y=pos_y, width=width, height=height)
+                                        except Exception:
+                                            try:
+                                                plotter.add_scalar_bar(title='', n_labels=0, color='black', title_font_size=12, label_font_size=1, label_format='', vertical=True, title_side='left', title_orientation=90, title_justify='center', position_x=pos_x, position_y=pos_y, width=width, height=height)
+                                            except Exception:
+                                                plotter.add_scalar_bar(title='', n_labels=0, color='black')
+                        # Ensure the scalar bar range matches the data
+                        try:
+                            plotter.update_scalar_bar_range(clim)
+                        except Exception:
+                            pass
+                        # If VTK didn't add a text actor, add a separate
+                        # PyVista text label for the colorbar title so its
+                        # position is independent from the bar itself.
+                        if not _vtk_text_added:
+                            try:
+                                try:
+                                    # Try adding rotated text first
+                                    plotter.add_text(colorbar_title, position=(tx, ty), font_size=colorbar_title_font_size, color='black', rotation=90)
+                                except Exception:
+                                    plotter.add_text(colorbar_title, position=(tx, ty), font_size=colorbar_title_font_size, color='black')
+                            except Exception:
+                                pass
+                        # Force label/title font size on any scalar bar actor
+                        # that may have been added (covers both our VTK actor
+                        # and PyVista-managed scalar bars which also appear as
+                        # vtkScalarBarActor in the renderer).
+                        try:
+                            import vtk
+                            ren = plotter.renderer
+                            # Try 2D actors first
+                            try:
+                                actors2d = ren.GetActors2D()
+                                actors2d.InitTraversal()
+                                while True:
+                                    a = actors2d.GetNextActor()
+                                    if a is None:
+                                        break
+                                    try:
+                                        if a.IsA('vtkScalarBarActor'):
+                                            try:
+                                                tp = a.GetTitleTextProperty()
+                                                lp = a.GetLabelTextProperty()
+                                                tp.SetFontSize(12)
+                                                lp.SetFontSize(20)
+                                            except Exception:
+                                                pass
+                                    except Exception:
+                                        pass
+                            except Exception:
+                                # Fallback: iterate view props
+                                try:
+                                    props = ren.GetViewProps()
+                                    props.InitTraversal()
+                                    while True:
+                                        p = props.GetNextProp()
+                                        if p is None:
+                                            break
+                                        try:
+                                            if p.IsA('vtkScalarBarActor'):
+                                                try:
+                                                    tp = p.GetTitleTextProperty()
+                                                    lp = p.GetLabelTextProperty()
+                                                    tp.SetFontSize(12)
+                                                    lp.SetFontSize(20)
+                                                except Exception:
+                                                    pass
+                                        except Exception:
+                                            pass
+                                except Exception:
+                                    pass
+                        except Exception:
+                            # If VTK not available, nothing to force here
+                            pass
+                    except Exception:
+                        # If scalar bar helpers are unavailable, ignore and rely on defaults
+                        pass
+                except Exception:
+                    # If scalar bar helpers are unavailable, ignore and rely on defaults
+                    pass
+            # If user requested slices in combination with full_cmap, add colored
+            # slice planes using the numeric 'values' scalar so they match the
+            # continuous colormap (this mirrors the 'combined' mode behavior).
+            try:
+                if mode in ('slices', 'combined'):
+                    origin = origin_coords
+                    slice_xy = grid.slice(normal=[0, 0, 1], origin=origin)
+                    slice_xz = grid.slice(normal=[0, 1, 0], origin=origin)
+                    slice_yz = grid.slice(normal=[1, 0, 0], origin=origin)
+                    slice_planes = [slice_xy, slice_xz, slice_yz]
+                    for i, plane in enumerate(slice_planes):
+                        if plane.n_cells > 0:
+                            plotter.add_mesh(
+                                plane,
+                                scalars='values',
+                                cmap=cmap_obj,
+                                opacity=slice_opacity_value,
+                                show_edges=False,
+                                label=None if i > 0 else 'Slice',
+                                show_scalar_bar=False,
+                            )
+            except Exception:
+                # If slicing fails (older pyvista), ignore and continue
+                pass
+        except Exception:
+            # Fallback: if add_volume not available or fails, raise informative error
+            raise RuntimeError('Continuous colormap volume rendering failed. Ensure PyVista supports add_volume and the data are finite numeric scalars.')
+
+        # Continue to the shared post-rendering steps (bounds, legend/scalar bar, axes, title, camera)
+    # Force camera and bounds to the grid (model) so added invisible helpers
+    # do not change the displayed extents/ticks. Prefer resetting to the
+    # ImageData grid itself when possible.
+    # Defensive cleanup: if the user requested no legend, remove any
+    # scalar-bar actors that may have been added by fallbacks (VTK actor
+    # or PyVista scalar bar). This handles cases where a scalar bar was
+    # created despite `show_legend=False`.
+    if not show_legend:
+        try:
+            try:
+                import vtk
+                ren = plotter.renderer
+                # Try to remove 2D scalar bar actors (VTK ScalarBarActor)
+                try:
+                    actors2d = ren.GetActors2D()
+                    # different VTK versions expose traversal methods
+                    try:
+                        actors2d.InitTraversal()
+                        while True:
+                            a = actors2d.GetNextActor()
+                            if a is None:
+                                break
+                            try:
+                                if a.IsA('vtkScalarBarActor'):
+                                    ren.RemoveActor2D(a)
+                            except Exception:
+                                pass
+                    except Exception:
+                        # Fallback traversal API
+                        try:
+                            n = actors2d.GetNumberOfItems()
+                            for _ in range(n):
+                                a = actors2d.GetNextItem()
+                                try:
+                                    if a.IsA('vtkScalarBarActor'):
+                                        ren.RemoveActor2D(a)
+                                except Exception:
+                                    pass
+                        except Exception:
+                            pass
+                except Exception:
+                    # Try removing any view props matching scalar bar type
+                    try:
+                        props = ren.GetViewProps()
+                        try:
+                            props.InitTraversal()
+                            while True:
+                                p = props.GetNextProp()
+                                if p is None:
+                                    break
+                                try:
+                                    if p.IsA('vtkScalarBarActor'):
+                                        ren.RemoveActor(p)
+                                except Exception:
+                                    pass
+                        except Exception:
+                            pass
+                    except Exception:
+                        pass
+            except Exception:
+                # If VTK isn't available, ignore and try PyVista removal below
+                pass
+            # Try to remove any PyVista scalar bar if present
+            try:
+                # remove_scalar_bar exists in some PyVista versions
+                if hasattr(plotter, 'remove_scalar_bar'):
+                    plotter.remove_scalar_bar()
+            except Exception:
+                pass
+        except Exception:
+            pass
+    try:
+        # Call reset_camera without positional args to avoid PyVista deprecation
+        # warning about positional 'render' argument. Resetting without args
+        # recenters the camera to the scene (including the volume and slices).
+        plotter.reset_camera()
+    except Exception:
+        try:
+            plotter.reset_camera()
+        except Exception:
+            pass
+    # Render phases/slices (skip when full_cmap is True)
+    if (not full_cmap) and mode == '3d':
         phase_opacity_map = {}
         if isinstance(phase_opacity, dict):
             # Respect provided mapping; otherwise default later
@@ -334,8 +815,8 @@ def volume_rendering(
                     label=pname,
                     smooth_shading=True
                 )
-    elif mode in ('slices', 'combined'):
-        origin = [sx, sy, sz]
+    elif (not full_cmap) and mode in ('slices', 'combined'):
+        origin = origin_coords
         slice_xy = grid.slice(normal=[0, 0, 1], origin=origin)
         slice_xz = grid.slice(normal=[0, 1, 0], origin=origin)
         slice_yz = grid.slice(normal=[1, 0, 0], origin=origin)
@@ -382,19 +863,39 @@ def volume_rendering(
         plotter.show_bounds(location='outer', all_edges=True, color='gray')
 
     if show_legend:
-        plotter.add_legend(
-            size=legend_size,
-            loc=legend_position,
-            face='rectangle',
-            bcolor='white',
-            border=True
-        )
+        # Only add the discrete legend when NOT using the continuous colormap.
+        # The continuous path (`full_cmap=True`) already adds and configures
+        # a scalar bar earlier, so adding another here creates duplicate bars
+        # with conflicting ranges/ticks.
+        if not full_cmap:
+            plotter.add_legend(
+                size=legend_size,
+                loc=legend_position,
+                face='rectangle',
+                bcolor='white',
+                border=True
+            )
 
     if show_axes:
         plotter.add_axes(xlabel='X', ylabel='Y', zlabel='Z', line_width=axes_line_width, labels_off=False)
 
     if title:
         plotter.add_title(title, font_size=title_font_size, color=('white' if dark_mode else 'black'))
+
+    # Remove any PyVista-managed scalar bar (often added as a horizontal bar at
+    # the bottom) to avoid duplicate/wrong colorbars. We keep VTK scalar bar
+    # actors we added directly (those live in the renderer as vtkScalarBarActor
+    # and are not removed by plotter.remove_scalar_bar()).
+    try:
+        # Only remove PyVista-managed scalar bars if we didn't add one ourselves
+        if hasattr(plotter, 'remove_scalar_bar') and (not _pyvista_scalar_bar_added):
+            try:
+                plotter.remove_scalar_bar()
+            except Exception:
+                # Some versions may raise if no scalar bar present; ignore
+                pass
+    except Exception:
+        pass
 
     plotter.camera_position = 'iso'
     plotter.camera.zoom(camera_zoom if camera_zoom is not None else default_camera_zoom)
